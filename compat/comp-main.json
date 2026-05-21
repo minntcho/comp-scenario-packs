@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "comp-main",
+  "status": "pre_v1_git_ref",
+  "comp_dependency": "comp @ git+https://github.com/minntcho/comp@main",
+  "public_surfaces": [
+    "comp",
+    "comp.compiler_tool"
+  ],
+  "authority_policy": "compatibility_signal_not_authority_source"
+}

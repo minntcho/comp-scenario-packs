@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "comp-v1",
+  "status": "planned",
+  "comp_dependency": "comp>=1.0,<2.0",
+  "public_surfaces": [
+    "comp",
+    "comp.compiler_tool"
+  ],
+  "authority_policy": "compatibility_signal_not_authority_source"
+}

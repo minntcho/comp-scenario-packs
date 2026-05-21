@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comp-scenario-packs"
+version = "0.1.0a0"
+description = "Downstream scenario packs for comp compatibility and domain/product e2e signals"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "comp @ git+https://github.com/minntcho/comp@main",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["comp_scenario_packs"]
