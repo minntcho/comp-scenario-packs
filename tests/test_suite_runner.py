@@ -19,6 +19,11 @@ def test_discovers_all_checked_in_scenario_manifests():
         ROOT
         / "scenarios"
         / "esg_energy"
+        / "l_energy_alpha_physical_allocation_correction"
+        / "scenario.json",
+        ROOT
+        / "scenarios"
+        / "esg_energy"
         / "l_energy_pcf_governance"
         / "scenario.json",
         ROOT / "scenarios" / "public_projection_smoke" / "scenario.json",
@@ -48,13 +53,15 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
     )
 
     assert result.status == "passed"
-    assert result.scenario_count == 3
+    assert result.scenario_count == 4
     assert [item.scenario_id for item in result.results] == [
         "l_energy_alpha_invalid_allocation_rfi",
+        "l_energy_alpha_physical_allocation_correction",
         "l_energy_pcf_governance",
         "public_projection_smoke",
     ]
     assert [item.status for item in result.results] == [
+        "passed",
         "passed",
         "passed",
         "passed",
@@ -63,6 +70,7 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
     report_paths = sorted(tmp_path.glob("*.json"))
     assert [path.name for path in report_paths] == [
         "l_energy_alpha_invalid_allocation_rfi.json",
+        "l_energy_alpha_physical_allocation_correction.json",
         "l_energy_pcf_governance.json",
         "public_projection_smoke.json",
         "suite.json",
@@ -70,8 +78,8 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
 
     suite_report = json.loads((tmp_path / "suite.json").read_text(encoding="utf-8"))
     assert suite_report["status"] == "passed"
-    assert suite_report["scenario_count"] == 3
-    assert suite_report["pack_count"] == 3
+    assert suite_report["scenario_count"] == 4
+    assert suite_report["pack_count"] == 4
     assert suite_report["authority_policy"] == (
         "compatibility_signal_not_authority_source"
     )
@@ -79,6 +87,7 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
         "comp_dependency": "comp @ git+https://github.com/minntcho/comp@main",
         "covered_comp_scenario_ids": [
             "l_energy.alpha_invalid_allocation_rfi.v1",
+            "l_energy.alpha_physical_allocation_correction.v1",
             "l_energy_pcf_governance.v1",
         ],
         "cutover_states": [
@@ -93,6 +102,17 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
                 "cutover_state": "parallel-validation",
                 "covered_comp_scenario_ids": [
                     "l_energy.alpha_invalid_allocation_rfi.v1"
+                ],
+                "authority_policy": "compatibility_signal_not_authority_source",
+                "comp_relationship": "public_api_consumer",
+            },
+            {
+                "pack_id": "l_energy_alpha_physical_allocation_correction",
+                "status": "seed",
+                "scope": "large-domain-and-product-e2e",
+                "cutover_state": "parallel-validation",
+                "covered_comp_scenario_ids": [
+                    "l_energy.alpha_physical_allocation_correction.v1"
                 ],
                 "authority_policy": "compatibility_signal_not_authority_source",
                 "comp_relationship": "public_api_consumer",
@@ -119,6 +139,10 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
     }
     assert suite_report["scenarios"] == [
         {"scenario_id": "l_energy_alpha_invalid_allocation_rfi", "status": "passed"},
+        {
+            "scenario_id": "l_energy_alpha_physical_allocation_correction",
+            "status": "passed",
+        },
         {"scenario_id": "l_energy_pcf_governance", "status": "passed"},
         {"scenario_id": "public_projection_smoke", "status": "passed"},
     ]
