@@ -40,13 +40,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 0 if result["status"] == "passed" else 1
     if args.command == "bench-projection-query":
-        filter_field, filter_value = _parse_filter(args.filter)
+        filters = _parse_filter(args.filter)
         result = run_projection_query_benchmark(
             args.manifest,
             row_count=args.rows,
-            filter_field=filter_field,
-            filter_value=filter_value,
             report_path=args.report,
+            filters=filters,
             max_query_ms=args.max_query_ms,
             max_index_build_ms=args.max_index_build_ms,
         )
@@ -102,14 +101,19 @@ def _parse_row_counts(value: str) -> tuple[int, ...]:
     return row_counts
 
 
-def _parse_filter(value: str) -> tuple[str, str]:
-    if "=" not in value:
-        raise ValueError("--filter must use field=value format.")
-    field, filter_value = value.split("=", 1)
-    field = field.strip()
-    if not field:
-        raise ValueError("--filter field must not be empty.")
-    return field, filter_value
+def _parse_filter(value: str) -> dict[str, str]:
+    filters: dict[str, str] = {}
+    for item in value.split(","):
+        if "=" not in item:
+            raise ValueError("--filter must use field=value format.")
+        field, filter_value = item.split("=", 1)
+        field = field.strip()
+        if not field:
+            raise ValueError("--filter field must not be empty.")
+        filters[field] = filter_value
+    if not filters:
+        raise ValueError("--filter must include at least one field=value pair.")
+    return filters
 
 
 if __name__ == "__main__":

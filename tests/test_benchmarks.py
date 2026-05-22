@@ -142,3 +142,39 @@ def test_projection_query_benchmark_fails_when_query_budget_is_exceeded(tmp_path
             "actual": result["materialized_query"]["query_ms"],
         },
     ]
+
+
+def test_projection_query_benchmark_supports_composite_filters(tmp_path):
+    report_path = tmp_path / "projection-query-composite.json"
+
+    result = run_projection_query_benchmark(
+        ROOT / "scenarios" / "l_energy_pcf_governance" / "scenario.json",
+        row_count=3,
+        filters={
+            "site": "plant-a",
+            "period": "2026-01",
+            "activity_type": "diesel",
+        },
+        report_path=report_path,
+    )
+
+    assert result["status"] == "passed"
+    assert result["filter"] == {
+        "fields": {
+            "activity_type": "diesel",
+            "period": "2026-01",
+            "site": "plant-a",
+        }
+    }
+    assert result["materialized_query"]["query_strategy"] == (
+        "composite_field_equality_index"
+    )
+    assert result["materialized_query"]["indexed_fields"] == [
+        "activity_type",
+        "period",
+        "site",
+    ]
+    assert result["materialized_query"]["matched_count"] == 3
+
+    payload = json.loads(report_path.read_text(encoding="utf-8"))
+    assert payload == result
