@@ -51,8 +51,10 @@ comp-scenario-packs bench-projection-query \
   scenarios/esg_energy/l_energy_pcf_governance/scenario.json \
   --filter-preset esg_energy:plant_diesel_jan \
   --row-preset esg_energy:mixed_activity_rows \
+  --max-selectivity-ratio 0.5 \
   --report benchmarks/projection-query.json
 ```
 
 The presets expand to ordinary projection filters and benchmark rows. They do
-not change replay, receipt validation, or projection authorization.
+not change replay, receipt validation, or projection authorization. Selectivity
+budgets measure benchmark query shape; they are not authority gates.

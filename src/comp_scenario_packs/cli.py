@@ -60,6 +60,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             row_preset_id=args.row_preset,
             max_query_ms=args.max_query_ms,
             max_index_build_ms=args.max_index_build_ms,
+            max_selectivity_ratio=args.max_selectivity_ratio,
         )
         print(
             f"{result['benchmark_id']}: {result['status']} "
@@ -104,6 +105,7 @@ def _build_parser() -> argparse.ArgumentParser:
     projection_query.add_argument("--row-preset")
     projection_query.add_argument("--max-query-ms", type=float, default=None)
     projection_query.add_argument("--max-index-build-ms", type=float, default=None)
+    projection_query.add_argument("--max-selectivity-ratio", type=float, default=None)
     projection_query.add_argument("--report", default="benchmarks/projection-query.json")
     return parser
 
