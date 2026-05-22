@@ -3,6 +3,7 @@ from pathlib import Path
 
 from comp_scenario_packs.benchmarks import (
     run_benchmark_smoke,
+    run_projection_query_benchmark,
     run_replay_scale_benchmark,
 )
 
@@ -75,3 +76,35 @@ def test_replay_scale_benchmark_fails_when_runtime_budget_is_exceeded(tmp_path):
             "actual": result["runs"][0]["runtime_sec"],
         }
     ]
+
+
+def test_projection_query_benchmark_compares_replay_with_materialized_query(tmp_path):
+    report_path = tmp_path / "projection-query.json"
+
+    result = run_projection_query_benchmark(
+        ROOT / "scenarios" / "l_energy_pcf_governance" / "scenario.json",
+        row_count=3,
+        filter_field="site",
+        filter_value="plant-a",
+        report_path=report_path,
+    )
+
+    assert result["status"] == "passed"
+    assert result["benchmark_id"] == "projection_query_smoke"
+    assert result["scenario_id"] == "l_energy_pcf_governance"
+    assert result["row_count"] == 3
+    assert result["filter"] == {"field": "site", "value": "plant-a"}
+    assert result["full_replay"]["status"] == "passed"
+    assert result["full_replay"]["replay_checked_count"] == 3
+    assert result["full_replay"]["replay_failed_count"] == 0
+    assert result["materialized_query"]["serving_model"] == (
+        "verified_materialized_projection"
+    )
+    assert result["materialized_query"]["query_strategy"] == "field_equality_index"
+    assert result["materialized_query"]["indexed_row_count"] == 3
+    assert result["materialized_query"]["index_build_ms"] >= 0
+    assert result["materialized_query"]["matched_count"] == 3
+    assert result["materialized_query"]["query_ms"] >= 0
+
+    payload = json.loads(report_path.read_text(encoding="utf-8"))
+    assert payload == result

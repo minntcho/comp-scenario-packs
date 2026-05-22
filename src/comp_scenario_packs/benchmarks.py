@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+from dataclasses import replace
 import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -53,6 +55,29 @@ def run_replay_scale_benchmark(
     return report
 
 
+def run_projection_query_benchmark(
+    manifest_path: str | Path,
+    *,
+    row_count: int,
+    filter_field: str,
+    filter_value: Any,
+    report_path: str | Path,
+) -> dict[str, Any]:
+    report = _projection_query_payload(
+        manifest_path,
+        row_count=row_count,
+        filter_field=filter_field,
+        filter_value=filter_value,
+    )
+    benchmark_path = Path(report_path)
+    benchmark_path.parent.mkdir(parents=True, exist_ok=True)
+    benchmark_path.write_text(
+        json.dumps(report, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    return report
+
+
 def _benchmark_payload(scenarios_dir: str | Path) -> dict[str, Any]:
     with TemporaryDirectory() as temp_reports:
         suite = run_scenario_suite(scenarios_dir, reports_dir=temp_reports)
@@ -74,6 +99,118 @@ def _benchmark_payload(scenarios_dir: str | Path) -> dict[str, Any]:
             for result in suite.results
         ],
     }
+
+
+def _projection_query_payload(
+    manifest_path: str | Path,
+    *,
+    row_count: int,
+    filter_field: str,
+    filter_value: Any,
+) -> dict[str, Any]:
+    if row_count < 1:
+        raise ValueError("row_count must be positive.")
+    if not filter_field:
+        raise ValueError("filter_field must not be empty.")
+
+    manifest = load_manifest(manifest_path)
+    runtime_case = load_runtime_case(manifest.runtime_case_path)
+    artifact_envelopes = load_artifact_envelopes(manifest.artifact_envelopes_path)
+    scaled_case = _scale_runtime_case(runtime_case, row_count=row_count)
+    with TemporaryDirectory() as temp_root:
+        temp_path = Path(temp_root)
+        artifact_path = temp_path / "artifact_envelopes.jsonl"
+        runtime_case_path = temp_path / "runtime_case.json"
+        scaled_manifest_path = temp_path / "scenario.json"
+        write_artifact_envelopes(artifact_envelopes, artifact_path)
+        write_runtime_case(scaled_case, runtime_case_path)
+        scaled_manifest_path.write_text(
+            json.dumps(
+                {
+                    "id": manifest.scenario_id,
+                    "input_mode": "canonical_bundle",
+                    "runtime_case": {"path": runtime_case_path.name},
+                    "artifact_envelopes": {"path": artifact_path.name},
+                    "expected": {"invariants": list(manifest.invariants)},
+                },
+                indent=2,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
+        replay_result = run_scenario(scaled_manifest_path)
+
+    index_started = time.perf_counter()
+    projection_index: dict[Any, list[Any]] = {}
+    for projection in scaled_case.projections:
+        projection_index.setdefault(projection.row.get(filter_field), []).append(
+            projection
+        )
+    index_build_ms = round((time.perf_counter() - index_started) * 1000, 6)
+    query_started = time.perf_counter()
+    matched_rows = projection_index.get(filter_value, [])
+    query_ms = round((time.perf_counter() - query_started) * 1000, 6)
+    return {
+        "benchmark_id": "projection_query_smoke",
+        "status": replay_result.status,
+        "scenario_id": manifest.scenario_id,
+        "row_count": row_count,
+        "filter": {"field": filter_field, "value": filter_value},
+        "full_replay": {
+            "status": replay_result.status,
+            "runtime_sec": replay_result.performance["runtime_sec"],
+            "replay_checked_count": replay_result.replay_checked_count,
+            "replay_failed_count": replay_result.replay_failed_count,
+        },
+        "materialized_query": {
+            "serving_model": "verified_materialized_projection",
+            "query_strategy": "field_equality_index",
+            "index_build_ms": index_build_ms,
+            "query_ms": query_ms,
+            "matched_count": len(matched_rows),
+            "indexed_row_count": len(scaled_case.projections),
+        },
+    }
+
+
+def _scale_runtime_case(runtime_case: Any, *, row_count: int) -> Any:
+    receipt_by_key = {
+        (receipt.public_row_id, receipt.projection_id, receipt.draft_id): receipt
+        for receipt in runtime_case.receipts
+    }
+    base_projections = runtime_case.projections
+    if not base_projections:
+        raise ValueError("runtime_case must include at least one projection.")
+
+    projections: list[Any] = []
+    receipts: list[Any] = []
+    for row_index in range(row_count):
+        projection = base_projections[row_index % len(base_projections)]
+        receipt = receipt_by_key[
+            (projection.public_row_id, projection.projection_id, projection.draft_id)
+        ]
+        public_row_id = f"{projection.public_row_id}:bench:{row_index + 1}"
+        draft_id = f"{projection.draft_id}:bench:{row_index + 1}"
+        projections.append(
+            replace(
+                projection,
+                public_row_id=public_row_id,
+                draft_id=draft_id,
+                row=dict(projection.row),
+            )
+        )
+        receipts.append(
+            replace(
+                receipt,
+                public_row_id=public_row_id,
+                draft_id=draft_id,
+            )
+        )
+    return type(runtime_case)(
+        case_id=f"{runtime_case.case_id}:projection-query:{row_count}",
+        receipts=tuple(receipts),
+        projections=tuple(projections),
+    )
 
 
 def _replay_scale_payload(
@@ -177,4 +314,8 @@ def _runtime_budget_result(
     )
 
 
-__all__ = ["run_benchmark_smoke", "run_replay_scale_benchmark"]
+__all__ = [
+    "run_benchmark_smoke",
+    "run_projection_query_benchmark",
+    "run_replay_scale_benchmark",
+]
