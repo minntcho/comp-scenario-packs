@@ -10,6 +10,19 @@ from comp_scenario_packs.benchmarks import (
 
 ROOT = Path(__file__).resolve().parents[1]
 
+EXPECTED_SCENARIO_IDS = [
+    "l_energy_alpha_invalid_allocation_rfi",
+    "l_energy_alpha_physical_allocation_correction",
+    "l_energy_c_pack_yield_rollup",
+    "l_energy_carbon_tech_certificate_submission",
+    "l_energy_final_bottom_up_pcf_rollup",
+    "l_energy_l_materials_composition_rollup",
+    "l_energy_pcf_governance",
+    "l_energy_steel_frame_proxy_assignment",
+    "l_energy_tier0_physical_allocation",
+    "public_projection_smoke",
+]
+
 
 def test_benchmark_smoke_runs_scenarios_and_writes_report(tmp_path):
     report_path = tmp_path / "benchmark.json"
@@ -21,13 +34,10 @@ def test_benchmark_smoke_runs_scenarios_and_writes_report(tmp_path):
 
     assert result["status"] == "passed"
     assert result["benchmark_id"] == "scenario_runtime_smoke"
-    assert result["scenario_count"] == 4
-    assert [item["scenario_id"] for item in result["scenarios"]] == [
-        "l_energy_alpha_invalid_allocation_rfi",
-        "l_energy_alpha_physical_allocation_correction",
-        "l_energy_pcf_governance",
-        "public_projection_smoke",
-    ]
+    assert result["scenario_count"] == 10
+    assert [item["scenario_id"] for item in result["scenarios"]] == (
+        EXPECTED_SCENARIO_IDS
+    )
     assert all(item["runtime_sec"] >= 0 for item in result["scenarios"])
     counts_by_id = {
         item["scenario_id"]: (item["receipt_count"], item["public_row_count"])
@@ -36,7 +46,13 @@ def test_benchmark_smoke_runs_scenarios_and_writes_report(tmp_path):
     assert counts_by_id == {
         "l_energy_alpha_invalid_allocation_rfi": (0, 0),
         "l_energy_alpha_physical_allocation_correction": (1, 1),
+        "l_energy_c_pack_yield_rollup": (1, 1),
+        "l_energy_carbon_tech_certificate_submission": (1, 1),
+        "l_energy_final_bottom_up_pcf_rollup": (1, 1),
+        "l_energy_l_materials_composition_rollup": (1, 1),
         "l_energy_pcf_governance": (1, 1),
+        "l_energy_steel_frame_proxy_assignment": (1, 1),
+        "l_energy_tier0_physical_allocation": (1, 1),
         "public_projection_smoke": (1, 1),
     }
 

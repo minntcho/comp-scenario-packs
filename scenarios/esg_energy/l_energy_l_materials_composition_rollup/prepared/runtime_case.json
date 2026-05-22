@@ -1,0 +1,323 @@
+{
+  "case_id": "l_energy_l_materials_composition_rollup",
+  "projections": [
+    {
+      "draft_id": "draft:l-energy-pcf-governance:smoke",
+      "output_fields": [
+        "supplier_id",
+        "site",
+        "period",
+        "activity_type",
+        "amount",
+        "unit",
+        "emissions_kgco2e"
+      ],
+      "projection_id": "l-energy-pcf-governance",
+      "public_row_id": "public-row:l-energy-pcf-governance:smoke",
+      "row": {
+        "activity_type": "diesel",
+        "amount": 1200,
+        "emissions_kgco2e": 3216,
+        "period": "2026-01",
+        "site": "plant-a",
+        "supplier_id": "supplier:l-energy-fuel-a",
+        "unit": "L"
+      }
+    }
+  ],
+  "receipts": [
+    {
+      "authorized_fields": [
+        "supplier_id",
+        "site",
+        "period",
+        "activity_type",
+        "amount",
+        "unit",
+        "emissions_kgco2e"
+      ],
+      "barrier_snapshot": [
+        [
+          "governance_decision_id",
+          "governance_decision:l-energy-pcf-governance:smoke"
+        ],
+        [
+          "governance_status",
+          "commit"
+        ],
+        [
+          "governance_reasons",
+          [
+            "canonical_smoke_ready"
+          ]
+        ],
+        [
+          "commit_package_id",
+          "commit_package:l-energy-pcf-governance:smoke"
+        ],
+        [
+          "commit_package_complete",
+          true
+        ],
+        [
+          "subject_id",
+          "facility:plant-a"
+        ],
+        [
+          "projection_id",
+          "l-energy-pcf-governance"
+        ],
+        [
+          "authorized_fields",
+          [
+            "supplier_id",
+            "site",
+            "period",
+            "activity_type",
+            "amount",
+            "unit",
+            "emissions_kgco2e"
+          ]
+        ],
+        [
+          "profile_id",
+          "profile:l-energy-pcf-governance:smoke"
+        ],
+        [
+          "report_status",
+          "accepted"
+        ],
+        [
+          "checked_claim_fields",
+          [
+            "supplier_id",
+            "site",
+            "period",
+            "activity_type",
+            "amount",
+            "unit",
+            "emissions_kgco2e"
+          ]
+        ],
+        [
+          "checked_claim_witness_ids",
+          []
+        ],
+        [
+          "semantic_judgment_ids",
+          []
+        ],
+        [
+          "reference_binding_ids",
+          []
+        ],
+        [
+          "derived_claim_fields",
+          []
+        ],
+        [
+          "derived_claim_ids",
+          []
+        ],
+        [
+          "calculation_trace_ids",
+          []
+        ],
+        [
+          "formula_ids",
+          []
+        ],
+        [
+          "resolved_obligation_ids",
+          []
+        ],
+        [
+          "open_obligation_ids",
+          []
+        ],
+        [
+          "hazard_ids",
+          []
+        ],
+        [
+          "projection_value_commitments",
+          [
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "supplier_id",
+                "source_id": "checked_claim:l-energy-pcf-governance:supplier_id",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:508e05825d6c13950728ff98f6dc37e3de8278f423c43d4a922bdf59f0f81f99"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "site",
+                "source_id": "checked_claim:l-energy-pcf-governance:site",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:446705a2faff691995abbdcbdb9ce503e5aeb375cf931fbfbd92db3ac8216772"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "period",
+                "source_id": "checked_claim:l-energy-pcf-governance:period",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:ad57116f1c4df2cd4c5aba6dd954bc9dbccab13064e6c35b822efdf562602c8a"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "activity_type",
+                "source_id": "checked_claim:l-energy-pcf-governance:activity_type",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:7927956c73d0409c1e61691372cef718581f45b7567f7c26f7a08842093109a6"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "amount",
+                "source_id": "checked_claim:l-energy-pcf-governance:amount",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:7aa3fcfca9c3b08fbec22b363aa33f2f23d6dbecf3cb935c06c6900cb24d91bb"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "unit",
+                "source_id": "checked_claim:l-energy-pcf-governance:unit",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:0e2f6255c0a7516fa1780716b7606b0e5332d6fbac88c1569c17b6f4e06f2aba"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "emissions_kgco2e",
+                "source_id": "checked_claim:l-energy-pcf-governance:emissions_kgco2e",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:89c143b1ebe6ae7b38f9c0244599e10c6d8269b4b27310e660acbdc4c900b330"
+              }
+            }
+          ]
+        ],
+        [
+          "dependency_fingerprints",
+          []
+        ]
+      ],
+      "citations": {
+        "authorized_fields": [
+          "supplier_id",
+          "site",
+          "period",
+          "activity_type",
+          "amount",
+          "unit",
+          "emissions_kgco2e"
+        ],
+        "calculation_trace_ids": [],
+        "checked_claim_fields": [
+          "supplier_id",
+          "site",
+          "period",
+          "activity_type",
+          "amount",
+          "unit",
+          "emissions_kgco2e"
+        ],
+        "checked_claim_witness_ids": [],
+        "commit_package_complete": true,
+        "commit_package_id": "commit_package:l-energy-pcf-governance:smoke",
+        "dependency_fingerprints": [],
+        "derived_claim_fields": [],
+        "derived_claim_ids": [],
+        "formula_ids": [],
+        "governance_decision_id": "governance_decision:l-energy-pcf-governance:smoke",
+        "governance_reasons": [
+          "canonical_smoke_ready"
+        ],
+        "governance_status": "commit",
+        "hazard_ids": [],
+        "open_obligation_ids": [],
+        "profile_id": "profile:l-energy-pcf-governance:smoke",
+        "projection_id": "l-energy-pcf-governance",
+        "projection_value_commitments": [
+          {
+            "digest_alg": "sha256",
+            "field": "supplier_id",
+            "source_id": "checked_claim:l-energy-pcf-governance:supplier_id",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:508e05825d6c13950728ff98f6dc37e3de8278f423c43d4a922bdf59f0f81f99"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "site",
+            "source_id": "checked_claim:l-energy-pcf-governance:site",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:446705a2faff691995abbdcbdb9ce503e5aeb375cf931fbfbd92db3ac8216772"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "period",
+            "source_id": "checked_claim:l-energy-pcf-governance:period",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:ad57116f1c4df2cd4c5aba6dd954bc9dbccab13064e6c35b822efdf562602c8a"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "activity_type",
+            "source_id": "checked_claim:l-energy-pcf-governance:activity_type",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:7927956c73d0409c1e61691372cef718581f45b7567f7c26f7a08842093109a6"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "amount",
+            "source_id": "checked_claim:l-energy-pcf-governance:amount",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:7aa3fcfca9c3b08fbec22b363aa33f2f23d6dbecf3cb935c06c6900cb24d91bb"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "unit",
+            "source_id": "checked_claim:l-energy-pcf-governance:unit",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:0e2f6255c0a7516fa1780716b7606b0e5332d6fbac88c1569c17b6f4e06f2aba"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "emissions_kgco2e",
+            "source_id": "checked_claim:l-energy-pcf-governance:emissions_kgco2e",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:89c143b1ebe6ae7b38f9c0244599e10c6d8269b4b27310e660acbdc4c900b330"
+          }
+        ],
+        "reference_binding_ids": [],
+        "report_status": "accepted",
+        "resolved_obligation_ids": [],
+        "semantic_judgment_ids": [],
+        "subject_id": "facility:plant-a"
+      },
+      "draft_id": "draft:l-energy-pcf-governance:smoke",
+      "projection_id": "l-energy-pcf-governance",
+      "public_row_id": "public-row:l-energy-pcf-governance:smoke",
+      "winner_receipt_ids": [
+        "governance_decision:l-energy-pcf-governance:smoke"
+      ]
+    }
+  ]
+}

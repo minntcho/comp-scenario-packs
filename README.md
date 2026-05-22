@@ -53,6 +53,17 @@ parallel validation for `comp` internal scenario
 `l_energy.alpha_physical_allocation_correction.v1`. It covers the corrected
 allocation path where receipt-gated public projection is present.
 
+The accepted L-Energy rollup-chain packs are also seeded in parallel
+validation:
+`l_energy_steel_frame_proxy_assignment`,
+`l_energy_carbon_tech_certificate_submission`,
+`l_energy_l_materials_composition_rollup`,
+`l_energy_c_pack_yield_rollup`,
+`l_energy_tier0_physical_allocation`, and
+`l_energy_final_bottom_up_pcf_rollup`. They cover downstream compatibility for
+the corresponding internal rollup scenarios while `comp` remains the receipt
+and replay authority.
+
 ## Dependency Direction
 
 Before `comp` v1.0, this repository may install `comp` from a Git ref:
