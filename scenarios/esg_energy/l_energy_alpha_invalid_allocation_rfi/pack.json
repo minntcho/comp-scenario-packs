@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "pack_id": "l_energy_alpha_invalid_allocation_rfi",
+  "status": "seed",
+  "scope": "large-domain-and-product-e2e",
+  "cutover_state": "parallel-validation",
+  "covers_comp_scenario_ids": [
+    "l_energy.alpha_invalid_allocation_rfi.v1"
+  ],
+  "comp_relationship": "public_api_consumer",
+  "authority_policy": "compatibility_signal_not_authority_source",
+  "public_surfaces": [
+    "comp.scenario_contracts"
+  ],
+  "input_mode": "canonical_bundle",
+  "scenario_manifest": "scenario.json",
+  "prepared_inputs": [
+    "prepared/runtime_case.json",
+    "prepared/artifact_envelopes.jsonl"
+  ],
+  "runnable_contracts": [
+    "canonical_blocked_projection_smoke"
+  ],
+  "source_refs": [
+    {
+      "repo": "minntcho/esg-platform",
+      "path": "tests/e2e/cases/001-l-energy-pcf-governance.yaml"
+    }
+  ],
+  "planned_flows": [
+    "supplier_rfi_workflow",
+    "allocation_method_block",
+    "no_projection_receipt_gate"
+  ]
+}

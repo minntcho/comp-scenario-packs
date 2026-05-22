@@ -1,0 +1,23 @@
+{
+  "artifact_envelopes": {
+    "path": "prepared/artifact_envelopes.jsonl"
+  },
+  "expected": {
+    "covers_comp_scenario_id": "l_energy.alpha_invalid_allocation_rfi.v1",
+    "decision": "blocked",
+    "invariants": [
+      "replay_succeeds",
+      "blocking_hazards_absent"
+    ],
+    "projection": "none"
+  },
+  "id": "l_energy_alpha_invalid_allocation_rfi",
+  "input_mode": "canonical_bundle",
+  "report": {
+    "format": "json",
+    "path": "reports/latest.json"
+  },
+  "runtime_case": {
+    "path": "prepared/runtime_case.json"
+  }
+}
