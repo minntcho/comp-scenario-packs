@@ -62,12 +62,16 @@ def run_projection_query_benchmark(
     filter_field: str,
     filter_value: Any,
     report_path: str | Path,
+    max_query_ms: float | None = None,
+    max_index_build_ms: float | None = None,
 ) -> dict[str, Any]:
     report = _projection_query_payload(
         manifest_path,
         row_count=row_count,
         filter_field=filter_field,
         filter_value=filter_value,
+        max_query_ms=max_query_ms,
+        max_index_build_ms=max_index_build_ms,
     )
     benchmark_path = Path(report_path)
     benchmark_path.parent.mkdir(parents=True, exist_ok=True)
@@ -107,11 +111,17 @@ def _projection_query_payload(
     row_count: int,
     filter_field: str,
     filter_value: Any,
+    max_query_ms: float | None = None,
+    max_index_build_ms: float | None = None,
 ) -> dict[str, Any]:
     if row_count < 1:
         raise ValueError("row_count must be positive.")
     if not filter_field:
         raise ValueError("filter_field must not be empty.")
+    if max_query_ms is not None and max_query_ms < 0:
+        raise ValueError("max_query_ms must be non-negative.")
+    if max_index_build_ms is not None and max_index_build_ms < 0:
+        raise ValueError("max_index_build_ms must be non-negative.")
 
     manifest = load_manifest(manifest_path)
     runtime_case = load_runtime_case(manifest.runtime_case_path)
@@ -150,12 +160,27 @@ def _projection_query_payload(
     query_started = time.perf_counter()
     matched_rows = projection_index.get(filter_value, [])
     query_ms = round((time.perf_counter() - query_started) * 1000, 6)
+    budget_status, budget_failures = _projection_query_budget_result(
+        index_build_ms=index_build_ms,
+        query_ms=query_ms,
+        max_index_build_ms=max_index_build_ms,
+        max_query_ms=max_query_ms,
+    )
+    status = (
+        "passed"
+        if replay_result.status == "passed" and budget_status != "failed"
+        else "failed"
+    )
     return {
         "benchmark_id": "projection_query_smoke",
-        "status": replay_result.status,
+        "status": status,
         "scenario_id": manifest.scenario_id,
         "row_count": row_count,
         "filter": {"field": filter_field, "value": filter_value},
+        "budgets": {
+            "max_index_build_ms": max_index_build_ms,
+            "max_query_ms": max_query_ms,
+        },
         "full_replay": {
             "status": replay_result.status,
             "runtime_sec": replay_result.performance["runtime_sec"],
@@ -169,6 +194,8 @@ def _projection_query_payload(
             "query_ms": query_ms,
             "matched_count": len(matched_rows),
             "indexed_row_count": len(scaled_case.projections),
+            "budget_status": budget_status,
+            "budget_failures": budget_failures,
         },
     }
 
@@ -312,6 +339,37 @@ def _runtime_budget_result(
             }
         ],
     )
+
+
+def _projection_query_budget_result(
+    *,
+    index_build_ms: float,
+    query_ms: float,
+    max_index_build_ms: float | None,
+    max_query_ms: float | None,
+) -> tuple[str, list[dict[str, Any]]]:
+    failures: list[dict[str, Any]] = []
+    if max_index_build_ms is not None and index_build_ms > max_index_build_ms:
+        failures.append(
+            {
+                "metric": "index_build_ms",
+                "limit": max_index_build_ms,
+                "actual": index_build_ms,
+            }
+        )
+    if max_query_ms is not None and query_ms > max_query_ms:
+        failures.append(
+            {
+                "metric": "query_ms",
+                "limit": max_query_ms,
+                "actual": query_ms,
+            }
+        )
+    if failures:
+        return "failed", failures
+    if max_index_build_ms is None and max_query_ms is None:
+        return "not_configured", []
+    return "passed", []
 
 
 __all__ = [

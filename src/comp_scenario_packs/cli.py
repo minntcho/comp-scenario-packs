@@ -47,6 +47,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             filter_field=filter_field,
             filter_value=filter_value,
             report_path=args.report,
+            max_query_ms=args.max_query_ms,
+            max_index_build_ms=args.max_index_build_ms,
         )
         print(
             f"{result['benchmark_id']}: {result['status']} "
@@ -87,6 +89,8 @@ def _build_parser() -> argparse.ArgumentParser:
     projection_query.add_argument("manifest")
     projection_query.add_argument("--rows", type=int, default=100)
     projection_query.add_argument("--filter", required=True)
+    projection_query.add_argument("--max-query-ms", type=float, default=None)
+    projection_query.add_argument("--max-index-build-ms", type=float, default=None)
     projection_query.add_argument("--report", default="benchmarks/projection-query.json")
     return parser
 

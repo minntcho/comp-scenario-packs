@@ -114,7 +114,8 @@ python -m comp_scenario_packs.cli bench-projection-query scenarios/l_energy_pcf_
 The projection query smoke first verifies a scaled canonical bundle through full
 replay, then queries the verified projection rows as a materialized serving
 view. This keeps receipt replay as the authority path while measuring the shape
-of a lightweight read path.
+of a lightweight read path. Add `--max-index-build-ms` and `--max-query-ms` to
+turn the materialized serving read path into a CI budget gate.
 
 Use `docs/migration-checklist.md` before moving existing `comp`
 `tests/domain_scenarios` material into this repository.
