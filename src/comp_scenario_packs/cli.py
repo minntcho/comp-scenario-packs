@@ -5,6 +5,7 @@ from collections.abc import Sequence
 
 from comp_scenario_packs.benchmarks import (
     run_benchmark_smoke,
+    run_projection_query_benchmark,
     run_replay_scale_benchmark,
 )
 from comp_scenario_packs.suite import run_scenario_suite
@@ -38,6 +39,20 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"({len(result['runs'])} runs)"
         )
         return 0 if result["status"] == "passed" else 1
+    if args.command == "bench-projection-query":
+        filter_field, filter_value = _parse_filter(args.filter)
+        result = run_projection_query_benchmark(
+            args.manifest,
+            row_count=args.rows,
+            filter_field=filter_field,
+            filter_value=filter_value,
+            report_path=args.report,
+        )
+        print(
+            f"{result['benchmark_id']}: {result['status']} "
+            f"({result['materialized_query']['matched_count']} matches)"
+        )
+        return 0 if result["status"] == "passed" else 1
     parser.print_help()
     return 2
 
@@ -65,6 +80,14 @@ def _build_parser() -> argparse.ArgumentParser:
     replay_scale.add_argument("--rows", default="1,10,100")
     replay_scale.add_argument("--max-runtime-sec", type=float, default=None)
     replay_scale.add_argument("--report", default="benchmarks/replay-scale.json")
+    projection_query = subparsers.add_parser(
+        "bench-projection-query",
+        help="Compare full replay with a verified materialized projection query.",
+    )
+    projection_query.add_argument("manifest")
+    projection_query.add_argument("--rows", type=int, default=100)
+    projection_query.add_argument("--filter", required=True)
+    projection_query.add_argument("--report", default="benchmarks/projection-query.json")
     return parser
 
 
@@ -73,6 +96,16 @@ def _parse_row_counts(value: str) -> tuple[int, ...]:
     if not row_counts:
         raise ValueError("--rows must include at least one integer.")
     return row_counts
+
+
+def _parse_filter(value: str) -> tuple[str, str]:
+    if "=" not in value:
+        raise ValueError("--filter must use field=value format.")
+    field, filter_value = value.split("=", 1)
+    field = field.strip()
+    if not field:
+        raise ValueError("--filter field must not be empty.")
+    return field, filter_value
 
 
 if __name__ == "__main__":
