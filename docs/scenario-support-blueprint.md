@@ -40,8 +40,9 @@ src/comp_scenario_packs/
 
 scenarios/
   public_projection_smoke/
-  l_energy_pcf_governance/
-  future_nested_domain/
+  esg_energy/
+    l_energy_pcf_governance/
+  future_domain/
 
 docs/
   domain-scenario-support.md
@@ -103,7 +104,7 @@ Use `--filter` when the query shape is local to one command:
 
 ```bash
 comp-scenario-packs bench-projection-query \
-  scenarios/l_energy_pcf_governance/scenario.json \
+  scenarios/esg_energy/l_energy_pcf_governance/scenario.json \
   --filter site=plant-a,period=2026-01,activity_type=diesel \
   --report benchmarks/projection-query.json
 ```
@@ -112,7 +113,7 @@ Use --filter-preset when a domain helper owns the reusable query shape:
 
 ```bash
 comp-scenario-packs bench-projection-query \
-  scenarios/l_energy_pcf_governance/scenario.json \
+  scenarios/esg_energy/l_energy_pcf_governance/scenario.json \
   --filter-preset esg_energy:plant_diesel_jan \
   --report benchmarks/projection-query.json
 ```

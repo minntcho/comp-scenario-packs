@@ -45,7 +45,7 @@ L-Energy smoke pack. For example:
 
 ```bash
 comp-scenario-packs bench-projection-query \
-  scenarios/l_energy_pcf_governance/scenario.json \
+  scenarios/esg_energy/l_energy_pcf_governance/scenario.json \
   --filter-preset esg_energy:plant_diesel_jan \
   --report benchmarks/projection-query.json
 ```

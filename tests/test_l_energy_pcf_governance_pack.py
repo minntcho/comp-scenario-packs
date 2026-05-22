@@ -6,7 +6,13 @@ from comp_scenario_packs import SCENARIO_PACKS
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCENARIO = ROOT / "scenarios" / "l_energy_pcf_governance" / "scenario.json"
+SCENARIO = (
+    ROOT
+    / "scenarios"
+    / "esg_energy"
+    / "l_energy_pcf_governance"
+    / "scenario.json"
+)
 
 
 def test_l_energy_pack_stays_seeded_but_has_runnable_canonical_contract():

@@ -19,7 +19,7 @@ def test_seed_pack_is_declared_as_downstream_compatibility_signal():
 
 
 def test_l_energy_pack_metadata_keeps_authority_boundary():
-    metadata = _load_json("scenarios/l_energy_pcf_governance/pack.json")
+    metadata = _load_json("scenarios/esg_energy/l_energy_pcf_governance/pack.json")
 
     assert metadata["pack_id"] == "l_energy_pcf_governance"
     assert metadata["status"] == "seed"

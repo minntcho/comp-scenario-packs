@@ -82,7 +82,11 @@ def test_projection_query_benchmark_compares_replay_with_materialized_query(tmp_
     report_path = tmp_path / "projection-query.json"
 
     result = run_projection_query_benchmark(
-        ROOT / "scenarios" / "l_energy_pcf_governance" / "scenario.json",
+        ROOT
+        / "scenarios"
+        / "esg_energy"
+        / "l_energy_pcf_governance"
+        / "scenario.json",
         row_count=3,
         filter_field="site",
         filter_value="plant-a",
@@ -114,7 +118,11 @@ def test_projection_query_benchmark_fails_when_query_budget_is_exceeded(tmp_path
     report_path = tmp_path / "projection-query-budget.json"
 
     result = run_projection_query_benchmark(
-        ROOT / "scenarios" / "l_energy_pcf_governance" / "scenario.json",
+        ROOT
+        / "scenarios"
+        / "esg_energy"
+        / "l_energy_pcf_governance"
+        / "scenario.json",
         row_count=3,
         filter_field="site",
         filter_value="plant-a",
@@ -148,7 +156,11 @@ def test_projection_query_benchmark_supports_composite_filters(tmp_path):
     report_path = tmp_path / "projection-query-composite.json"
 
     result = run_projection_query_benchmark(
-        ROOT / "scenarios" / "l_energy_pcf_governance" / "scenario.json",
+        ROOT
+        / "scenarios"
+        / "esg_energy"
+        / "l_energy_pcf_governance"
+        / "scenario.json",
         row_count=3,
         filters={
             "site": "plant-a",
