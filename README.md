@@ -102,6 +102,8 @@ python -m comp_scenario_packs.cli bench-replay-scale scenarios/public_projection
 The replay scale smoke repeats one prepared canonical scenario at multiple row
 counts and records replay counts plus runtime. It is meant to expose scaling
 shape early; it does not replace a production replay/materialized-view benchmark.
+Add `--max-runtime-sec` to turn the report into a budget gate that fails when
+any replay-scale run exceeds the declared per-run runtime budget.
 
 Use `docs/migration-checklist.md` before moving existing `comp`
 `tests/domain_scenarios` material into this repository.

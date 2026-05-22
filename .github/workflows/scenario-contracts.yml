@@ -24,4 +24,4 @@ jobs:
       - name: Run benchmark smoke
         run: python -m comp_scenario_packs.cli bench-smoke --scenarios-dir scenarios --report benchmarks/latest.json
       - name: Run replay scale smoke
-        run: python -m comp_scenario_packs.cli bench-replay-scale scenarios/public_projection_smoke/scenario.json --rows 1,10 --report benchmarks/replay-scale.json
+        run: python -m comp_scenario_packs.cli bench-replay-scale scenarios/public_projection_smoke/scenario.json --rows 1,10 --max-runtime-sec 10 --report benchmarks/replay-scale.json

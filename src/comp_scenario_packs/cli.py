@@ -31,6 +31,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.manifest,
             row_counts=_parse_row_counts(args.rows),
             report_path=args.report,
+            max_runtime_sec=args.max_runtime_sec,
         )
         print(
             f"{result['benchmark_id']}: {result['status']} "
@@ -62,6 +63,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     replay_scale.add_argument("manifest")
     replay_scale.add_argument("--rows", default="1,10,100")
+    replay_scale.add_argument("--max-runtime-sec", type=float, default=None)
     replay_scale.add_argument("--report", default="benchmarks/replay-scale.json")
     return parser
 

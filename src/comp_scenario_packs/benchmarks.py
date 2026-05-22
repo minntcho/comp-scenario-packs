@@ -37,8 +37,13 @@ def run_replay_scale_benchmark(
     *,
     row_counts: tuple[int, ...],
     report_path: str | Path,
+    max_runtime_sec: float | None = None,
 ) -> dict[str, Any]:
-    report = _replay_scale_payload(manifest_path, row_counts=row_counts)
+    report = _replay_scale_payload(
+        manifest_path,
+        row_counts=row_counts,
+        max_runtime_sec=max_runtime_sec,
+    )
     benchmark_path = Path(report_path)
     benchmark_path.parent.mkdir(parents=True, exist_ok=True)
     benchmark_path.write_text(
@@ -75,9 +80,12 @@ def _replay_scale_payload(
     manifest_path: str | Path,
     *,
     row_counts: tuple[int, ...],
+    max_runtime_sec: float | None = None,
 ) -> dict[str, Any]:
     if not row_counts or any(row_count < 1 for row_count in row_counts):
         raise ValueError("row_counts must contain positive integers.")
+    if max_runtime_sec is not None and max_runtime_sec < 0:
+        raise ValueError("max_runtime_sec must be non-negative.")
 
     manifest = load_manifest(manifest_path)
     runtime_case = load_runtime_case(manifest.runtime_case_path)
@@ -111,11 +119,18 @@ def _replay_scale_payload(
                 encoding="utf-8",
             )
             result = run_scenario(scaled_manifest_path)
+            runtime_sec = result.performance["runtime_sec"]
+            budget_status, budget_failures = _runtime_budget_result(
+                runtime_sec,
+                max_runtime_sec=max_runtime_sec,
+            )
             runs.append(
                 {
                     "row_count": row_count,
                     "status": result.status,
-                    "runtime_sec": result.performance["runtime_sec"],
+                    "runtime_sec": runtime_sec,
+                    "budget_status": budget_status,
+                    "budget_failures": budget_failures,
                     "artifact_count": result.artifact_count,
                     "receipt_count": result.receipt_count,
                     "public_row_count": result.public_row_count,
@@ -123,14 +138,43 @@ def _replay_scale_payload(
                     "replay_failed_count": result.replay_failed_count,
                 }
             )
-    status = "passed" if all(run["status"] == "passed" for run in runs) else "failed"
+    status = (
+        "passed"
+        if all(
+            run["status"] == "passed" and run["budget_status"] != "failed"
+            for run in runs
+        )
+        else "failed"
+    )
     return {
         "benchmark_id": "replay_scale_smoke",
         "status": status,
         "scenario_id": manifest.scenario_id,
         "row_counts": list(row_counts),
+        "budgets": {"max_runtime_sec": max_runtime_sec},
         "runs": runs,
     }
+
+
+def _runtime_budget_result(
+    runtime_sec: float,
+    *,
+    max_runtime_sec: float | None,
+) -> tuple[str, list[dict[str, Any]]]:
+    if max_runtime_sec is None:
+        return "not_configured", []
+    if runtime_sec <= max_runtime_sec:
+        return "passed", []
+    return (
+        "failed",
+        [
+            {
+                "metric": "runtime_sec",
+                "limit": max_runtime_sec,
+                "actual": runtime_sec,
+            }
+        ],
+    )
 
 
 __all__ = ["run_benchmark_smoke", "run_replay_scale_benchmark"]
