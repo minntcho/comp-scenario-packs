@@ -13,6 +13,14 @@ class ImportViolation:
     reason: str
 
 
+ALLOWED_COMP_IMPORTS = (
+    "comp",
+    "comp.compiler_tool",
+    "comp.persistence",
+    "comp.scenario_contracts",
+)
+
+
 def find_forbidden_comp_imports(
     source: str,
     *,
@@ -80,6 +88,8 @@ def _forbidden_reason(module: str) -> str | None:
         return "comp_tests_import"
     if module == "comp._internal" or module.startswith("comp._"):
         return "private_comp_import"
+    if module.startswith("comp.") and module not in ALLOWED_COMP_IMPORTS:
+        return "undeclared_comp_surface"
     return None
 
 
@@ -89,4 +99,9 @@ def _should_skip(path: Path, *, root: Path) -> bool:
     return any(part in ignored_dirs for part in relative_parts)
 
 
-__all__ = ["ImportViolation", "find_forbidden_comp_imports", "scan_python_files"]
+__all__ = [
+    "ALLOWED_COMP_IMPORTS",
+    "ImportViolation",
+    "find_forbidden_comp_imports",
+    "scan_python_files",
+]

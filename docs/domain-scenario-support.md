@@ -36,7 +36,10 @@ downstream scenario helpers that make examples and benchmark commands reusable.
 
 Domain support modules should prefer pure data and small helper functions. They
 must not import `comp.tests`, `tests.domain_scenarios`, `comp._internal`, or
-private `comp._*` modules. If a helper needs to execute the trust path, keep that
+private `comp._*` modules. They also should not import implementation submodules
+such as `comp.scenario_contracts.runner` or `comp.persistence.envelope`; use the
+package-level public surfaces declared in `compat/comp-main.json` and
+`compat/comp-v1.json`. If a helper needs to execute the trust path, keep that
 logic in benchmark or suite code that calls public `comp.scenario_contracts`
 surfaces.
 

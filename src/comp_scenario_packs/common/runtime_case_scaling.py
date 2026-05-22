@@ -4,7 +4,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from typing import Any
 
-from comp.persistence.envelope import ArtifactEnvelope
+from comp.persistence import ArtifactEnvelope
 
 
 def scale_runtime_case(

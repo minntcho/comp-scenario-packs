@@ -215,6 +215,7 @@ receipt minting authority
 replay replacement logic
 projection authorization decisions
 private comp imports
+undeclared comp package submodule imports
 large product workflow orchestration
 ```
 
