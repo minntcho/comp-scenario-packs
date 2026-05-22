@@ -1,0 +1,26 @@
+{
+  "artifact_envelopes": {
+    "path": "prepared/artifact_envelopes.jsonl"
+  },
+  "expected": {
+    "covers_comp_scenario_id": "l_energy.l_materials_composition_rollup.v1",
+    "decision": "accepted",
+    "invariants": [
+      "receipt_exists",
+      "replay_succeeds",
+      "all_public_rows_have_receipts",
+      "projection_values_are_committed",
+      "blocking_hazards_absent"
+    ],
+    "projection": "present"
+  },
+  "id": "l_energy_l_materials_composition_rollup",
+  "input_mode": "canonical_bundle",
+  "report": {
+    "format": "json",
+    "path": "reports/latest.json"
+  },
+  "runtime_case": {
+    "path": "prepared/runtime_case.json"
+  }
+}

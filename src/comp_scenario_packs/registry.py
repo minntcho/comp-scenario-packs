@@ -42,6 +42,54 @@ SCENARIO_PACKS = (
         ),
     ),
     ScenarioPack(
+        pack_id="l_energy_steel_frame_proxy_assignment",
+        status="seed",
+        scope="large-domain-and-product-e2e",
+        cutover_state="parallel-validation",
+        covered_comp_scenario_ids=("l_energy.steel_frame_proxy_assignment.v1",),
+    ),
+    ScenarioPack(
+        pack_id="l_energy_carbon_tech_certificate_submission",
+        status="seed",
+        scope="large-domain-and-product-e2e",
+        cutover_state="parallel-validation",
+        covered_comp_scenario_ids=(
+            "l_energy.carbon_tech_certificate_submission.v1",
+        ),
+    ),
+    ScenarioPack(
+        pack_id="l_energy_l_materials_composition_rollup",
+        status="seed",
+        scope="large-domain-and-product-e2e",
+        cutover_state="parallel-validation",
+        covered_comp_scenario_ids=(
+            "l_energy.l_materials_composition_rollup.v1",
+        ),
+    ),
+    ScenarioPack(
+        pack_id="l_energy_c_pack_yield_rollup",
+        status="seed",
+        scope="large-domain-and-product-e2e",
+        cutover_state="parallel-validation",
+        covered_comp_scenario_ids=("l_energy.c_pack_yield_rollup.v1",),
+    ),
+    ScenarioPack(
+        pack_id="l_energy_tier0_physical_allocation",
+        status="seed",
+        scope="large-domain-and-product-e2e",
+        cutover_state="parallel-validation",
+        covered_comp_scenario_ids=("l_energy.tier0_physical_allocation.v1",),
+    ),
+    ScenarioPack(
+        pack_id="l_energy_final_bottom_up_pcf_rollup",
+        status="seed",
+        scope="large-domain-and-product-e2e",
+        cutover_state="parallel-validation",
+        covered_comp_scenario_ids=(
+            "l_energy.final_bottom_up_pcf_rollup.v1",
+        ),
+    ),
+    ScenarioPack(
         pack_id="l_energy_pcf_governance",
         status="seed",
         scope="large-domain-and-product-e2e",

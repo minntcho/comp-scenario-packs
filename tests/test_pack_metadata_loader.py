@@ -19,15 +19,40 @@ def test_discovers_pack_metadata_from_checked_in_scenarios():
     assert [pack.pack_id for pack in packs] == [
         "l_energy_alpha_invalid_allocation_rfi",
         "l_energy_alpha_physical_allocation_correction",
+        "l_energy_c_pack_yield_rollup",
+        "l_energy_carbon_tech_certificate_submission",
+        "l_energy_final_bottom_up_pcf_rollup",
+        "l_energy_l_materials_composition_rollup",
         "l_energy_pcf_governance",
+        "l_energy_steel_frame_proxy_assignment",
+        "l_energy_tier0_physical_allocation",
         "public_projection_smoke",
     ]
-    assert packs[0].shadowed_comp_scenario_ids == ()
-    assert packs[1].shadowed_comp_scenario_ids == (
-        "l_energy.alpha_physical_allocation_correction.v1",
-    )
-    assert packs[2].shadowed_comp_scenario_ids == ("l_energy_pcf_governance.v1",)
-    assert packs[3].shadowed_comp_scenario_ids == ()
+    shadowed_by_id = {pack.pack_id: pack.shadowed_comp_scenario_ids for pack in packs}
+    assert shadowed_by_id == {
+        "l_energy_alpha_invalid_allocation_rfi": (),
+        "l_energy_alpha_physical_allocation_correction": (
+            "l_energy.alpha_physical_allocation_correction.v1",
+        ),
+        "l_energy_c_pack_yield_rollup": ("l_energy.c_pack_yield_rollup.v1",),
+        "l_energy_carbon_tech_certificate_submission": (
+            "l_energy.carbon_tech_certificate_submission.v1",
+        ),
+        "l_energy_final_bottom_up_pcf_rollup": (
+            "l_energy.final_bottom_up_pcf_rollup.v1",
+        ),
+        "l_energy_l_materials_composition_rollup": (
+            "l_energy.l_materials_composition_rollup.v1",
+        ),
+        "l_energy_pcf_governance": ("l_energy_pcf_governance.v1",),
+        "l_energy_steel_frame_proxy_assignment": (
+            "l_energy.steel_frame_proxy_assignment.v1",
+        ),
+        "l_energy_tier0_physical_allocation": (
+            "l_energy.tier0_physical_allocation.v1",
+        ),
+        "public_projection_smoke": (),
+    }
 
 
 def test_registry_matches_checked_in_pack_metadata():
