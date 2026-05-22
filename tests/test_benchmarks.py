@@ -52,3 +52,26 @@ def test_replay_scale_benchmark_replays_one_manifest_at_multiple_row_counts(tmp_
 
     payload = json.loads(report_path.read_text(encoding="utf-8"))
     assert payload == result
+
+
+def test_replay_scale_benchmark_fails_when_runtime_budget_is_exceeded(tmp_path):
+    report_path = tmp_path / "replay-scale-budget.json"
+
+    result = run_replay_scale_benchmark(
+        ROOT / "scenarios" / "public_projection_smoke" / "scenario.json",
+        row_counts=(1,),
+        report_path=report_path,
+        max_runtime_sec=0.0,
+    )
+
+    assert result["status"] == "failed"
+    assert result["budgets"] == {"max_runtime_sec": 0.0}
+    assert result["runs"][0]["status"] == "passed"
+    assert result["runs"][0]["budget_status"] == "failed"
+    assert result["runs"][0]["budget_failures"] == [
+        {
+            "metric": "runtime_sec",
+            "limit": 0.0,
+            "actual": result["runs"][0]["runtime_sec"],
+        }
+    ]
