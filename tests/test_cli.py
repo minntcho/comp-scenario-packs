@@ -125,3 +125,31 @@ def test_bench_projection_query_cli_accepts_composite_filter(tmp_path):
     assert payload["materialized_query"]["query_strategy"] == (
         "composite_field_equality_index"
     )
+
+
+def test_bench_projection_query_cli_accepts_esg_energy_filter_preset(tmp_path):
+    report_path = tmp_path / "projection-query-preset.json"
+
+    exit_code = main(
+        [
+            "bench-projection-query",
+            str(ROOT / "scenarios" / "l_energy_pcf_governance" / "scenario.json"),
+            "--rows",
+            "3",
+            "--filter-preset",
+            "esg_energy:plant_diesel_jan",
+            "--report",
+            str(report_path),
+        ]
+    )
+
+    assert exit_code == 0
+    payload = json.loads(report_path.read_text(encoding="utf-8"))
+    assert payload["filter"] == {
+        "fields": {
+            "activity_type": "diesel",
+            "period": "2026-01",
+            "site": "plant-a",
+        }
+    }
+    assert payload["materialized_query"]["matched_count"] == 3

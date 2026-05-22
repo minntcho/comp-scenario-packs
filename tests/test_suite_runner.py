@@ -16,6 +16,22 @@ def test_discovers_all_checked_in_scenario_manifests():
     )
 
 
+def test_discovers_nested_domain_scenario_manifests(tmp_path):
+    shallow = tmp_path / "public_projection_smoke"
+    nested = tmp_path / "esg_energy" / "l_energy_pcf_governance"
+    shallow.mkdir(parents=True)
+    nested.mkdir(parents=True)
+    (shallow / "scenario.json").write_text("{}", encoding="utf-8")
+    (nested / "scenario.json").write_text("{}", encoding="utf-8")
+
+    manifests = discover_scenario_manifests(tmp_path)
+
+    assert manifests == (
+        nested / "scenario.json",
+        shallow / "scenario.json",
+    )
+
+
 def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
     result = run_scenario_suite(
         ROOT / "scenarios",

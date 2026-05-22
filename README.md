@@ -60,6 +60,10 @@ Scenario packs should import `comp` through public surfaces such as `comp`,
 `comp.compiler_tool`, and `comp.scenario_contracts`. Avoid importing private
 implementation modules or copying `comp` source into this repository.
 
+Domain-specific reuse belongs in scenario support modules, not authority
+modules. See `docs/domain-scenario-support.md` for the `common/` and `domains/`
+layout and non-authority rules.
+
 ## Local Development
 
 Install test dependencies:

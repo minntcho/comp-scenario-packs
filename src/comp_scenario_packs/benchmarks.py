@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import time
-from dataclasses import replace
 import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -16,6 +15,16 @@ from comp.scenario_contracts import (
     write_runtime_case,
 )
 
+from comp_scenario_packs.common.benchmark_budgets import (
+    projection_query_budget_result,
+    runtime_budget_result,
+)
+from comp_scenario_packs.common.projection_query import (
+    normalize_projection_filters,
+    projection_filter_report,
+    projection_query_strategy,
+)
+from comp_scenario_packs.common.runtime_case_scaling import scale_runtime_case
 from comp_scenario_packs.suite import run_scenario_suite
 
 
@@ -123,7 +132,7 @@ def _projection_query_payload(
         raise ValueError("max_query_ms must be non-negative.")
     if max_index_build_ms is not None and max_index_build_ms < 0:
         raise ValueError("max_index_build_ms must be non-negative.")
-    filter_map = _normalize_projection_filters(
+    filter_map = normalize_projection_filters(
         filter_field=filter_field,
         filter_value=filter_value,
         filters=filters,
@@ -133,7 +142,7 @@ def _projection_query_payload(
     manifest = load_manifest(manifest_path)
     runtime_case = load_runtime_case(manifest.runtime_case_path)
     artifact_envelopes = load_artifact_envelopes(manifest.artifact_envelopes_path)
-    scaled_case = _scale_runtime_case(runtime_case, row_count=row_count)
+    scaled_case = scale_runtime_case(runtime_case, row_count=row_count)
     with TemporaryDirectory() as temp_root:
         temp_path = Path(temp_root)
         artifact_path = temp_path / "artifact_envelopes.jsonl"
@@ -167,7 +176,7 @@ def _projection_query_payload(
     filter_key = tuple(filter_map[field] for field in index_fields)
     matched_rows = projection_index.get(filter_key, [])
     query_ms = round((time.perf_counter() - query_started) * 1000, 6)
-    budget_status, budget_failures = _projection_query_budget_result(
+    budget_status, budget_failures = projection_query_budget_result(
         index_build_ms=index_build_ms,
         query_ms=query_ms,
         max_index_build_ms=max_index_build_ms,
@@ -183,7 +192,7 @@ def _projection_query_payload(
         "status": status,
         "scenario_id": manifest.scenario_id,
         "row_count": row_count,
-        "filter": _projection_filter_report(filter_map),
+        "filter": projection_filter_report(filter_map),
         "budgets": {
             "max_index_build_ms": max_index_build_ms,
             "max_query_ms": max_query_ms,
@@ -196,7 +205,7 @@ def _projection_query_payload(
         },
         "materialized_query": {
             "serving_model": "verified_materialized_projection",
-            "query_strategy": _projection_query_strategy(filter_map),
+            "query_strategy": projection_query_strategy(filter_map),
             "indexed_fields": index_fields,
             "index_build_ms": index_build_ms,
             "query_ms": query_ms,
@@ -206,80 +215,6 @@ def _projection_query_payload(
             "budget_failures": budget_failures,
         },
     }
-
-
-def _normalize_projection_filters(
-    *,
-    filter_field: str | None,
-    filter_value: Any | None,
-    filters: dict[str, Any] | None,
-) -> dict[str, Any]:
-    if filters is None:
-        if not filter_field:
-            raise ValueError("filter_field must not be empty.")
-        filters = {filter_field: filter_value}
-    cleaned: dict[str, Any] = {}
-    for field, value in filters.items():
-        normalized_field = field.strip()
-        if not normalized_field:
-            raise ValueError("filter fields must not be empty.")
-        cleaned[normalized_field] = value
-    if not cleaned:
-        raise ValueError("at least one projection filter is required.")
-    return dict(sorted(cleaned.items()))
-
-
-def _projection_filter_report(filter_map: dict[str, Any]) -> dict[str, Any]:
-    if len(filter_map) == 1:
-        field, value = next(iter(filter_map.items()))
-        return {"field": field, "value": value}
-    return {"fields": filter_map}
-
-
-def _projection_query_strategy(filter_map: dict[str, Any]) -> str:
-    if len(filter_map) == 1:
-        return "field_equality_index"
-    return "composite_field_equality_index"
-
-
-def _scale_runtime_case(runtime_case: Any, *, row_count: int) -> Any:
-    receipt_by_key = {
-        (receipt.public_row_id, receipt.projection_id, receipt.draft_id): receipt
-        for receipt in runtime_case.receipts
-    }
-    base_projections = runtime_case.projections
-    if not base_projections:
-        raise ValueError("runtime_case must include at least one projection.")
-
-    projections: list[Any] = []
-    receipts: list[Any] = []
-    for row_index in range(row_count):
-        projection = base_projections[row_index % len(base_projections)]
-        receipt = receipt_by_key[
-            (projection.public_row_id, projection.projection_id, projection.draft_id)
-        ]
-        public_row_id = f"{projection.public_row_id}:bench:{row_index + 1}"
-        draft_id = f"{projection.draft_id}:bench:{row_index + 1}"
-        projections.append(
-            replace(
-                projection,
-                public_row_id=public_row_id,
-                draft_id=draft_id,
-                row=dict(projection.row),
-            )
-        )
-        receipts.append(
-            replace(
-                receipt,
-                public_row_id=public_row_id,
-                draft_id=draft_id,
-            )
-        )
-    return type(runtime_case)(
-        case_id=f"{runtime_case.case_id}:projection-query:{row_count}",
-        receipts=tuple(receipts),
-        projections=tuple(projections),
-    )
 
 
 def _replay_scale_payload(
@@ -326,7 +261,7 @@ def _replay_scale_payload(
             )
             result = run_scenario(scaled_manifest_path)
             runtime_sec = result.performance["runtime_sec"]
-            budget_status, budget_failures = _runtime_budget_result(
+            budget_status, budget_failures = runtime_budget_result(
                 runtime_sec,
                 max_runtime_sec=max_runtime_sec,
             )
@@ -360,58 +295,6 @@ def _replay_scale_payload(
         "budgets": {"max_runtime_sec": max_runtime_sec},
         "runs": runs,
     }
-
-
-def _runtime_budget_result(
-    runtime_sec: float,
-    *,
-    max_runtime_sec: float | None,
-) -> tuple[str, list[dict[str, Any]]]:
-    if max_runtime_sec is None:
-        return "not_configured", []
-    if runtime_sec <= max_runtime_sec:
-        return "passed", []
-    return (
-        "failed",
-        [
-            {
-                "metric": "runtime_sec",
-                "limit": max_runtime_sec,
-                "actual": runtime_sec,
-            }
-        ],
-    )
-
-
-def _projection_query_budget_result(
-    *,
-    index_build_ms: float,
-    query_ms: float,
-    max_index_build_ms: float | None,
-    max_query_ms: float | None,
-) -> tuple[str, list[dict[str, Any]]]:
-    failures: list[dict[str, Any]] = []
-    if max_index_build_ms is not None and index_build_ms > max_index_build_ms:
-        failures.append(
-            {
-                "metric": "index_build_ms",
-                "limit": max_index_build_ms,
-                "actual": index_build_ms,
-            }
-        )
-    if max_query_ms is not None and query_ms > max_query_ms:
-        failures.append(
-            {
-                "metric": "query_ms",
-                "limit": max_query_ms,
-                "actual": query_ms,
-            }
-        )
-    if failures:
-        return "failed", failures
-    if max_index_build_ms is None and max_query_ms is None:
-        return "not_configured", []
-    return "passed", []
 
 
 __all__ = [
