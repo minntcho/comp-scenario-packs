@@ -108,3 +108,33 @@ def test_shadow_metadata_must_match_covered_comp_scenario_ids(tmp_path):
 
     with pytest.raises(PackMetadataError, match="shadowed scenarios must match"):
         load_pack_metadata(pack_dir / "pack.json")
+
+
+def test_public_surfaces_must_be_declared_compat_surfaces(tmp_path):
+    pack_dir = tmp_path / "pack"
+    pack_dir.mkdir()
+    (pack_dir / "pack.json").write_text(
+        """
+        {
+          "schema_version": 1,
+          "pack_id": "bad_surface",
+          "status": "seed",
+          "scope": "large-domain-and-product-e2e",
+          "cutover_state": "parallel-validation",
+          "covers_comp_scenario_ids": [],
+          "comp_relationship": "public_api_consumer",
+          "authority_policy": "compatibility_signal_not_authority_source",
+          "public_surfaces": ["comp.persistence.envelope"],
+          "input_mode": "canonical_bundle",
+          "scenario_manifest": "scenario.json",
+          "prepared_inputs": [
+            "prepared/runtime_case.json",
+            "prepared/artifact_envelopes.jsonl"
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(PackMetadataError, match="public_surfaces"):
+        load_pack_metadata(pack_dir / "pack.json")
