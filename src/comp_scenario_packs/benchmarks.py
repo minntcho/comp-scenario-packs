@@ -59,9 +59,10 @@ def run_projection_query_benchmark(
     manifest_path: str | Path,
     *,
     row_count: int,
-    filter_field: str,
-    filter_value: Any,
     report_path: str | Path,
+    filter_field: str | None = None,
+    filter_value: Any | None = None,
+    filters: dict[str, Any] | None = None,
     max_query_ms: float | None = None,
     max_index_build_ms: float | None = None,
 ) -> dict[str, Any]:
@@ -70,6 +71,7 @@ def run_projection_query_benchmark(
         row_count=row_count,
         filter_field=filter_field,
         filter_value=filter_value,
+        filters=filters,
         max_query_ms=max_query_ms,
         max_index_build_ms=max_index_build_ms,
     )
@@ -109,19 +111,24 @@ def _projection_query_payload(
     manifest_path: str | Path,
     *,
     row_count: int,
-    filter_field: str,
-    filter_value: Any,
+    filter_field: str | None = None,
+    filter_value: Any | None = None,
+    filters: dict[str, Any] | None = None,
     max_query_ms: float | None = None,
     max_index_build_ms: float | None = None,
 ) -> dict[str, Any]:
     if row_count < 1:
         raise ValueError("row_count must be positive.")
-    if not filter_field:
-        raise ValueError("filter_field must not be empty.")
     if max_query_ms is not None and max_query_ms < 0:
         raise ValueError("max_query_ms must be non-negative.")
     if max_index_build_ms is not None and max_index_build_ms < 0:
         raise ValueError("max_index_build_ms must be non-negative.")
+    filter_map = _normalize_projection_filters(
+        filter_field=filter_field,
+        filter_value=filter_value,
+        filters=filters,
+    )
+    index_fields = list(filter_map)
 
     manifest = load_manifest(manifest_path)
     runtime_case = load_runtime_case(manifest.runtime_case_path)
@@ -151,14 +158,14 @@ def _projection_query_payload(
         replay_result = run_scenario(scaled_manifest_path)
 
     index_started = time.perf_counter()
-    projection_index: dict[Any, list[Any]] = {}
+    projection_index: dict[tuple[Any, ...], list[Any]] = {}
     for projection in scaled_case.projections:
-        projection_index.setdefault(projection.row.get(filter_field), []).append(
-            projection
-        )
+        key = tuple(projection.row.get(field) for field in index_fields)
+        projection_index.setdefault(key, []).append(projection)
     index_build_ms = round((time.perf_counter() - index_started) * 1000, 6)
     query_started = time.perf_counter()
-    matched_rows = projection_index.get(filter_value, [])
+    filter_key = tuple(filter_map[field] for field in index_fields)
+    matched_rows = projection_index.get(filter_key, [])
     query_ms = round((time.perf_counter() - query_started) * 1000, 6)
     budget_status, budget_failures = _projection_query_budget_result(
         index_build_ms=index_build_ms,
@@ -176,7 +183,7 @@ def _projection_query_payload(
         "status": status,
         "scenario_id": manifest.scenario_id,
         "row_count": row_count,
-        "filter": {"field": filter_field, "value": filter_value},
+        "filter": _projection_filter_report(filter_map),
         "budgets": {
             "max_index_build_ms": max_index_build_ms,
             "max_query_ms": max_query_ms,
@@ -189,7 +196,8 @@ def _projection_query_payload(
         },
         "materialized_query": {
             "serving_model": "verified_materialized_projection",
-            "query_strategy": "field_equality_index",
+            "query_strategy": _projection_query_strategy(filter_map),
+            "indexed_fields": index_fields,
             "index_build_ms": index_build_ms,
             "query_ms": query_ms,
             "matched_count": len(matched_rows),
@@ -198,6 +206,40 @@ def _projection_query_payload(
             "budget_failures": budget_failures,
         },
     }
+
+
+def _normalize_projection_filters(
+    *,
+    filter_field: str | None,
+    filter_value: Any | None,
+    filters: dict[str, Any] | None,
+) -> dict[str, Any]:
+    if filters is None:
+        if not filter_field:
+            raise ValueError("filter_field must not be empty.")
+        filters = {filter_field: filter_value}
+    cleaned: dict[str, Any] = {}
+    for field, value in filters.items():
+        normalized_field = field.strip()
+        if not normalized_field:
+            raise ValueError("filter fields must not be empty.")
+        cleaned[normalized_field] = value
+    if not cleaned:
+        raise ValueError("at least one projection filter is required.")
+    return dict(sorted(cleaned.items()))
+
+
+def _projection_filter_report(filter_map: dict[str, Any]) -> dict[str, Any]:
+    if len(filter_map) == 1:
+        field, value = next(iter(filter_map.items()))
+        return {"field": field, "value": value}
+    return {"fields": filter_map}
+
+
+def _projection_query_strategy(filter_map: dict[str, Any]) -> str:
+    if len(filter_map) == 1:
+        return "field_equality_index"
+    return "composite_field_equality_index"
 
 
 def _scale_runtime_case(runtime_case: Any, *, row_count: int) -> Any:

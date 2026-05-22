@@ -26,4 +26,4 @@ jobs:
       - name: Run replay scale smoke
         run: python -m comp_scenario_packs.cli bench-replay-scale scenarios/public_projection_smoke/scenario.json --rows 1,10 --max-runtime-sec 10 --report benchmarks/replay-scale.json
       - name: Run projection query smoke
-        run: python -m comp_scenario_packs.cli bench-projection-query scenarios/l_energy_pcf_governance/scenario.json --rows 10 --filter site=plant-a --max-index-build-ms 10 --max-query-ms 10 --report benchmarks/projection-query.json
+        run: python -m comp_scenario_packs.cli bench-projection-query scenarios/l_energy_pcf_governance/scenario.json --rows 10 --filter site=plant-a,period=2026-01,activity_type=diesel --max-index-build-ms 10 --max-query-ms 10 --report benchmarks/projection-query.json

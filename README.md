@@ -108,14 +108,16 @@ any replay-scale run exceeds the declared per-run runtime budget.
 Run a projection query smoke:
 
 ```bash
-python -m comp_scenario_packs.cli bench-projection-query scenarios/l_energy_pcf_governance/scenario.json --rows 100 --filter site=plant-a --report benchmarks/projection-query.json
+python -m comp_scenario_packs.cli bench-projection-query scenarios/l_energy_pcf_governance/scenario.json --rows 100 --filter site=plant-a,period=2026-01,activity_type=diesel --report benchmarks/projection-query.json
 ```
 
 The projection query smoke first verifies a scaled canonical bundle through full
 replay, then queries the verified projection rows as a materialized serving
 view. This keeps receipt replay as the authority path while measuring the shape
 of a lightweight read path. Add `--max-index-build-ms` and `--max-query-ms` to
-turn the materialized serving read path into a CI budget gate.
+turn the materialized serving read path into a CI budget gate. Use comma
+separated `field=value` pairs in `--filter` to exercise a composite projection
+index.
 
 Use `docs/migration-checklist.md` before moving existing `comp`
 `tests/domain_scenarios` material into this repository.
