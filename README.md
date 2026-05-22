@@ -80,5 +80,8 @@ Run the active smoke pack:
 python -m comp.cli.scenario scenario run scenarios/public_projection_smoke/scenario.json --report reports/public_projection_smoke.json
 ```
 
+Use `docs/migration-checklist.md` before moving existing `comp`
+`tests/domain_scenarios` material into this repository.
+
 When developing against a local checkout of `comp`, put that checkout on
 `PYTHONPATH` before running tests.
