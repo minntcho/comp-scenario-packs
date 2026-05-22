@@ -12,6 +12,12 @@ same authority invariant that the internal smoke test was protecting.
 
 Do not remove internal smoke tests until the external pack is green in CI.
 
+Pack metadata should name any internal `comp` scenario it shadows under
+`shadowed_comp_scenarios`. Use `status: parallel-validation` while both the
+internal scenario and the external prepared bundle are expected to stay green.
+That status is a migration signal only; it is not permission to remove the
+internal `comp` test.
+
 ## Keep In comp
 
 - Minimal kernel contract tests.
@@ -44,3 +50,21 @@ Use this order for candidates currently living under `tests/domain_scenarios`:
 4. Compare reports and invariant coverage across both locations.
 5. Shrink or remove the internal domain-heavy test only after the external pack
    is stable and the remaining internal test still protects the kernel contract.
+
+For a shadowed scenario entry, record:
+
+```json
+{
+  "scenario_id": "l_energy_pcf_governance.v1",
+  "residency_tier": "downstream-candidate",
+  "status": "parallel-validation",
+  "comp_path": "tests/domain_scenarios/l_energy_pcf_governance/scenario.py",
+  "authority_invariant": "canonical_projection_smoke",
+  "removal_policy": "keep_internal_until_external_green_and_kernel_smoke_remains"
+}
+```
+
+The first active example is `l_energy_pcf_governance`, which shadows the
+internal `l_energy_pcf_governance.v1` downstream-candidate through a prepared
+canonical bundle. `public_projection_smoke` remains the bridge smoke and does
+not shadow a domain-heavy internal scenario.

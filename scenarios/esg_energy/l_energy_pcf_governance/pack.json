@@ -27,6 +27,16 @@
       "path": "tests/e2e/cases/001-l-energy-pcf-governance.yaml"
     }
   ],
+  "shadowed_comp_scenarios": [
+    {
+      "scenario_id": "l_energy_pcf_governance.v1",
+      "residency_tier": "downstream-candidate",
+      "status": "parallel-validation",
+      "comp_path": "tests/domain_scenarios/l_energy_pcf_governance/scenario.py",
+      "authority_invariant": "canonical_projection_smoke",
+      "removal_policy": "keep_internal_until_external_green_and_kernel_smoke_remains"
+    }
+  ],
   "planned_flows": [
     "full_supplier_rfi_workflow",
     "platform_yaml_import",

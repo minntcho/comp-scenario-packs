@@ -50,6 +50,23 @@ def test_l_energy_pack_metadata_keeps_authority_boundary():
     ]
 
 
+def test_l_energy_pack_declares_shadowed_comp_scenario():
+    metadata = _load_json("scenarios/esg_energy/l_energy_pcf_governance/pack.json")
+
+    assert metadata["shadowed_comp_scenarios"] == [
+        {
+            "scenario_id": "l_energy_pcf_governance.v1",
+            "residency_tier": "downstream-candidate",
+            "status": "parallel-validation",
+            "comp_path": "tests/domain_scenarios/l_energy_pcf_governance/scenario.py",
+            "authority_invariant": "canonical_projection_smoke",
+            "removal_policy": (
+                "keep_internal_until_external_green_and_kernel_smoke_remains"
+            ),
+        }
+    ]
+
+
 def test_public_projection_smoke_metadata_keeps_authority_boundary():
     metadata = _load_json("scenarios/public_projection_smoke/pack.json")
 
