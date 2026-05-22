@@ -7,3 +7,4 @@ build/
 *.egg-info/
 /reports/*.json
 /scenarios/*/reports/*.json
+/benchmarks/*.json
