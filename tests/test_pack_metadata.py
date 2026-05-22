@@ -22,9 +22,22 @@ def test_l_energy_pack_metadata_keeps_authority_boundary():
     metadata = _load_json("scenarios/l_energy_pcf_governance/pack.json")
 
     assert metadata["pack_id"] == "l_energy_pcf_governance"
+    assert metadata["status"] == "seed"
     assert metadata["scope"] == "large-domain-and-product-e2e"
     assert metadata["comp_relationship"] == "public_api_consumer"
     assert metadata["authority_policy"] == AUTHORITY_POLICY
+    assert metadata["public_surfaces"] == [
+        "comp.scenario_contracts",
+    ]
+    assert metadata["input_mode"] == "canonical_bundle"
+    assert metadata["scenario_manifest"] == "scenario.json"
+    assert metadata["prepared_inputs"] == [
+        "prepared/runtime_case.json",
+        "prepared/artifact_envelopes.jsonl",
+    ]
+    assert metadata["runnable_contracts"] == [
+        "canonical_projection_smoke",
+    ]
     assert metadata["source_refs"] == [
         {
             "repo": "minntcho/esg-platform",
