@@ -30,7 +30,7 @@ class ScenarioSuiteResult:
 
 def discover_scenario_manifests(scenarios_dir: str | Path) -> tuple[Path, ...]:
     root = Path(scenarios_dir)
-    return tuple(sorted(root.glob("*/scenario.json")))
+    return tuple(sorted(root.rglob("scenario.json")))
 
 
 def run_scenario_suite(

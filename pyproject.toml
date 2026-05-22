@@ -20,4 +20,7 @@ comp-scenario-packs = "comp_scenario_packs.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["comp_scenario_packs"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["comp_scenario_packs*"]

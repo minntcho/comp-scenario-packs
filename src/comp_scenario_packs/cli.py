@@ -8,6 +8,7 @@ from comp_scenario_packs.benchmarks import (
     run_projection_query_benchmark,
     run_replay_scale_benchmark,
 )
+from comp_scenario_packs.domains.presets import get_projection_filter_preset
 from comp_scenario_packs.suite import run_scenario_suite
 
 
@@ -40,7 +41,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 0 if result["status"] == "passed" else 1
     if args.command == "bench-projection-query":
-        filters = _parse_filter(args.filter)
+        filters = _resolve_projection_filters(
+            filter_value=args.filter,
+            filter_preset=args.filter_preset,
+        )
         result = run_projection_query_benchmark(
             args.manifest,
             row_count=args.rows,
@@ -87,7 +91,8 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     projection_query.add_argument("manifest")
     projection_query.add_argument("--rows", type=int, default=100)
-    projection_query.add_argument("--filter", required=True)
+    projection_query.add_argument("--filter")
+    projection_query.add_argument("--filter-preset")
     projection_query.add_argument("--max-query-ms", type=float, default=None)
     projection_query.add_argument("--max-index-build-ms", type=float, default=None)
     projection_query.add_argument("--report", default="benchmarks/projection-query.json")
@@ -114,6 +119,20 @@ def _parse_filter(value: str) -> dict[str, str]:
     if not filters:
         raise ValueError("--filter must include at least one field=value pair.")
     return filters
+
+
+def _resolve_projection_filters(
+    *,
+    filter_value: str | None,
+    filter_preset: str | None,
+) -> dict[str, str]:
+    if filter_value and filter_preset:
+        raise ValueError("use either --filter or --filter-preset, not both.")
+    if filter_preset:
+        return get_projection_filter_preset(filter_preset)
+    if filter_value:
+        return _parse_filter(filter_value)
+    raise ValueError("bench-projection-query requires --filter or --filter-preset.")
 
 
 if __name__ == "__main__":
