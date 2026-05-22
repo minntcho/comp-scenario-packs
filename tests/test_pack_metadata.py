@@ -136,12 +136,14 @@ def test_compat_manifests_pin_public_comp_surfaces():
         "comp",
         "comp.compiler_tool",
         "comp.persistence",
+        "comp.runtime",
         "comp.scenario_contracts",
     ]
     assert v1["public_surfaces"] == [
         "comp",
         "comp.compiler_tool",
         "comp.persistence",
+        "comp.runtime",
         "comp.scenario_contracts",
     ]
     assert main["authority_policy"] == AUTHORITY_POLICY

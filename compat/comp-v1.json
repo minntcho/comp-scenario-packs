@@ -7,6 +7,7 @@
     "comp",
     "comp.compiler_tool",
     "comp.persistence",
+    "comp.runtime",
     "comp.scenario_contracts"
   ],
   "authority_policy": "compatibility_signal_not_authority_source"
