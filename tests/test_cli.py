@@ -69,3 +69,29 @@ def test_bench_projection_query_cli_writes_report(tmp_path):
     payload = json.loads(report_path.read_text(encoding="utf-8"))
     assert payload["benchmark_id"] == "projection_query_smoke"
     assert payload["materialized_query"]["matched_count"] == 3
+
+
+def test_bench_projection_query_cli_returns_failure_when_budget_is_exceeded(tmp_path):
+    report_path = tmp_path / "projection-query-budget.json"
+
+    exit_code = main(
+        [
+            "bench-projection-query",
+            str(ROOT / "scenarios" / "l_energy_pcf_governance" / "scenario.json"),
+            "--rows",
+            "3",
+            "--filter",
+            "site=plant-a",
+            "--max-query-ms",
+            "0",
+            "--max-index-build-ms",
+            "0",
+            "--report",
+            str(report_path),
+        ]
+    )
+
+    assert exit_code == 1
+    payload = json.loads(report_path.read_text(encoding="utf-8"))
+    assert payload["status"] == "failed"
+    assert payload["materialized_query"]["budget_status"] == "failed"

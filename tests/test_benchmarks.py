@@ -108,3 +108,37 @@ def test_projection_query_benchmark_compares_replay_with_materialized_query(tmp_
 
     payload = json.loads(report_path.read_text(encoding="utf-8"))
     assert payload == result
+
+
+def test_projection_query_benchmark_fails_when_query_budget_is_exceeded(tmp_path):
+    report_path = tmp_path / "projection-query-budget.json"
+
+    result = run_projection_query_benchmark(
+        ROOT / "scenarios" / "l_energy_pcf_governance" / "scenario.json",
+        row_count=3,
+        filter_field="site",
+        filter_value="plant-a",
+        report_path=report_path,
+        max_query_ms=0.0,
+        max_index_build_ms=0.0,
+    )
+
+    assert result["status"] == "failed"
+    assert result["budgets"] == {
+        "max_index_build_ms": 0.0,
+        "max_query_ms": 0.0,
+    }
+    assert result["full_replay"]["status"] == "passed"
+    assert result["materialized_query"]["budget_status"] == "failed"
+    assert result["materialized_query"]["budget_failures"] == [
+        {
+            "metric": "index_build_ms",
+            "limit": 0.0,
+            "actual": result["materialized_query"]["index_build_ms"],
+        },
+        {
+            "metric": "query_ms",
+            "limit": 0.0,
+            "actual": result["materialized_query"]["query_ms"],
+        },
+    ]
