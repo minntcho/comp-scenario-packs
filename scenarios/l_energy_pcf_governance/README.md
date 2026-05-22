@@ -5,6 +5,16 @@ Status: seed
 This pack is reserved for the large L-Energy supplier workflow that should live
 outside the `comp` kernel repository.
 
+The current runnable contract is intentionally small: one prepared canonical
+bundle that commits a diesel activity public row through `comp.scenario_contracts`.
+It is a shadow-migration fixture, not the full product workflow.
+
+Run it from the repository root:
+
+```bash
+python -m comp.cli.scenario scenario run scenarios/l_energy_pcf_governance/scenario.json --report reports/l_energy_pcf_governance.json
+```
+
 Expected future coverage:
 
 ```text
