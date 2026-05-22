@@ -126,6 +126,70 @@ def test_accepted_l_energy_pack_declares_shadowed_comp_scenario():
     ]
 
 
+def test_steel_frame_proxy_pack_is_declared_as_downstream_coverage():
+    packs_by_id = {pack.pack_id: pack for pack in SCENARIO_PACKS}
+    pack = packs_by_id["l_energy_steel_frame_proxy_assignment"]
+
+    assert pack.status == "seed"
+    assert pack.scope == "large-domain-and-product-e2e"
+    assert pack.cutover_state == "parallel-validation"
+    assert pack.covered_comp_scenario_ids == (
+        "l_energy.steel_frame_proxy_assignment.v1",
+    )
+    assert pack.comp_relationship == "public_api_consumer"
+    assert pack.authority_policy == AUTHORITY_POLICY
+
+
+def test_steel_frame_proxy_pack_metadata_keeps_authority_boundary():
+    metadata = _load_json(
+        "scenarios/esg_energy/l_energy_steel_frame_proxy_assignment/pack.json"
+    )
+
+    assert metadata["pack_id"] == "l_energy_steel_frame_proxy_assignment"
+    assert metadata["status"] == "seed"
+    assert metadata["scope"] == "large-domain-and-product-e2e"
+    assert metadata["cutover_state"] == "parallel-validation"
+    assert metadata["covers_comp_scenario_ids"] == [
+        "l_energy.steel_frame_proxy_assignment.v1"
+    ]
+    assert metadata["comp_relationship"] == "public_api_consumer"
+    assert metadata["authority_policy"] == AUTHORITY_POLICY
+    assert metadata["public_surfaces"] == [
+        "comp.scenario_contracts",
+    ]
+    assert metadata["input_mode"] == "canonical_bundle"
+    assert metadata["scenario_manifest"] == "scenario.json"
+    assert metadata["prepared_inputs"] == [
+        "prepared/runtime_case.json",
+        "prepared/artifact_envelopes.jsonl",
+    ]
+    assert metadata["runnable_contracts"] == [
+        "canonical_projection_smoke",
+    ]
+
+
+def test_steel_frame_proxy_pack_declares_shadowed_comp_scenario():
+    metadata = _load_json(
+        "scenarios/esg_energy/l_energy_steel_frame_proxy_assignment/pack.json"
+    )
+
+    assert metadata["shadowed_comp_scenarios"] == [
+        {
+            "scenario_id": "l_energy.steel_frame_proxy_assignment.v1",
+            "residency_tier": "downstream-candidate",
+            "status": "parallel-validation",
+            "comp_path": (
+                "tests/domain_scenarios/l_energy_pcf_governance/"
+                "steel_frame_proxy_assignment.py"
+            ),
+            "authority_invariant": "canonical_projection_smoke",
+            "removal_policy": (
+                "keep_internal_until_external_green_and_kernel_smoke_remains"
+            ),
+        }
+    ]
+
+
 def test_l_energy_pack_metadata_keeps_authority_boundary():
     metadata = _load_json("scenarios/esg_energy/l_energy_pcf_governance/pack.json")
 

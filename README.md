@@ -53,6 +53,11 @@ parallel validation for `comp` internal scenario
 `l_energy.alpha_physical_allocation_correction.v1`. It covers the corrected
 allocation path where receipt-gated public projection is present.
 
+`l_energy_steel_frame_proxy_assignment` is a seeded proxy-assignment pack in
+parallel validation for `comp` internal scenario
+`l_energy.steel_frame_proxy_assignment.v1`. It covers the missing supplier
+submission path where a proxy factor produces receipt-gated public projection.
+
 ## Dependency Direction
 
 Before `comp` v1.0, this repository may install `comp` from a Git ref:

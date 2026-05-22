@@ -1,0 +1,359 @@
+{
+  "case_id": "l_energy_steel_frame_proxy_assignment",
+  "projections": [
+    {
+      "draft_id": "commit-package:case:001-l-energy-pcf-governance:steel-frame-proxy-assignment",
+      "output_fields": [
+        "actor_id",
+        "supplier_submission_status",
+        "proxy_quality",
+        "missing_mass_ton",
+        "steel_frame_final_emission_tco2e"
+      ],
+      "projection_id": "l-energy-steel-frame-proxy-assignment",
+      "public_row_id": "public-row:steel-frame-proxy-assignment",
+      "row": {
+        "actor_id": "steel_frame",
+        "missing_mass_ton": 1900,
+        "proxy_quality": "Low",
+        "steel_frame_final_emission_tco2e": 4750,
+        "supplier_submission_status": "absent"
+      }
+    }
+  ],
+  "receipts": [
+    {
+      "authorized_fields": [
+        "actor_id",
+        "supplier_submission_status",
+        "required_lower_tier_input_ton",
+        "verified_alpha_input_ton",
+        "proxy_quality",
+        "missing_mass_ton",
+        "steel_frame_final_emission_tco2e"
+      ],
+      "barrier_snapshot": [
+        [
+          "governance_decision_id",
+          "governance-decision:commit-package:case:001-l-energy-pcf-governance:steel-frame-proxy-assignment"
+        ],
+        [
+          "governance_status",
+          "commit"
+        ],
+        [
+          "governance_reasons",
+          [
+            "commit_package_complete"
+          ]
+        ],
+        [
+          "commit_package_id",
+          "commit-package:case:001-l-energy-pcf-governance:steel-frame-proxy-assignment"
+        ],
+        [
+          "commit_package_complete",
+          true
+        ],
+        [
+          "subject_id",
+          "case:001-l-energy-pcf-governance:steel-frame-proxy-assignment"
+        ],
+        [
+          "projection_id",
+          "l-energy-steel-frame-proxy-assignment"
+        ],
+        [
+          "authorized_fields",
+          [
+            "actor_id",
+            "supplier_submission_status",
+            "required_lower_tier_input_ton",
+            "verified_alpha_input_ton",
+            "proxy_quality",
+            "missing_mass_ton",
+            "steel_frame_final_emission_tco2e"
+          ]
+        ],
+        [
+          "profile_id",
+          null
+        ],
+        [
+          "report_status",
+          "accepted"
+        ],
+        [
+          "checked_claim_fields",
+          [
+            "actor_id",
+            "supplier_submission_status",
+            "required_lower_tier_input_ton",
+            "verified_alpha_input_ton",
+            "proxy_quality"
+          ]
+        ],
+        [
+          "checked_claim_witness_ids",
+          [
+            "source:steel-frame-submission-absence",
+            "source:steel-frame-submission-absence",
+            "source:c-pack-lower-tier-requirement",
+            "source:alpha-metal-verified-input",
+            "source:steel-frame-submission-absence"
+          ]
+        ],
+        [
+          "semantic_judgment_ids",
+          []
+        ],
+        [
+          "reference_binding_ids",
+          [
+            "bind:steel-frame:proxy_factor"
+          ]
+        ],
+        [
+          "derived_claim_fields",
+          [
+            "missing_mass_ton",
+            "steel_frame_final_emission_tco2e"
+          ]
+        ],
+        [
+          "derived_claim_ids",
+          [
+            "steel-frame:missing_mass_ton",
+            "steel-frame:final_emission_tco2e"
+          ]
+        ],
+        [
+          "calculation_trace_ids",
+          [
+            "trace:steel-frame:missing_mass_ton",
+            "trace:steel-frame:final_emission_tco2e"
+          ]
+        ],
+        [
+          "formula_ids",
+          [
+            "pcf.steel_frame_proxy_assignment.v1"
+          ]
+        ],
+        [
+          "resolved_obligation_ids",
+          [
+            "steel-frame:supplier_submission:supplier_submission_absent",
+            "steel-frame:proxy_factor:missing_supplier_evidence_requires_proxy"
+          ]
+        ],
+        [
+          "open_obligation_ids",
+          []
+        ],
+        [
+          "hazard_ids",
+          []
+        ],
+        [
+          "projection_value_commitments",
+          [
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "actor_id",
+                "source_id": "checked_claim:actor_id:source:steel-frame-submission-absence",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:797b952c47714404e499f3ddf1d24c007773f9f06eb0405d65e4f00031bb46b7"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "supplier_submission_status",
+                "source_id": "checked_claim:supplier_submission_status:source:steel-frame-submission-absence",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:5efc0e842ec0437a5395847bc84e17c71bbe61395d51812af5300a4b7fc56535"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "required_lower_tier_input_ton",
+                "source_id": "checked_claim:required_lower_tier_input_ton:source:c-pack-lower-tier-requirement",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:eb012558edd1fd15e59122cad96602690dc23fad9da78ae16873a847a1e56ea4"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "verified_alpha_input_ton",
+                "source_id": "checked_claim:verified_alpha_input_ton:source:alpha-metal-verified-input",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:81ac7bee0e68d449b735f9025723ecd25beeb329aec7d6112028c7e26d44e6aa"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "proxy_quality",
+                "source_id": "checked_claim:proxy_quality:source:steel-frame-submission-absence",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:636c25a7185461c709b354ea51116913303cf0a6389f0a22e7d93398c610212e"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "missing_mass_ton",
+                "source_id": "steel-frame:missing_mass_ton",
+                "source_kind": "derived_claim",
+                "value_digest": "sha256:de17c261d41b1f3cbbd65ee8450593e029b0c68c29acfe91575a65a090e1c813"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "steel_frame_final_emission_tco2e",
+                "source_id": "steel-frame:final_emission_tco2e",
+                "source_kind": "derived_claim",
+                "value_digest": "sha256:5d47d3daaf188f4e9f2c3b2a4ff10b37364b66b698337e5bb930301912f1a940"
+              }
+            }
+          ]
+        ],
+        [
+          "dependency_fingerprints",
+          []
+        ]
+      ],
+      "citations": {
+        "authorized_fields": [
+          "actor_id",
+          "supplier_submission_status",
+          "required_lower_tier_input_ton",
+          "verified_alpha_input_ton",
+          "proxy_quality",
+          "missing_mass_ton",
+          "steel_frame_final_emission_tco2e"
+        ],
+        "calculation_trace_ids": [
+          "trace:steel-frame:missing_mass_ton",
+          "trace:steel-frame:final_emission_tco2e"
+        ],
+        "checked_claim_fields": [
+          "actor_id",
+          "supplier_submission_status",
+          "required_lower_tier_input_ton",
+          "verified_alpha_input_ton",
+          "proxy_quality"
+        ],
+        "checked_claim_witness_ids": [
+          "source:steel-frame-submission-absence",
+          "source:steel-frame-submission-absence",
+          "source:c-pack-lower-tier-requirement",
+          "source:alpha-metal-verified-input",
+          "source:steel-frame-submission-absence"
+        ],
+        "commit_package_complete": true,
+        "commit_package_id": "commit-package:case:001-l-energy-pcf-governance:steel-frame-proxy-assignment",
+        "dependency_fingerprints": [],
+        "derived_claim_fields": [
+          "missing_mass_ton",
+          "steel_frame_final_emission_tco2e"
+        ],
+        "derived_claim_ids": [
+          "steel-frame:missing_mass_ton",
+          "steel-frame:final_emission_tco2e"
+        ],
+        "formula_ids": [
+          "pcf.steel_frame_proxy_assignment.v1"
+        ],
+        "governance_decision_id": "governance-decision:commit-package:case:001-l-energy-pcf-governance:steel-frame-proxy-assignment",
+        "governance_reasons": [
+          "commit_package_complete"
+        ],
+        "governance_status": "commit",
+        "hazard_ids": [],
+        "open_obligation_ids": [],
+        "profile_id": null,
+        "projection_id": "l-energy-steel-frame-proxy-assignment",
+        "projection_value_commitments": [
+          {
+            "digest_alg": "sha256",
+            "field": "actor_id",
+            "source_id": "checked_claim:actor_id:source:steel-frame-submission-absence",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:797b952c47714404e499f3ddf1d24c007773f9f06eb0405d65e4f00031bb46b7"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "supplier_submission_status",
+            "source_id": "checked_claim:supplier_submission_status:source:steel-frame-submission-absence",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:5efc0e842ec0437a5395847bc84e17c71bbe61395d51812af5300a4b7fc56535"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "required_lower_tier_input_ton",
+            "source_id": "checked_claim:required_lower_tier_input_ton:source:c-pack-lower-tier-requirement",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:eb012558edd1fd15e59122cad96602690dc23fad9da78ae16873a847a1e56ea4"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "verified_alpha_input_ton",
+            "source_id": "checked_claim:verified_alpha_input_ton:source:alpha-metal-verified-input",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:81ac7bee0e68d449b735f9025723ecd25beeb329aec7d6112028c7e26d44e6aa"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "proxy_quality",
+            "source_id": "checked_claim:proxy_quality:source:steel-frame-submission-absence",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:636c25a7185461c709b354ea51116913303cf0a6389f0a22e7d93398c610212e"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "missing_mass_ton",
+            "source_id": "steel-frame:missing_mass_ton",
+            "source_kind": "derived_claim",
+            "value_digest": "sha256:de17c261d41b1f3cbbd65ee8450593e029b0c68c29acfe91575a65a090e1c813"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "steel_frame_final_emission_tco2e",
+            "source_id": "steel-frame:final_emission_tco2e",
+            "source_kind": "derived_claim",
+            "value_digest": "sha256:5d47d3daaf188f4e9f2c3b2a4ff10b37364b66b698337e5bb930301912f1a940"
+          }
+        ],
+        "reference_binding_ids": [
+          "bind:steel-frame:proxy_factor"
+        ],
+        "report_status": "accepted",
+        "resolved_obligation_ids": [
+          "steel-frame:supplier_submission:supplier_submission_absent",
+          "steel-frame:proxy_factor:missing_supplier_evidence_requires_proxy"
+        ],
+        "semantic_judgment_ids": [],
+        "subject_id": "case:001-l-energy-pcf-governance:steel-frame-proxy-assignment"
+      },
+      "draft_id": "commit-package:case:001-l-energy-pcf-governance:steel-frame-proxy-assignment",
+      "projection_id": "l-energy-steel-frame-proxy-assignment",
+      "public_row_id": "public-row:steel-frame-proxy-assignment",
+      "winner_receipt_ids": [
+        "governance-decision:commit-package:case:001-l-energy-pcf-governance:steel-frame-proxy-assignment"
+      ]
+    }
+  ]
+}

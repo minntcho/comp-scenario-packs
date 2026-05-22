@@ -20,6 +20,7 @@ def test_discovers_pack_metadata_from_checked_in_scenarios():
         "l_energy_alpha_invalid_allocation_rfi",
         "l_energy_alpha_physical_allocation_correction",
         "l_energy_pcf_governance",
+        "l_energy_steel_frame_proxy_assignment",
         "public_projection_smoke",
     ]
     assert packs[0].shadowed_comp_scenario_ids == ()
@@ -27,7 +28,10 @@ def test_discovers_pack_metadata_from_checked_in_scenarios():
         "l_energy.alpha_physical_allocation_correction.v1",
     )
     assert packs[2].shadowed_comp_scenario_ids == ("l_energy_pcf_governance.v1",)
-    assert packs[3].shadowed_comp_scenario_ids == ()
+    assert packs[3].shadowed_comp_scenario_ids == (
+        "l_energy.steel_frame_proxy_assignment.v1",
+    )
+    assert packs[4].shadowed_comp_scenario_ids == ()
 
 
 def test_registry_matches_checked_in_pack_metadata():
