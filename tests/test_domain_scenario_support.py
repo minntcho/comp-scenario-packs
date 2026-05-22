@@ -95,6 +95,7 @@ def test_scenario_support_blueprint_documents_operational_layout():
         "Do not bypass replay",
         "Use --filter-preset when a domain helper owns the reusable query shape",
         "Use --row-preset when a domain helper owns the reusable row mix",
+        "--max-selectivity-ratio",
     ]
     for phrase in required_phrases:
         assert phrase in doc

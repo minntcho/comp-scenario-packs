@@ -93,7 +93,7 @@ Projection query benchmarks add a downstream read-model step:
 verified RuntimeCase projections
   -> materialized projection index
   -> filter or filter preset lookup
-  -> query/index budget gate
+  -> query/index/selectivity budget gate
 ```
 
 Replay remains the authority path. The materialized projection index is a
@@ -126,12 +126,18 @@ comp-scenario-packs bench-projection-query \
   scenarios/esg_energy/l_energy_pcf_governance/scenario.json \
   --filter-preset esg_energy:plant_diesel_jan \
   --row-preset esg_energy:mixed_activity_rows \
+  --max-selectivity-ratio 0.5 \
   --report benchmarks/projection-query.json
 ```
 
 Filter presets expand to ordinary filter dictionaries, and row presets expand
 to benchmark row dictionaries with matching value commitments. They must not
 change replay, receipt validation, or projection authorization.
+
+Use `--max-selectivity-ratio` when the benchmark should fail if the filter
+matches too much of the indexed projection set. For example, 2 matches out of 8
+indexed rows reports `selectivity_ratio` as `0.25`; a `0.5` budget passes and a
+`0.1` budget fails.
 
 ## Adding A New Domain Support Helper
 
@@ -218,9 +224,8 @@ Recommended next steps:
 
 1. Add `domains/esg_energy/fields.py` for reusable public projection field sets.
 2. Move future ESG scenarios under `scenarios/esg_energy/`.
-3. Add selectivity checks for projection query benchmarks.
-4. Add aggregate query benchmarks after filter/selectivity behavior is stable.
-5. Add `domains/lca_pcf/` only when the first LCA scenario needs reusable
+3. Add aggregate query benchmarks after filter/selectivity behavior is stable.
+4. Add `domains/lca_pcf/` only when the first LCA scenario needs reusable
    support.
 
 Each step should be a small PR with tests and CI evidence.

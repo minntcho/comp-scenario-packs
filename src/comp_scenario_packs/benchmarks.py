@@ -79,6 +79,7 @@ def run_projection_query_benchmark(
     row_preset_id: str | None = None,
     max_query_ms: float | None = None,
     max_index_build_ms: float | None = None,
+    max_selectivity_ratio: float | None = None,
 ) -> dict[str, Any]:
     report = _projection_query_payload(
         manifest_path,
@@ -90,6 +91,7 @@ def run_projection_query_benchmark(
         row_preset_id=row_preset_id,
         max_query_ms=max_query_ms,
         max_index_build_ms=max_index_build_ms,
+        max_selectivity_ratio=max_selectivity_ratio,
     )
     benchmark_path = Path(report_path)
     benchmark_path.parent.mkdir(parents=True, exist_ok=True)
@@ -134,6 +136,7 @@ def _projection_query_payload(
     row_preset_id: str | None = None,
     max_query_ms: float | None = None,
     max_index_build_ms: float | None = None,
+    max_selectivity_ratio: float | None = None,
 ) -> dict[str, Any]:
     if row_count < 1:
         raise ValueError("row_count must be positive.")
@@ -141,6 +144,8 @@ def _projection_query_payload(
         raise ValueError("max_query_ms must be non-negative.")
     if max_index_build_ms is not None and max_index_build_ms < 0:
         raise ValueError("max_index_build_ms must be non-negative.")
+    if max_selectivity_ratio is not None and not (0 <= max_selectivity_ratio <= 1):
+        raise ValueError("max_selectivity_ratio must be between 0 and 1.")
     filter_map = normalize_projection_filters(
         filter_field=filter_field,
         filter_value=filter_value,
@@ -199,11 +204,15 @@ def _projection_query_payload(
     filter_key = tuple(filter_map[field] for field in index_fields)
     matched_rows = projection_index.get(filter_key, [])
     query_ms = round((time.perf_counter() - query_started) * 1000, 6)
+    indexed_row_count = len(scaled_case.projections)
+    selectivity_ratio = round(len(matched_rows) / indexed_row_count, 6)
     budget_status, budget_failures = projection_query_budget_result(
         index_build_ms=index_build_ms,
         query_ms=query_ms,
+        selectivity_ratio=selectivity_ratio,
         max_index_build_ms=max_index_build_ms,
         max_query_ms=max_query_ms,
+        max_selectivity_ratio=max_selectivity_ratio,
     )
     status = (
         "passed"
@@ -220,6 +229,7 @@ def _projection_query_payload(
         "budgets": {
             "max_index_build_ms": max_index_build_ms,
             "max_query_ms": max_query_ms,
+            "max_selectivity_ratio": max_selectivity_ratio,
         },
         "full_replay": {
             "status": replay_result.status,
@@ -234,7 +244,8 @@ def _projection_query_payload(
             "index_build_ms": index_build_ms,
             "query_ms": query_ms,
             "matched_count": len(matched_rows),
-            "indexed_row_count": len(scaled_case.projections),
+            "indexed_row_count": indexed_row_count,
+            "selectivity_ratio": selectivity_ratio,
             "budget_status": budget_status,
             "budget_failures": budget_failures,
         },
