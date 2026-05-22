@@ -24,7 +24,10 @@ from comp_scenario_packs.common.projection_query import (
     projection_filter_report,
     projection_query_strategy,
 )
-from comp_scenario_packs.common.runtime_case_scaling import scale_runtime_case
+from comp_scenario_packs.common.runtime_case_scaling import (
+    projection_source_artifacts_for_runtime_case,
+    scale_runtime_case,
+)
 from comp_scenario_packs.suite import run_scenario_suite
 
 
@@ -72,6 +75,8 @@ def run_projection_query_benchmark(
     filter_field: str | None = None,
     filter_value: Any | None = None,
     filters: dict[str, Any] | None = None,
+    row_variants: tuple[dict[str, Any], ...] | None = None,
+    row_preset_id: str | None = None,
     max_query_ms: float | None = None,
     max_index_build_ms: float | None = None,
 ) -> dict[str, Any]:
@@ -81,6 +86,8 @@ def run_projection_query_benchmark(
         filter_field=filter_field,
         filter_value=filter_value,
         filters=filters,
+        row_variants=row_variants,
+        row_preset_id=row_preset_id,
         max_query_ms=max_query_ms,
         max_index_build_ms=max_index_build_ms,
     )
@@ -123,6 +130,8 @@ def _projection_query_payload(
     filter_field: str | None = None,
     filter_value: Any | None = None,
     filters: dict[str, Any] | None = None,
+    row_variants: tuple[dict[str, Any], ...] | None = None,
+    row_preset_id: str | None = None,
     max_query_ms: float | None = None,
     max_index_build_ms: float | None = None,
 ) -> dict[str, Any]:
@@ -142,13 +151,27 @@ def _projection_query_payload(
     manifest = load_manifest(manifest_path)
     runtime_case = load_runtime_case(manifest.runtime_case_path)
     artifact_envelopes = load_artifact_envelopes(manifest.artifact_envelopes_path)
-    scaled_case = scale_runtime_case(runtime_case, row_count=row_count)
+    scaled_case = scale_runtime_case(
+        runtime_case,
+        row_count=row_count,
+        row_variants=row_variants,
+    )
+    scaled_artifact_envelopes = tuple(artifact_envelopes)
+    if row_variants is not None:
+        scaled_artifact_envelopes = scaled_artifact_envelopes + (
+            projection_source_artifacts_for_runtime_case(
+                scaled_case,
+                existing_artifact_ids={
+                    envelope.artifact_id for envelope in artifact_envelopes
+                },
+            )
+        )
     with TemporaryDirectory() as temp_root:
         temp_path = Path(temp_root)
         artifact_path = temp_path / "artifact_envelopes.jsonl"
         runtime_case_path = temp_path / "runtime_case.json"
         scaled_manifest_path = temp_path / "scenario.json"
-        write_artifact_envelopes(artifact_envelopes, artifact_path)
+        write_artifact_envelopes(scaled_artifact_envelopes, artifact_path)
         write_runtime_case(scaled_case, runtime_case_path)
         scaled_manifest_path.write_text(
             json.dumps(
@@ -192,6 +215,7 @@ def _projection_query_payload(
         "status": status,
         "scenario_id": manifest.scenario_id,
         "row_count": row_count,
+        "row_preset": row_preset_id or ("custom" if row_variants is not None else None),
         "filter": projection_filter_report(filter_map),
         "budgets": {
             "max_index_build_ms": max_index_build_ms,

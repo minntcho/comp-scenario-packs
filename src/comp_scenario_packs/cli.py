@@ -8,7 +8,10 @@ from comp_scenario_packs.benchmarks import (
     run_projection_query_benchmark,
     run_replay_scale_benchmark,
 )
-from comp_scenario_packs.domains.presets import get_projection_filter_preset
+from comp_scenario_packs.domains.presets import (
+    get_projection_filter_preset,
+    get_projection_row_preset,
+)
 from comp_scenario_packs.suite import run_scenario_suite
 
 
@@ -45,11 +48,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             filter_value=args.filter,
             filter_preset=args.filter_preset,
         )
+        row_variants = (
+            get_projection_row_preset(args.row_preset) if args.row_preset else None
+        )
         result = run_projection_query_benchmark(
             args.manifest,
             row_count=args.rows,
             report_path=args.report,
             filters=filters,
+            row_variants=row_variants,
+            row_preset_id=args.row_preset,
             max_query_ms=args.max_query_ms,
             max_index_build_ms=args.max_index_build_ms,
         )
@@ -93,6 +101,7 @@ def _build_parser() -> argparse.ArgumentParser:
     projection_query.add_argument("--rows", type=int, default=100)
     projection_query.add_argument("--filter")
     projection_query.add_argument("--filter-preset")
+    projection_query.add_argument("--row-preset")
     projection_query.add_argument("--max-query-ms", type=float, default=None)
     projection_query.add_argument("--max-index-build-ms", type=float, default=None)
     projection_query.add_argument("--report", default="benchmarks/projection-query.json")
