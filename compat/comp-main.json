@@ -5,7 +5,8 @@
   "comp_dependency": "comp @ git+https://github.com/minntcho/comp@main",
   "public_surfaces": [
     "comp",
-    "comp.compiler_tool"
+    "comp.compiler_tool",
+    "comp.scenario_contracts"
   ],
   "authority_policy": "compatibility_signal_not_authority_source"
 }

@@ -9,7 +9,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_seed_pack_is_declared_as_downstream_compatibility_signal():
-    (pack,) = SCENARIO_PACKS
+    packs_by_id = {pack.pack_id: pack for pack in SCENARIO_PACKS}
+    pack = packs_by_id["l_energy_pcf_governance"]
 
     assert pack.pack_id == "l_energy_pcf_governance"
     assert pack.status == "seed"
@@ -32,6 +33,19 @@ def test_l_energy_pack_metadata_keeps_authority_boundary():
     ]
 
 
+def test_public_projection_smoke_metadata_keeps_authority_boundary():
+    metadata = _load_json("scenarios/public_projection_smoke/pack.json")
+
+    assert metadata["pack_id"] == "public_projection_smoke"
+    assert metadata["status"] == "active"
+    assert metadata["scope"] == "canonical-runtime-smoke"
+    assert metadata["comp_relationship"] == "public_api_consumer"
+    assert metadata["authority_policy"] == AUTHORITY_POLICY
+    assert metadata["public_surfaces"] == [
+        "comp.scenario_contracts",
+    ]
+
+
 def test_compat_manifests_pin_public_comp_surfaces():
     main = _load_json("compat/comp-main.json")
     v1 = _load_json("compat/comp-v1.json")
@@ -40,8 +54,16 @@ def test_compat_manifests_pin_public_comp_surfaces():
         "comp @ git+https://github.com/minntcho/comp@main"
     )
     assert v1["comp_dependency"] == "comp>=1.0,<2.0"
-    assert main["public_surfaces"] == ["comp", "comp.compiler_tool"]
-    assert v1["public_surfaces"] == ["comp", "comp.compiler_tool"]
+    assert main["public_surfaces"] == [
+        "comp",
+        "comp.compiler_tool",
+        "comp.scenario_contracts",
+    ]
+    assert v1["public_surfaces"] == [
+        "comp",
+        "comp.compiler_tool",
+        "comp.scenario_contracts",
+    ]
     assert main["authority_policy"] == AUTHORITY_POLICY
     assert v1["authority_policy"] == AUTHORITY_POLICY
 

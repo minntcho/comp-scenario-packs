@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "pack_id": "public_projection_smoke",
+  "status": "active",
+  "scope": "canonical-runtime-smoke",
+  "comp_relationship": "public_api_consumer",
+  "authority_policy": "compatibility_signal_not_authority_source",
+  "public_surfaces": [
+    "comp.scenario_contracts"
+  ],
+  "input_mode": "canonical_bundle",
+  "scenario_manifest": "scenario.json",
+  "prepared_inputs": [
+    "prepared/runtime_case.json",
+    "prepared/artifact_envelopes.jsonl"
+  ],
+  "invariants": [
+    "receipt_exists",
+    "replay_succeeds",
+    "all_public_rows_have_receipts",
+    "projection_values_are_committed",
+    "blocking_hazards_absent"
+  ]
+}

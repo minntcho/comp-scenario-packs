@@ -17,6 +17,11 @@ class ScenarioPack:
 
 SCENARIO_PACKS = (
     ScenarioPack(
+        pack_id="public_projection_smoke",
+        status="active",
+        scope="canonical-runtime-smoke",
+    ),
+    ScenarioPack(
         pack_id="l_energy_pcf_governance",
         status="seed",
         scope="large-domain-and-product-e2e",

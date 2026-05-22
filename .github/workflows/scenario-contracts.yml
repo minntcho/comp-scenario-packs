@@ -1,0 +1,25 @@
+name: scenario-contracts
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  public-scenario-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[test]"
+      - name: Run tests
+        run: python -m pytest -q
+      - name: Validate public projection smoke manifest
+        run: python -m comp.cli.scenario scenario validate scenarios/public_projection_smoke/scenario.json
+      - name: Run public projection smoke pack
+        run: python -m comp.cli.scenario scenario run scenarios/public_projection_smoke/scenario.json --report reports/public_projection_smoke.json
