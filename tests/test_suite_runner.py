@@ -17,6 +17,9 @@ EXPECTED_SCENARIO_IDS = [
     "l_energy_steel_frame_proxy_assignment",
     "l_energy_tier0_physical_allocation",
     "public_projection_smoke",
+    "synthetic_pcf_anomaly",
+    "synthetic_pcf_resolution",
+    "synthetic_pcf_smoke",
 ]
 
 EXPECTED_COVERED_COMP_SCENARIO_IDS = [
@@ -29,6 +32,9 @@ EXPECTED_COVERED_COMP_SCENARIO_IDS = [
     "l_energy.steel_frame_proxy_assignment.v1",
     "l_energy.tier0_physical_allocation.v1",
     "l_energy_pcf_governance.v1",
+    "synthetic_pcf.anomaly.v1",
+    "synthetic_pcf.resolution.v1",
+    "synthetic_pcf.smoke.v1",
 ]
 
 
@@ -82,6 +88,21 @@ def test_discovers_all_checked_in_scenario_manifests():
         / "l_energy_tier0_physical_allocation"
         / "scenario.json",
         ROOT / "scenarios" / "public_projection_smoke" / "scenario.json",
+        ROOT
+        / "scenarios"
+        / "synthetic_pcf"
+        / "synthetic_pcf_anomaly"
+        / "scenario.json",
+        ROOT
+        / "scenarios"
+        / "synthetic_pcf"
+        / "synthetic_pcf_resolution"
+        / "scenario.json",
+        ROOT
+        / "scenarios"
+        / "synthetic_pcf"
+        / "synthetic_pcf_smoke"
+        / "scenario.json",
     )
 
 
@@ -108,9 +129,9 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
     )
 
     assert result.status == "passed"
-    assert result.scenario_count == 10
+    assert result.scenario_count == 13
     assert [item.scenario_id for item in result.results] == EXPECTED_SCENARIO_IDS
-    assert [item.status for item in result.results] == ["passed"] * 10
+    assert [item.status for item in result.results] == ["passed"] * 13
 
     report_paths = sorted(tmp_path.glob("*.json"))
     assert [path.name for path in report_paths] == [
@@ -125,12 +146,15 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
         "l_energy_tier0_physical_allocation.json",
         "public_projection_smoke.json",
         "suite.json",
+        "synthetic_pcf_anomaly.json",
+        "synthetic_pcf_resolution.json",
+        "synthetic_pcf_smoke.json",
     ]
 
     suite_report = json.loads((tmp_path / "suite.json").read_text(encoding="utf-8"))
     assert suite_report["status"] == "passed"
-    assert suite_report["scenario_count"] == 10
-    assert suite_report["pack_count"] == 10
+    assert suite_report["scenario_count"] == 13
+    assert suite_report["pack_count"] == 13
     assert suite_report["authority_policy"] == (
         "compatibility_signal_not_authority_source"
     )
@@ -243,6 +267,33 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
                 "scope": "canonical-runtime-smoke",
                 "cutover_state": "baseline-public-surface",
                 "covered_comp_scenario_ids": [],
+                "authority_policy": "compatibility_signal_not_authority_source",
+                "comp_relationship": "public_api_consumer",
+            },
+            {
+                "pack_id": "synthetic_pcf_anomaly",
+                "status": "seed",
+                "scope": "synthetic-generator-e2e",
+                "cutover_state": "parallel-validation",
+                "covered_comp_scenario_ids": ["synthetic_pcf.anomaly.v1"],
+                "authority_policy": "compatibility_signal_not_authority_source",
+                "comp_relationship": "public_api_consumer",
+            },
+            {
+                "pack_id": "synthetic_pcf_resolution",
+                "status": "seed",
+                "scope": "synthetic-generator-e2e",
+                "cutover_state": "parallel-validation",
+                "covered_comp_scenario_ids": ["synthetic_pcf.resolution.v1"],
+                "authority_policy": "compatibility_signal_not_authority_source",
+                "comp_relationship": "public_api_consumer",
+            },
+            {
+                "pack_id": "synthetic_pcf_smoke",
+                "status": "seed",
+                "scope": "synthetic-generator-e2e",
+                "cutover_state": "parallel-validation",
+                "covered_comp_scenario_ids": ["synthetic_pcf.smoke.v1"],
                 "authority_policy": "compatibility_signal_not_authority_source",
                 "comp_relationship": "public_api_consumer",
             },

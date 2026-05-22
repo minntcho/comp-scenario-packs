@@ -96,6 +96,27 @@ SCENARIO_PACKS = (
         cutover_state="parallel-validation",
         covered_comp_scenario_ids=("l_energy_pcf_governance.v1",),
     ),
+    ScenarioPack(
+        pack_id="synthetic_pcf_smoke",
+        status="seed",
+        scope="synthetic-generator-e2e",
+        cutover_state="parallel-validation",
+        covered_comp_scenario_ids=("synthetic_pcf.smoke.v1",),
+    ),
+    ScenarioPack(
+        pack_id="synthetic_pcf_anomaly",
+        status="seed",
+        scope="synthetic-generator-e2e",
+        cutover_state="parallel-validation",
+        covered_comp_scenario_ids=("synthetic_pcf.anomaly.v1",),
+    ),
+    ScenarioPack(
+        pack_id="synthetic_pcf_resolution",
+        status="seed",
+        scope="synthetic-generator-e2e",
+        cutover_state="parallel-validation",
+        covered_comp_scenario_ids=("synthetic_pcf.resolution.v1",),
+    ),
 )
 
 

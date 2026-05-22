@@ -64,6 +64,11 @@ validation:
 the corresponding internal rollup scenarios while `comp` remains the receipt
 and replay authority.
 
+`synthetic_pcf_smoke`, `synthetic_pcf_anomaly`, and
+`synthetic_pcf_resolution` are seeded synthetic-generator packs in parallel
+validation for the corresponding `comp` internal synthetic PCF scenarios. Raw
+claim authority scenarios remain inside `comp`.
+
 ## Dependency Direction
 
 Before `comp` v1.0, this repository may install `comp` from a Git ref:
