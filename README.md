@@ -93,6 +93,16 @@ python -m comp_scenario_packs.cli bench-smoke --scenarios-dir scenarios --report
 The benchmark smoke records per-scenario runtime and trust-path counts. It is a
 starter report for replay/query performance work, not a production load test.
 
+Run a replay scale smoke:
+
+```bash
+python -m comp_scenario_packs.cli bench-replay-scale scenarios/public_projection_smoke/scenario.json --rows 1,10,100 --report benchmarks/replay-scale.json
+```
+
+The replay scale smoke repeats one prepared canonical scenario at multiple row
+counts and records replay counts plus runtime. It is meant to expose scaling
+shape early; it does not replace a production replay/materialized-view benchmark.
+
 Use `docs/migration-checklist.md` before moving existing `comp`
 `tests/domain_scenarios` material into this repository.
 
