@@ -62,7 +62,8 @@ implementation modules or copying `comp` source into this repository.
 
 Domain-specific reuse belongs in scenario support modules, not authority
 modules. See `docs/domain-scenario-support.md` for the `common/` and `domains/`
-layout and non-authority rules.
+layout and non-authority rules. See `docs/scenario-support-blueprint.md` for
+the operational map, scenario nesting guidance, and helper placement rules.
 
 ## Local Development
 

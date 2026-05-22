@@ -1,0 +1,213 @@
+# Scenario Support Blueprint
+
+This document explains how `comp-scenario-packs` should grow after the first
+scenario support tree. It is an operational map, not an authority contract.
+
+## System Map
+
+```text
+comp
+  trust kernel
+  public scenario API
+  receipt, replay, and projection authority
+        ^
+        |
+        | public APIs only
+        |
+comp-scenario-packs
+  reality rehearsal layer
+  scenario fixtures
+  benchmark helpers
+  compatibility and performance reports
+```
+
+comp is the trust kernel. It owns receipt validation, replay semantics, and
+projection authorization.
+
+comp-scenario-packs is the reality rehearsal layer. It prepares canonical
+scenario bundles, runs public `comp` APIs, measures replay/query shape, and
+publishes CI compatibility signals.
+
+## Repository Roles
+
+```text
+src/comp_scenario_packs/
+  common/
+  domains/
+  benchmarks.py
+  cli.py
+  suite.py
+
+scenarios/
+  public_projection_smoke/
+  l_energy_pcf_governance/
+  future_nested_domain/
+
+docs/
+  domain-scenario-support.md
+  scenario-support-blueprint.md
+```
+
+common/ contains domain-neutral benchmark machinery. Current examples:
+
+```text
+common/projection_query.py
+  filter normalization
+  projection query report shape
+  query strategy labels
+
+common/runtime_case_scaling.py
+  benchmark-only RuntimeCase scaling
+  projection and receipt key suffixing
+
+common/benchmark_budgets.py
+  runtime/query/index budget status
+  budget failure payloads
+```
+
+domains/ contains scenario fixtures and presets. It is where reusable
+domain-specific query shapes, field sets, expected summaries, and synthetic
+fixture helpers belong. These modules should be boring, mostly pure data and
+small helpers.
+
+scenarios/ contains prepared canonical bundles. A scenario directory owns
+manifest files, prepared runtime cases, artifact envelopes, README notes, and
+pack metadata. Scenario data may move into nested domain directories over time.
+
+## Current Flow
+
+```text
+scenario.json
+  -> comp.scenario_contracts.load_manifest
+  -> TrustRuntime through public API
+  -> full replay verification
+  -> benchmark report
+  -> CI budget gate
+```
+
+Projection query benchmarks add a downstream read-model step:
+
+```text
+verified RuntimeCase projections
+  -> materialized projection index
+  -> filter or filter preset lookup
+  -> query/index budget gate
+```
+
+Replay remains the authority path. The materialized projection index is a
+serving-path rehearsal, not projection authority.
+
+## Filters And Presets
+
+Use `--filter` when the query shape is local to one command:
+
+```bash
+comp-scenario-packs bench-projection-query \
+  scenarios/l_energy_pcf_governance/scenario.json \
+  --filter site=plant-a,period=2026-01,activity_type=diesel \
+  --report benchmarks/projection-query.json
+```
+
+Use --filter-preset when a domain helper owns the reusable query shape:
+
+```bash
+comp-scenario-packs bench-projection-query \
+  scenarios/l_energy_pcf_governance/scenario.json \
+  --filter-preset esg_energy:plant_diesel_jan \
+  --report benchmarks/projection-query.json
+```
+
+Presets expand to ordinary filter dictionaries. They must not change replay,
+receipt validation, or projection authorization.
+
+## Adding A New Domain Support Helper
+
+Adding a new domain support helper should follow this path:
+
+1. Add a focused module under `src/comp_scenario_packs/domains/<domain>/`.
+2. Keep it pure data or small deterministic helpers.
+3. Add a test that imports the public helper and checks it returns copies, not
+   mutable shared state.
+4. If it needs CLI access, route through a small resolver such as
+   `domains/presets.py`.
+5. Document the preset or helper in this blueprint or a domain README.
+
+Do not put receipt authorization logic here. Do not bypass replay. Do not
+replace comp projection authority.
+
+## Adding A Nested Scenario
+
+Adding a nested scenario should follow this path:
+
+```text
+scenarios/
+  esg_energy/
+    energy_projection_query_scale/
+      scenario.json
+      pack.json
+      README.md
+      prepared/
+        runtime_case.json
+        artifact_envelopes.jsonl
+```
+
+The suite runner discovers nested `scenario.json` files with
+`scenarios/**/scenario.json`, so old one-level scenarios and new domain-nested
+scenarios can coexist.
+
+Prefer moving scenarios gradually. Do not relocate all existing scenarios in the
+same PR as a new helper unless the migration itself is the point of the PR.
+
+## What Belongs Where
+
+Put this in `common/`:
+
+```text
+domain-neutral runtime scaling
+domain-neutral projection query indexing
+benchmark budget calculation
+report payload helpers shared across domains
+```
+
+Put this in `domains/<domain>/`:
+
+```text
+filter presets
+field sets
+expected summary helpers
+synthetic fixture helpers
+domain-specific benchmark presets
+```
+
+Put this in `scenarios/<domain>/<scenario>/`:
+
+```text
+manifest
+prepared canonical bundle
+pack metadata
+scenario README
+small checked-in fixture data
+```
+
+Keep this out of `comp-scenario-packs`:
+
+```text
+receipt minting authority
+replay replacement logic
+projection authorization decisions
+private comp imports
+large product workflow orchestration
+```
+
+## Near-Term Growth
+
+Recommended next steps:
+
+1. Add `domains/esg_energy/fields.py` for reusable public projection field sets.
+2. Move future ESG scenarios under `scenarios/esg_energy/`.
+3. Add selectivity checks for projection query benchmarks.
+4. Add aggregate query benchmarks after filter/selectivity behavior is stable.
+5. Add `domains/lca_pcf/` only when the first LCA scenario needs reusable
+   support.
+
+Each step should be a small PR with tests and CI evidence.
