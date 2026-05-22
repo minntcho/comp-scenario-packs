@@ -48,6 +48,11 @@ in parallel validation for `comp` internal scenario
 `l_energy.alpha_invalid_allocation_rfi.v1`. It covers the RFI path where public
 projection must remain absent.
 
+`l_energy_alpha_physical_allocation_correction` is the accepted counterpart in
+parallel validation for `comp` internal scenario
+`l_energy.alpha_physical_allocation_correction.v1`. It covers the corrected
+allocation path where receipt-gated public projection is present.
+
 ## Dependency Direction
 
 Before `comp` v1.0, this repository may install `comp` from a Git ref:

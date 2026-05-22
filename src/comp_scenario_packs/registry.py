@@ -33,6 +33,15 @@ SCENARIO_PACKS = (
         covered_comp_scenario_ids=("l_energy.alpha_invalid_allocation_rfi.v1",),
     ),
     ScenarioPack(
+        pack_id="l_energy_alpha_physical_allocation_correction",
+        status="seed",
+        scope="large-domain-and-product-e2e",
+        cutover_state="parallel-validation",
+        covered_comp_scenario_ids=(
+            "l_energy.alpha_physical_allocation_correction.v1",
+        ),
+    ),
+    ScenarioPack(
         pack_id="l_energy_pcf_governance",
         status="seed",
         scope="large-domain-and-product-e2e",
