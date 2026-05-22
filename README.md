@@ -84,6 +84,15 @@ The suite runner discovers `scenarios/*/scenario.json`, runs each manifest
 through `comp.scenario_contracts`, writes one report per scenario, and writes a
 summary report to `reports/suite.json`.
 
+Run the lightweight benchmark smoke:
+
+```bash
+python -m comp_scenario_packs.cli bench-smoke --scenarios-dir scenarios --report benchmarks/latest.json
+```
+
+The benchmark smoke records per-scenario runtime and trust-path counts. It is a
+starter report for replay/query performance work, not a production load test.
+
 Use `docs/migration-checklist.md` before moving existing `comp`
 `tests/domain_scenarios` material into this repository.
 

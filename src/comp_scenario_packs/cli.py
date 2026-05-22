@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from collections.abc import Sequence
 
+from comp_scenario_packs.benchmarks import run_benchmark_smoke
 from comp_scenario_packs.suite import run_scenario_suite
 
 
@@ -15,6 +16,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         for scenario_result in result.results:
             print(f"{scenario_result.scenario_id}: {scenario_result.status}")
         return 0 if result.status == "passed" else 1
+    if args.command == "bench-smoke":
+        result = run_benchmark_smoke(args.scenarios_dir, report_path=args.report)
+        print(
+            f"{result['benchmark_id']}: {result['status']} "
+            f"({result['scenario_count']} scenarios)"
+        )
+        return 0 if result["status"] == "passed" else 1
     parser.print_help()
     return 2
 
@@ -28,6 +36,12 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     run_all.add_argument("--scenarios-dir", default="scenarios")
     run_all.add_argument("--reports-dir", default="reports")
+    bench_smoke = subparsers.add_parser(
+        "bench-smoke",
+        help="Run a lightweight runtime benchmark over checked-in scenarios.",
+    )
+    bench_smoke.add_argument("--scenarios-dir", default="scenarios")
+    bench_smoke.add_argument("--report", default="benchmarks/latest.json")
     return parser
 
 
