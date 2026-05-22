@@ -24,7 +24,9 @@ src/comp_scenario_packs/
 
   domains/
     esg_energy/
+      fields.py
       filters.py
+      rows.py
 ```
 
 `common/` is for domain-neutral benchmark mechanics. `domains/*` is for
@@ -40,15 +42,17 @@ surfaces.
 
 ## Current Presets
 
-`domains.esg_energy.filters` defines reusable projection filters for the
-L-Energy smoke pack. For example:
+`domains.esg_energy.filters` defines reusable projection filters and
+`domains.esg_energy.rows` defines reusable row mixes for the L-Energy smoke
+pack. For example:
 
 ```bash
 comp-scenario-packs bench-projection-query \
   scenarios/esg_energy/l_energy_pcf_governance/scenario.json \
   --filter-preset esg_energy:plant_diesel_jan \
+  --row-preset esg_energy:mixed_activity_rows \
   --report benchmarks/projection-query.json
 ```
 
-The preset expands to ordinary projection filters. It does not change replay,
-receipt validation, or projection authorization.
+The presets expand to ordinary projection filters and benchmark rows. They do
+not change replay, receipt validation, or projection authorization.

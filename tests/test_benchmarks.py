@@ -190,3 +190,71 @@ def test_projection_query_benchmark_supports_composite_filters(tmp_path):
 
     payload = json.loads(report_path.read_text(encoding="utf-8"))
     assert payload == result
+
+
+def test_projection_query_benchmark_supports_selective_row_presets(tmp_path):
+    report_path = tmp_path / "projection-query-row-preset.json"
+
+    result = run_projection_query_benchmark(
+        ROOT
+        / "scenarios"
+        / "esg_energy"
+        / "l_energy_pcf_governance"
+        / "scenario.json",
+        row_count=8,
+        filters={
+            "site": "plant-a",
+            "period": "2026-01",
+            "activity_type": "diesel",
+        },
+        row_variants=(
+            {
+                "site": "plant-a",
+                "period": "2026-01",
+                "activity_type": "diesel",
+                "amount": 1200,
+                "unit": "L",
+                "emissions_kgco2e": 3216,
+                "supplier_id": "supplier:l-energy-fuel-a",
+            },
+            {
+                "site": "plant-a",
+                "period": "2026-01",
+                "activity_type": "electricity",
+                "amount": 8400,
+                "unit": "kWh",
+                "emissions_kgco2e": 3612,
+                "supplier_id": "supplier:l-energy-grid-a",
+            },
+            {
+                "site": "plant-b",
+                "period": "2026-01",
+                "activity_type": "natural_gas",
+                "amount": 500,
+                "unit": "m3",
+                "emissions_kgco2e": 1000,
+                "supplier_id": "supplier:l-energy-gas-b",
+            },
+            {
+                "site": "plant-a",
+                "period": "2026-02",
+                "activity_type": "diesel",
+                "amount": 900,
+                "unit": "L",
+                "emissions_kgco2e": 2412,
+                "supplier_id": "supplier:l-energy-fuel-a",
+            },
+        ),
+        report_path=report_path,
+    )
+
+    assert result["status"] == "passed"
+    assert result["row_preset"] == "custom"
+    assert result["row_count"] == 8
+    assert result["full_replay"]["replay_checked_count"] == 8
+    assert result["full_replay"]["replay_failed_count"] == 0
+    assert result["materialized_query"]["indexed_row_count"] == 8
+    assert result["materialized_query"]["matched_count"] == 2
+
+    payload = json.loads(report_path.read_text(encoding="utf-8"))
+    assert payload == result

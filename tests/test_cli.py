@@ -177,3 +177,34 @@ def test_bench_projection_query_cli_accepts_esg_energy_filter_preset(tmp_path):
         }
     }
     assert payload["materialized_query"]["matched_count"] == 3
+
+
+def test_bench_projection_query_cli_accepts_esg_energy_row_preset(tmp_path):
+    report_path = tmp_path / "projection-query-row-preset.json"
+
+    exit_code = main(
+        [
+            "bench-projection-query",
+            str(
+                ROOT
+                / "scenarios"
+                / "esg_energy"
+                / "l_energy_pcf_governance"
+                / "scenario.json"
+            ),
+            "--rows",
+            "8",
+            "--filter-preset",
+            "esg_energy:plant_diesel_jan",
+            "--row-preset",
+            "esg_energy:mixed_activity_rows",
+            "--report",
+            str(report_path),
+        ]
+    )
+
+    assert exit_code == 0
+    payload = json.loads(report_path.read_text(encoding="utf-8"))
+    assert payload["row_preset"] == "esg_energy:mixed_activity_rows"
+    assert payload["materialized_query"]["indexed_row_count"] == 8
+    assert payload["materialized_query"]["matched_count"] == 2

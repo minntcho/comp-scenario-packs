@@ -5,6 +5,11 @@ import tomllib
 from comp_scenario_packs.domains.esg_energy.filters import (
     get_energy_projection_filter,
 )
+from comp_scenario_packs.domains.esg_energy.fields import (
+    get_energy_projection_fields,
+)
+from comp_scenario_packs.domains.esg_energy.rows import get_energy_projection_rows
+from comp_scenario_packs.domains.presets import get_projection_row_preset
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,6 +25,47 @@ def test_esg_energy_filter_preset_returns_copy():
         "site": "plant-a",
     }
     assert first is not second
+
+
+def test_esg_energy_projection_fields_describe_public_activity_rows():
+    assert get_energy_projection_fields("pcf_activity_public_v0") == (
+        "supplier_id",
+        "site",
+        "period",
+        "activity_type",
+        "amount",
+        "unit",
+        "emissions_kgco2e",
+    )
+
+
+def test_esg_energy_row_preset_returns_selective_query_rows():
+    rows = get_energy_projection_rows("mixed_activity_rows")
+
+    assert rows[0] == {
+        "activity_type": "diesel",
+        "amount": 1200,
+        "emissions_kgco2e": 3216,
+        "period": "2026-01",
+        "site": "plant-a",
+        "supplier_id": "supplier:l-energy-fuel-a",
+        "unit": "L",
+    }
+    assert rows[1]["activity_type"] == "electricity"
+    assert rows[2]["site"] == "plant-b"
+
+    mutated = rows[0]
+    mutated["activity_type"] = "changed"
+    assert get_energy_projection_rows("mixed_activity_rows")[0]["activity_type"] == (
+        "diesel"
+    )
+
+
+def test_domain_preset_resolver_returns_esg_energy_rows():
+    rows = get_projection_row_preset("esg_energy:mixed_activity_rows")
+
+    assert len(rows) == 4
+    assert rows[0]["activity_type"] == "diesel"
 
 
 def test_domain_scenario_support_doc_defines_non_authority_boundary():
@@ -48,6 +94,7 @@ def test_scenario_support_blueprint_documents_operational_layout():
         "Do not put receipt authorization logic here",
         "Do not bypass replay",
         "Use --filter-preset when a domain helper owns the reusable query shape",
+        "Use --row-preset when a domain helper owns the reusable row mix",
     ]
     for phrase in required_phrases:
         assert phrase in doc

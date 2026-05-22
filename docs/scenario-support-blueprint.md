@@ -60,6 +60,7 @@ common/projection_query.py
 common/runtime_case_scaling.py
   benchmark-only RuntimeCase scaling
   projection and receipt key suffixing
+  benchmark row variants with matching value commitments
 
 common/benchmark_budgets.py
   runtime/query/index budget status
@@ -118,8 +119,19 @@ comp-scenario-packs bench-projection-query \
   --report benchmarks/projection-query.json
 ```
 
-Presets expand to ordinary filter dictionaries. They must not change replay,
-receipt validation, or projection authorization.
+Use --row-preset when a domain helper owns the reusable row mix:
+
+```bash
+comp-scenario-packs bench-projection-query \
+  scenarios/esg_energy/l_energy_pcf_governance/scenario.json \
+  --filter-preset esg_energy:plant_diesel_jan \
+  --row-preset esg_energy:mixed_activity_rows \
+  --report benchmarks/projection-query.json
+```
+
+Filter presets expand to ordinary filter dictionaries, and row presets expand
+to benchmark row dictionaries with matching value commitments. They must not
+change replay, receipt validation, or projection authorization.
 
 ## Adding A New Domain Support Helper
 
