@@ -19,11 +19,5 @@ jobs:
           python -m pip install -e ".[test]"
       - name: Run tests
         run: python -m pytest -q
-      - name: Validate public projection smoke manifest
-        run: python -m comp.cli.scenario scenario validate scenarios/public_projection_smoke/scenario.json
-      - name: Run public projection smoke pack
-        run: python -m comp.cli.scenario scenario run scenarios/public_projection_smoke/scenario.json --report reports/public_projection_smoke.json
-      - name: Validate L-Energy PCF governance smoke manifest
-        run: python -m comp.cli.scenario scenario validate scenarios/l_energy_pcf_governance/scenario.json
-      - name: Run L-Energy PCF governance smoke pack
-        run: python -m comp.cli.scenario scenario run scenarios/l_energy_pcf_governance/scenario.json --report reports/l_energy_pcf_governance.json
+      - name: Run scenario suite
+        run: python -m comp_scenario_packs.cli run-all --scenarios-dir scenarios --reports-dir reports

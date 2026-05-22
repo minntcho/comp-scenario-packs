@@ -74,11 +74,15 @@ Run tests:
 python -m pytest -q
 ```
 
-Run the active smoke pack:
+Run all checked-in scenario manifests:
 
 ```bash
-python -m comp.cli.scenario scenario run scenarios/public_projection_smoke/scenario.json --report reports/public_projection_smoke.json
+python -m comp_scenario_packs.cli run-all --scenarios-dir scenarios --reports-dir reports
 ```
+
+The suite runner discovers `scenarios/*/scenario.json`, runs each manifest
+through `comp.scenario_contracts`, writes one report per scenario, and writes a
+summary report to `reports/suite.json`.
 
 Use `docs/migration-checklist.md` before moving existing `comp`
 `tests/domain_scenarios` material into this repository.
