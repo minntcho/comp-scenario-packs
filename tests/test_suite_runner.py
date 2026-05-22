@@ -11,7 +11,11 @@ def test_discovers_all_checked_in_scenario_manifests():
     manifests = discover_scenario_manifests(ROOT / "scenarios")
 
     assert manifests == (
-        ROOT / "scenarios" / "l_energy_pcf_governance" / "scenario.json",
+        ROOT
+        / "scenarios"
+        / "esg_energy"
+        / "l_energy_pcf_governance"
+        / "scenario.json",
         ROOT / "scenarios" / "public_projection_smoke" / "scenario.json",
     )
 

@@ -55,7 +55,13 @@ def test_bench_projection_query_cli_writes_report(tmp_path):
     exit_code = main(
         [
             "bench-projection-query",
-            str(ROOT / "scenarios" / "l_energy_pcf_governance" / "scenario.json"),
+            str(
+                ROOT
+                / "scenarios"
+                / "esg_energy"
+                / "l_energy_pcf_governance"
+                / "scenario.json"
+            ),
             "--rows",
             "3",
             "--filter",
@@ -77,7 +83,13 @@ def test_bench_projection_query_cli_returns_failure_when_budget_is_exceeded(tmp_
     exit_code = main(
         [
             "bench-projection-query",
-            str(ROOT / "scenarios" / "l_energy_pcf_governance" / "scenario.json"),
+            str(
+                ROOT
+                / "scenarios"
+                / "esg_energy"
+                / "l_energy_pcf_governance"
+                / "scenario.json"
+            ),
             "--rows",
             "3",
             "--filter",
@@ -103,7 +115,13 @@ def test_bench_projection_query_cli_accepts_composite_filter(tmp_path):
     exit_code = main(
         [
             "bench-projection-query",
-            str(ROOT / "scenarios" / "l_energy_pcf_governance" / "scenario.json"),
+            str(
+                ROOT
+                / "scenarios"
+                / "esg_energy"
+                / "l_energy_pcf_governance"
+                / "scenario.json"
+            ),
             "--rows",
             "3",
             "--filter",
@@ -133,7 +151,13 @@ def test_bench_projection_query_cli_accepts_esg_energy_filter_preset(tmp_path):
     exit_code = main(
         [
             "bench-projection-query",
-            str(ROOT / "scenarios" / "l_energy_pcf_governance" / "scenario.json"),
+            str(
+                ROOT
+                / "scenarios"
+                / "esg_energy"
+                / "l_energy_pcf_governance"
+                / "scenario.json"
+            ),
             "--rows",
             "3",
             "--filter-preset",
