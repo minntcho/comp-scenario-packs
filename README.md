@@ -33,14 +33,15 @@ a receipt can be minted, and whether public projection is authorized.
 
 ## Current Status
 
-Status: bootstrap
+Status: active bootstrap / parallel validation
 
-`public_projection_smoke` is the first active canonical bundle. It runs through
-`comp.scenario_contracts` and verifies the external repo can consume `comp`
-without importing internal tests.
+`public_projection_smoke` is the active baseline public-surface smoke. It runs
+through `comp.scenario_contracts` and proves this downstream repository can
+consume `comp` without importing `comp` tests or private modules.
 
-`l_energy_pcf_governance` is a seeded pack intended to grow into the large
-L-Energy supplier workflow that stays outside the `comp` kernel repo.
+`l_energy_pcf_governance` is a seeded large-domain pack in parallel validation
+for `comp` internal scenario `l_energy_pcf_governance.v1`. It is not yet a
+replacement for all internal L-Energy micro-scenarios.
 
 ## Dependency Direction
 
