@@ -56,9 +56,10 @@ After `comp` v1.0, prefer version ranges:
 comp>=1.0,<2.0
 ```
 
-Scenario packs should import `comp` through public surfaces such as `comp`,
-`comp.compiler_tool`, and `comp.scenario_contracts`. Avoid importing private
-implementation modules or copying `comp` source into this repository.
+Scenario packs should import `comp` through public package surfaces such as
+`comp`, `comp.compiler_tool`, `comp.persistence`, and
+`comp.scenario_contracts`. Avoid importing private implementation modules,
+public-package submodules, or copying `comp` source into this repository.
 
 Domain-specific reuse belongs in scenario support modules, not authority
 modules. See `docs/domain-scenario-support.md` for the `common/` and `domains/`
