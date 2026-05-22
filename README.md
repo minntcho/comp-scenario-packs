@@ -90,6 +90,11 @@ The suite runner discovers `scenarios/**/scenario.json`, runs each manifest
 through `comp.scenario_contracts`, writes one report per scenario, and writes a
 summary report to `reports/suite.json`.
 
+The suite summary includes a `coverage` envelope that lists checked-in packs,
+cutover states, covered `comp` scenario ids, and the expected pre-v1 `comp`
+dependency. That envelope is review evidence only; it does not authorize public
+projection or replace `comp` receipt replay.
+
 Run the lightweight benchmark smoke:
 
 ```bash

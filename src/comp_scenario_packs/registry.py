@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 
 AUTHORITY_POLICY = "compatibility_signal_not_authority_source"
+COMP_DEPENDENCY_BEFORE_V1 = "comp @ git+https://github.com/minntcho/comp@main"
 
 
 @dataclass(frozen=True)
@@ -34,4 +35,40 @@ SCENARIO_PACKS = (
 )
 
 
-__all__ = ["AUTHORITY_POLICY", "SCENARIO_PACKS", "ScenarioPack"]
+def scenario_pack_coverage() -> dict[str, object]:
+    packs = tuple(sorted(SCENARIO_PACKS, key=lambda pack: pack.pack_id))
+    covered_ids = sorted(
+        {
+            scenario_id
+            for pack in packs
+            for scenario_id in pack.covered_comp_scenario_ids
+        }
+    )
+    cutover_states = sorted({pack.cutover_state for pack in packs})
+
+    return {
+        "comp_dependency": COMP_DEPENDENCY_BEFORE_V1,
+        "covered_comp_scenario_ids": covered_ids,
+        "cutover_states": cutover_states,
+        "packs": [
+            {
+                "pack_id": pack.pack_id,
+                "status": pack.status,
+                "scope": pack.scope,
+                "cutover_state": pack.cutover_state,
+                "covered_comp_scenario_ids": list(pack.covered_comp_scenario_ids),
+                "authority_policy": pack.authority_policy,
+                "comp_relationship": pack.comp_relationship,
+            }
+            for pack in packs
+        ],
+    }
+
+
+__all__ = [
+    "AUTHORITY_POLICY",
+    "COMP_DEPENDENCY_BEFORE_V1",
+    "SCENARIO_PACKS",
+    "ScenarioPack",
+    "scenario_pack_coverage",
+]
