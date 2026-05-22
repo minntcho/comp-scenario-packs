@@ -35,8 +35,12 @@ a receipt can be minted, and whether public projection is authorized.
 
 Status: bootstrap
 
-The first seeded pack is `l_energy_pcf_governance`, intended to grow into the
-large L-Energy supplier workflow that stays outside the `comp` kernel repo.
+`public_projection_smoke` is the first active canonical bundle. It runs through
+`comp.scenario_contracts` and verifies the external repo can consume `comp`
+without importing internal tests.
+
+`l_energy_pcf_governance` is a seeded pack intended to grow into the large
+L-Energy supplier workflow that stays outside the `comp` kernel repo.
 
 ## Dependency Direction
 
@@ -52,9 +56,9 @@ After `comp` v1.0, prefer version ranges:
 comp>=1.0,<2.0
 ```
 
-Scenario packs should import `comp` through public surfaces such as `comp` and
-`comp.compiler_tool`. Avoid importing private implementation modules or copying
-`comp` source into this repository.
+Scenario packs should import `comp` through public surfaces such as `comp`,
+`comp.compiler_tool`, and `comp.scenario_contracts`. Avoid importing private
+implementation modules or copying `comp` source into this repository.
 
 ## Local Development
 
@@ -68,6 +72,12 @@ Run tests:
 
 ```bash
 python -m pytest -q
+```
+
+Run the active smoke pack:
+
+```bash
+python -m comp.cli.scenario scenario run scenarios/public_projection_smoke/scenario.json --report reports/public_projection_smoke.json
 ```
 
 When developing against a local checkout of `comp`, put that checkout on
