@@ -19,6 +19,8 @@ def test_migration_checklist_defines_shadow_migration_rules():
         "parallel-validation",
         "discover_pack_metadata",
         "PackMetadataError",
+        "public_surfaces",
+        "ALLOWED_COMP_IMPORTS",
         "public_projection_smoke",
         "tests/domain_scenarios",
         "comp.scenario_contracts",

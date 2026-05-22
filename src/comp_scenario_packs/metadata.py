@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from comp_scenario_packs.boundaries import ALLOWED_COMP_IMPORTS
+
 
 class PackMetadataError(ValueError):
     """Raised when checked-in pack metadata violates migration rules."""
@@ -52,6 +54,7 @@ def load_pack_metadata(path: str | Path) -> PackMetadata:
     if not isinstance(payload, Mapping):
         raise PackMetadataError(f"Pack metadata must be an object: {pack_path}.")
     metadata = _pack_from_mapping(payload, path=pack_path)
+    _validate_public_surfaces(metadata, path=pack_path)
     _validate_shadow_coverage(metadata, path=pack_path)
     return metadata
 
@@ -121,6 +124,19 @@ def _validate_shadow_coverage(metadata: PackMetadata, *, path: Path) -> None:
         raise PackMetadataError(
             "Pack metadata with shadowed scenarios must use "
             f"cutover_state='parallel-validation': {path}."
+        )
+
+
+def _validate_public_surfaces(metadata: PackMetadata, *, path: Path) -> None:
+    undeclared = tuple(
+        surface
+        for surface in metadata.public_surfaces
+        if surface not in ALLOWED_COMP_IMPORTS
+    )
+    if undeclared:
+        raise PackMetadataError(
+            "Pack metadata public_surfaces must use declared comp surfaces: "
+            f"{', '.join(undeclared)} in {path}."
         )
 
 

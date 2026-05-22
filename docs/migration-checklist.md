@@ -22,6 +22,10 @@ Use `discover_pack_metadata(...)` when a test or report needs to inspect
 checked-in `pack.json` files generically. Invalid shadow coverage should raise
 `PackMetadataError` instead of silently producing a compatibility report.
 
+Pack metadata `public_surfaces` must only name `comp` surfaces declared by
+`ALLOWED_COMP_IMPORTS`. Invalid implementation submodules should raise
+`PackMetadataError` instead of becoming an implied public API.
+
 ## Keep In comp
 
 - Minimal kernel contract tests.
