@@ -17,6 +17,8 @@ def test_migration_checklist_defines_shadow_migration_rules():
         "## Shadow Run Before Removal",
         "shadowed_comp_scenarios",
         "parallel-validation",
+        "discover_pack_metadata",
+        "PackMetadataError",
         "public_projection_smoke",
         "tests/domain_scenarios",
         "comp.scenario_contracts",

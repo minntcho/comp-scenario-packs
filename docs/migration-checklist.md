@@ -18,6 +18,10 @@ internal scenario and the external prepared bundle are expected to stay green.
 That status is a migration signal only; it is not permission to remove the
 internal `comp` test.
 
+Use `discover_pack_metadata(...)` when a test or report needs to inspect
+checked-in `pack.json` files generically. Invalid shadow coverage should raise
+`PackMetadataError` instead of silently producing a compatibility report.
+
 ## Keep In comp
 
 - Minimal kernel contract tests.
