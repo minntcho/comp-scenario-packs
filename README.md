@@ -43,6 +43,11 @@ consume `comp` without importing `comp` tests or private modules.
 for `comp` internal scenario `l_energy_pcf_governance.v1`. It is not yet a
 replacement for all internal L-Energy micro-scenarios.
 
+`l_energy_alpha_invalid_allocation_rfi` is a seeded blocked/no-projection pack
+in parallel validation for `comp` internal scenario
+`l_energy.alpha_invalid_allocation_rfi.v1`. It covers the RFI path where public
+projection must remain absent.
+
 ## Dependency Direction
 
 Before `comp` v1.0, this repository may install `comp` from a Git ref:
