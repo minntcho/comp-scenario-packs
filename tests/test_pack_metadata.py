@@ -14,6 +14,8 @@ def test_seed_pack_is_declared_as_downstream_compatibility_signal():
 
     assert pack.pack_id == "l_energy_pcf_governance"
     assert pack.status == "seed"
+    assert pack.cutover_state == "parallel-validation"
+    assert pack.covered_comp_scenario_ids == ("l_energy_pcf_governance.v1",)
     assert pack.comp_relationship == "public_api_consumer"
     assert pack.authority_policy == AUTHORITY_POLICY
 
@@ -24,6 +26,8 @@ def test_l_energy_pack_metadata_keeps_authority_boundary():
     assert metadata["pack_id"] == "l_energy_pcf_governance"
     assert metadata["status"] == "seed"
     assert metadata["scope"] == "large-domain-and-product-e2e"
+    assert metadata["cutover_state"] == "parallel-validation"
+    assert metadata["covers_comp_scenario_ids"] == ["l_energy_pcf_governance.v1"]
     assert metadata["comp_relationship"] == "public_api_consumer"
     assert metadata["authority_policy"] == AUTHORITY_POLICY
     assert metadata["public_surfaces"] == [
@@ -52,6 +56,8 @@ def test_public_projection_smoke_metadata_keeps_authority_boundary():
     assert metadata["pack_id"] == "public_projection_smoke"
     assert metadata["status"] == "active"
     assert metadata["scope"] == "canonical-runtime-smoke"
+    assert metadata["cutover_state"] == "baseline-public-surface"
+    assert metadata["covers_comp_scenario_ids"] == []
     assert metadata["comp_relationship"] == "public_api_consumer"
     assert metadata["authority_policy"] == AUTHORITY_POLICY
     assert metadata["public_surfaces"] == [

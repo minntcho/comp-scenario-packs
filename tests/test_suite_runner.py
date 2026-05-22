@@ -60,6 +60,10 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
     suite_report = json.loads((tmp_path / "suite.json").read_text(encoding="utf-8"))
     assert suite_report["status"] == "passed"
     assert suite_report["scenario_count"] == 2
+    assert suite_report["pack_count"] == 2
+    assert suite_report["authority_policy"] == (
+        "compatibility_signal_not_authority_source"
+    )
     assert suite_report["scenarios"] == [
         {"scenario_id": "l_energy_pcf_governance", "status": "passed"},
         {"scenario_id": "public_projection_smoke", "status": "passed"},

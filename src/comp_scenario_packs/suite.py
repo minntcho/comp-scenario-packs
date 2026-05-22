@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from comp.scenario_contracts import ScenarioResult, load_manifest, run_scenario
+from comp_scenario_packs.registry import AUTHORITY_POLICY, SCENARIO_PACKS
 
 
 @dataclass(frozen=True)
@@ -18,6 +19,8 @@ class ScenarioSuiteResult:
         return {
             "status": self.status,
             "scenario_count": self.scenario_count,
+            "pack_count": len(SCENARIO_PACKS),
+            "authority_policy": AUTHORITY_POLICY,
             "scenarios": [
                 {
                     "scenario_id": result.scenario_id,
