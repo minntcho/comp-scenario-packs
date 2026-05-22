@@ -21,6 +21,9 @@ EXPECTED_SCENARIO_IDS = [
     "l_energy_steel_frame_proxy_assignment",
     "l_energy_tier0_physical_allocation",
     "public_projection_smoke",
+    "synthetic_pcf_anomaly",
+    "synthetic_pcf_resolution",
+    "synthetic_pcf_smoke",
 ]
 
 
@@ -34,7 +37,7 @@ def test_benchmark_smoke_runs_scenarios_and_writes_report(tmp_path):
 
     assert result["status"] == "passed"
     assert result["benchmark_id"] == "scenario_runtime_smoke"
-    assert result["scenario_count"] == 10
+    assert result["scenario_count"] == 13
     assert [item["scenario_id"] for item in result["scenarios"]] == (
         EXPECTED_SCENARIO_IDS
     )
@@ -54,6 +57,9 @@ def test_benchmark_smoke_runs_scenarios_and_writes_report(tmp_path):
         "l_energy_steel_frame_proxy_assignment": (1, 1),
         "l_energy_tier0_physical_allocation": (1, 1),
         "public_projection_smoke": (1, 1),
+        "synthetic_pcf_anomaly": (0, 0),
+        "synthetic_pcf_resolution": (1, 1),
+        "synthetic_pcf_smoke": (1, 1),
     }
 
     payload = json.loads(report_path.read_text(encoding="utf-8"))

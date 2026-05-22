@@ -27,6 +27,9 @@ def test_discovers_pack_metadata_from_checked_in_scenarios():
         "l_energy_steel_frame_proxy_assignment",
         "l_energy_tier0_physical_allocation",
         "public_projection_smoke",
+        "synthetic_pcf_anomaly",
+        "synthetic_pcf_resolution",
+        "synthetic_pcf_smoke",
     ]
     shadowed_by_id = {pack.pack_id: pack.shadowed_comp_scenario_ids for pack in packs}
     assert shadowed_by_id == {
@@ -52,6 +55,9 @@ def test_discovers_pack_metadata_from_checked_in_scenarios():
             "l_energy.tier0_physical_allocation.v1",
         ),
         "public_projection_smoke": (),
+        "synthetic_pcf_anomaly": ("synthetic_pcf.anomaly.v1",),
+        "synthetic_pcf_resolution": ("synthetic_pcf.resolution.v1",),
+        "synthetic_pcf_smoke": ("synthetic_pcf.smoke.v1",),
     }
 
 

@@ -1,0 +1,203 @@
+{
+  "case_id": "synthetic_pcf_smoke",
+  "projections": [
+    {
+      "draft_id": "draft:smoke",
+      "output_fields": [
+        "site",
+        "amount"
+      ],
+      "projection_id": "public-row",
+      "public_row_id": "public-row:smoke",
+      "row": {
+        "amount": 100,
+        "site": "plant-a"
+      }
+    }
+  ],
+  "receipts": [
+    {
+      "authorized_fields": [
+        "site",
+        "amount"
+      ],
+      "barrier_snapshot": [
+        [
+          "governance_decision_id",
+          "governance_decision:smoke"
+        ],
+        [
+          "governance_status",
+          "commit"
+        ],
+        [
+          "governance_reasons",
+          [
+            "ready"
+          ]
+        ],
+        [
+          "commit_package_id",
+          "commit_package:smoke"
+        ],
+        [
+          "commit_package_complete",
+          true
+        ],
+        [
+          "subject_id",
+          "facility:smoke"
+        ],
+        [
+          "projection_id",
+          "public-row"
+        ],
+        [
+          "authorized_fields",
+          [
+            "site",
+            "amount"
+          ]
+        ],
+        [
+          "profile_id",
+          null
+        ],
+        [
+          "report_status",
+          "accepted"
+        ],
+        [
+          "checked_claim_fields",
+          [
+            "site",
+            "amount"
+          ]
+        ],
+        [
+          "checked_claim_witness_ids",
+          []
+        ],
+        [
+          "semantic_judgment_ids",
+          []
+        ],
+        [
+          "reference_binding_ids",
+          []
+        ],
+        [
+          "derived_claim_fields",
+          []
+        ],
+        [
+          "derived_claim_ids",
+          []
+        ],
+        [
+          "calculation_trace_ids",
+          []
+        ],
+        [
+          "formula_ids",
+          []
+        ],
+        [
+          "resolved_obligation_ids",
+          []
+        ],
+        [
+          "open_obligation_ids",
+          []
+        ],
+        [
+          "hazard_ids",
+          []
+        ],
+        [
+          "projection_value_commitments",
+          [
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "site",
+                "source_id": "checked_claim:site:smoke",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:446705a2faff691995abbdcbdb9ce503e5aeb375cf931fbfbd92db3ac8216772"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "amount",
+                "source_id": "checked_claim:amount:smoke",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:7846b98c8ca7e0384a451d65df6abb4e2c24ef762ebfa55e307fbf781e227c59"
+              }
+            }
+          ]
+        ],
+        [
+          "dependency_fingerprints",
+          []
+        ]
+      ],
+      "citations": {
+        "authorized_fields": [
+          "site",
+          "amount"
+        ],
+        "calculation_trace_ids": [],
+        "checked_claim_fields": [
+          "site",
+          "amount"
+        ],
+        "checked_claim_witness_ids": [],
+        "commit_package_complete": true,
+        "commit_package_id": "commit_package:smoke",
+        "dependency_fingerprints": [],
+        "derived_claim_fields": [],
+        "derived_claim_ids": [],
+        "formula_ids": [],
+        "governance_decision_id": "governance_decision:smoke",
+        "governance_reasons": [
+          "ready"
+        ],
+        "governance_status": "commit",
+        "hazard_ids": [],
+        "open_obligation_ids": [],
+        "profile_id": null,
+        "projection_id": "public-row",
+        "projection_value_commitments": [
+          {
+            "digest_alg": "sha256",
+            "field": "site",
+            "source_id": "checked_claim:site:smoke",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:446705a2faff691995abbdcbdb9ce503e5aeb375cf931fbfbd92db3ac8216772"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "amount",
+            "source_id": "checked_claim:amount:smoke",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:7846b98c8ca7e0384a451d65df6abb4e2c24ef762ebfa55e307fbf781e227c59"
+          }
+        ],
+        "reference_binding_ids": [],
+        "report_status": "accepted",
+        "resolved_obligation_ids": [],
+        "semantic_judgment_ids": [],
+        "subject_id": "facility:smoke"
+      },
+      "draft_id": "draft:smoke",
+      "projection_id": "public-row",
+      "public_row_id": "public-row:smoke",
+      "winner_receipt_ids": [
+        "governance_decision:smoke"
+      ]
+    }
+  ]
+}

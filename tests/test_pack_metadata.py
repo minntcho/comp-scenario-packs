@@ -51,6 +51,27 @@ ROLLUP_PACKS = (
     ),
 )
 
+SYNTHETIC_PCF_PACKS = (
+    (
+        "synthetic_pcf_smoke",
+        "synthetic_pcf.smoke.v1",
+        "tests/domain_scenarios/synthetic_pcf_smoke/scenario.py",
+        "canonical_projection_smoke",
+    ),
+    (
+        "synthetic_pcf_anomaly",
+        "synthetic_pcf.anomaly.v1",
+        "tests/domain_scenarios/synthetic_pcf_anomaly/scenario.py",
+        "canonical_blocked_projection_smoke",
+    ),
+    (
+        "synthetic_pcf_resolution",
+        "synthetic_pcf.resolution.v1",
+        "tests/domain_scenarios/synthetic_pcf_resolution/scenario.py",
+        "canonical_projection_smoke",
+    ),
+)
+
 
 def test_seed_pack_is_declared_as_downstream_compatibility_signal():
     packs_by_id = {pack.pack_id: pack for pack in SCENARIO_PACKS}
@@ -278,6 +299,72 @@ def test_l_energy_pack_declares_shadowed_comp_scenario():
             "status": "parallel-validation",
             "comp_path": "tests/domain_scenarios/l_energy_pcf_governance/scenario.py",
             "authority_invariant": "canonical_projection_smoke",
+            "removal_policy": (
+                "keep_internal_until_external_green_and_kernel_smoke_remains"
+            ),
+        }
+    ]
+
+
+@pytest.mark.parametrize(
+    ("pack_id", "comp_scenario_id", "comp_path", "contract_id"),
+    SYNTHETIC_PCF_PACKS,
+)
+def test_synthetic_pcf_pack_metadata_keeps_authority_boundary(
+    pack_id,
+    comp_scenario_id,
+    comp_path,
+    contract_id,
+):
+    metadata = _load_json(f"scenarios/synthetic_pcf/{pack_id}/pack.json")
+    packs_by_id = {pack.pack_id: pack for pack in SCENARIO_PACKS}
+    pack = packs_by_id[pack_id]
+
+    assert pack.status == "seed"
+    assert pack.scope == "synthetic-generator-e2e"
+    assert pack.cutover_state == "parallel-validation"
+    assert pack.covered_comp_scenario_ids == (comp_scenario_id,)
+    assert pack.comp_relationship == "public_api_consumer"
+    assert pack.authority_policy == AUTHORITY_POLICY
+
+    assert metadata["pack_id"] == pack_id
+    assert metadata["status"] == "seed"
+    assert metadata["scope"] == "synthetic-generator-e2e"
+    assert metadata["cutover_state"] == "parallel-validation"
+    assert metadata["covers_comp_scenario_ids"] == [comp_scenario_id]
+    assert metadata["comp_relationship"] == "public_api_consumer"
+    assert metadata["authority_policy"] == AUTHORITY_POLICY
+    assert metadata["public_surfaces"] == [
+        "comp.scenario_contracts",
+    ]
+    assert metadata["input_mode"] == "canonical_bundle"
+    assert metadata["scenario_manifest"] == "scenario.json"
+    assert metadata["prepared_inputs"] == [
+        "prepared/runtime_case.json",
+        "prepared/artifact_envelopes.jsonl",
+    ]
+    assert metadata["runnable_contracts"] == [contract_id]
+
+
+@pytest.mark.parametrize(
+    ("pack_id", "comp_scenario_id", "comp_path", "contract_id"),
+    SYNTHETIC_PCF_PACKS,
+)
+def test_synthetic_pcf_packs_declare_shadowed_comp_scenarios(
+    pack_id,
+    comp_scenario_id,
+    comp_path,
+    contract_id,
+):
+    metadata = _load_json(f"scenarios/synthetic_pcf/{pack_id}/pack.json")
+
+    assert metadata["shadowed_comp_scenarios"] == [
+        {
+            "scenario_id": comp_scenario_id,
+            "residency_tier": "downstream-candidate",
+            "status": "parallel-validation",
+            "comp_path": comp_path,
+            "authority_invariant": contract_id,
             "removal_policy": (
                 "keep_internal_until_external_green_and_kernel_smoke_remains"
             ),

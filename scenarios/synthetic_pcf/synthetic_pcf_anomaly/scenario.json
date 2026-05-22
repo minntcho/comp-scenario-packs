@@ -1,0 +1,23 @@
+{
+  "artifact_envelopes": {
+    "path": "prepared/artifact_envelopes.jsonl"
+  },
+  "expected": {
+    "covers_comp_scenario_id": "synthetic_pcf.anomaly.v1",
+    "decision": "blocked",
+    "invariants": [
+      "replay_succeeds",
+      "blocking_hazards_absent"
+    ],
+    "projection": "none"
+  },
+  "id": "synthetic_pcf_anomaly",
+  "input_mode": "canonical_bundle",
+  "report": {
+    "format": "json",
+    "path": "reports/latest.json"
+  },
+  "runtime_case": {
+    "path": "prepared/runtime_case.json"
+  }
+}
