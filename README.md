@@ -63,7 +63,7 @@ comp>=1.0,<2.0
 ```
 
 Scenario packs should import `comp` through public package surfaces such as
-`comp`, `comp.compiler_tool`, `comp.persistence`, and
+`comp`, `comp.compiler_tool`, `comp.persistence`, `comp.runtime`, and
 `comp.scenario_contracts`. Avoid importing private implementation modules,
 public-package submodules, or copying `comp` source into this repository.
 

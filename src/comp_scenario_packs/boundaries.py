@@ -17,6 +17,7 @@ ALLOWED_COMP_IMPORTS = (
     "comp",
     "comp.compiler_tool",
     "comp.persistence",
+    "comp.runtime",
     "comp.scenario_contracts",
 )
 

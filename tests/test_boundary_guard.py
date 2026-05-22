@@ -17,10 +17,12 @@ def test_detects_forbidden_comp_test_and_private_imports():
             "import comp._internal",
             "from comp.scenario_contracts import run_scenario",
             "from comp.persistence import ArtifactEnvelope",
+            "import comp.runtime",
             "import comp.compiler_tool",
             "from comp import ProjectionSpec",
             "from comp.persistence.envelope import ArtifactEnvelope",
             "import comp.scenario_contracts.runner",
+            "from comp.runtime.compiler_run_artifacts import materialize_compiler_run_artifacts",
         ]
     )
 
@@ -29,8 +31,14 @@ def test_detects_forbidden_comp_test_and_private_imports():
     assert [(item.path, item.module, item.line, item.reason) for item in violations] == [
         ("pack.py", "comp.tests.domain_scenarios", 1, "comp_tests_import"),
         ("pack.py", "comp._internal", 2, "private_comp_import"),
-        ("pack.py", "comp.persistence.envelope", 7, "undeclared_comp_surface"),
-        ("pack.py", "comp.scenario_contracts.runner", 8, "undeclared_comp_surface"),
+        ("pack.py", "comp.persistence.envelope", 8, "undeclared_comp_surface"),
+        ("pack.py", "comp.scenario_contracts.runner", 9, "undeclared_comp_surface"),
+        (
+            "pack.py",
+            "comp.runtime.compiler_run_artifacts",
+            10,
+            "undeclared_comp_surface",
+        ),
     ]
 
 
@@ -39,6 +47,7 @@ def test_allowed_comp_imports_are_exact_public_surfaces():
         "comp",
         "comp.compiler_tool",
         "comp.persistence",
+        "comp.runtime",
         "comp.scenario_contracts",
     )
 
