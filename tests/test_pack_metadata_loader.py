@@ -81,6 +81,33 @@ def test_discovers_pack_metadata_from_checked_in_scenarios():
         "synthetic_pcf_resolution": ("canonical_projection_smoke",),
         "synthetic_pcf_smoke": ("canonical_projection_smoke",),
     }
+    source_refs_by_id = {
+        pack.pack_id: tuple(
+            {"repo": source.repo, "path": source.path} for source in pack.source_refs
+        )
+        for pack in packs
+    }
+    esg_platform_case = (
+        {
+            "repo": "minntcho/esg-platform",
+            "path": "tests/e2e/cases/001-l-energy-pcf-governance.yaml",
+        },
+    )
+    assert source_refs_by_id == {
+        "l_energy_alpha_invalid_allocation_rfi": esg_platform_case,
+        "l_energy_alpha_physical_allocation_correction": esg_platform_case,
+        "l_energy_c_pack_yield_rollup": esg_platform_case,
+        "l_energy_carbon_tech_certificate_submission": esg_platform_case,
+        "l_energy_final_bottom_up_pcf_rollup": esg_platform_case,
+        "l_energy_l_materials_composition_rollup": esg_platform_case,
+        "l_energy_pcf_governance": esg_platform_case,
+        "l_energy_steel_frame_proxy_assignment": esg_platform_case,
+        "l_energy_tier0_physical_allocation": esg_platform_case,
+        "public_projection_smoke": (),
+        "synthetic_pcf_anomaly": (),
+        "synthetic_pcf_resolution": (),
+        "synthetic_pcf_smoke": (),
+    }
 
 
 def test_registry_matches_checked_in_pack_metadata():
@@ -206,4 +233,39 @@ def test_shadowed_pack_runnable_contracts_cover_authority_invariants(tmp_path):
     )
 
     with pytest.raises(PackMetadataError, match="runnable_contracts"):
+        load_pack_metadata(pack_dir / "pack.json")
+
+
+def test_source_refs_must_be_repo_path_objects(tmp_path):
+    pack_dir = tmp_path / "pack"
+    pack_dir.mkdir()
+    (pack_dir / "pack.json").write_text(
+        """
+        {
+          "schema_version": 1,
+          "pack_id": "bad_source_ref",
+          "status": "seed",
+          "scope": "large-domain-and-product-e2e",
+          "cutover_state": "parallel-validation",
+          "covers_comp_scenario_ids": [],
+          "comp_relationship": "public_api_consumer",
+          "authority_policy": "compatibility_signal_not_authority_source",
+          "public_surfaces": ["comp.scenario_contracts"],
+          "input_mode": "canonical_bundle",
+          "scenario_manifest": "scenario.json",
+          "prepared_inputs": [
+            "prepared/runtime_case.json",
+            "prepared/artifact_envelopes.jsonl"
+          ],
+          "source_refs": [
+            {
+              "repo": "minntcho/esg-platform"
+            }
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(PackMetadataError, match="source_refs.path"):
         load_pack_metadata(pack_dir / "pack.json")

@@ -23,6 +23,8 @@ def test_migration_checklist_defines_shadow_migration_rules():
         "ALLOWED_COMP_IMPORTS",
         "runnable_contracts",
         "authority_invariant",
+        "source_refs",
+        "provenance signal",
         "public_projection_smoke",
         "tests/domain_scenarios",
         "comp.scenario_contracts",
