@@ -118,11 +118,11 @@ through `comp.scenario_contracts`, writes one report per scenario, and writes a
 summary report to `reports/suite.json`.
 
 The suite summary includes a `coverage` envelope that lists checked-in packs,
-cutover states, covered `comp` scenario ids, source refs, and the expected
-pre-v1 `comp` dependency. The envelope is generated from checked-in pack
-metadata, while the import-time registry remains a convenience surface. That
-envelope is review evidence only; it does not authorize public projection or
-replace `comp` receipt replay.
+cutover states, covered `comp` scenario ids, runnable contracts, source refs,
+and the expected pre-v1 `comp` dependency. The envelope is generated from
+checked-in pack metadata, while the import-time registry remains a convenience
+surface. That envelope is review evidence only; it does not authorize public
+projection or replace `comp` receipt replay.
 
 The top-level `SCENARIO_PACKS` export is derived from checked-in `pack.json`
 metadata in this checkout. Treat it as an import convenience for coarse pack

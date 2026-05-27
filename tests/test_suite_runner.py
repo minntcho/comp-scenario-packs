@@ -178,7 +178,7 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
     assert suite_report["authority_policy"] == (
         "compatibility_signal_not_authority_source"
     )
-    assert _coverage_without_source_refs(suite_report["coverage"]) == {
+    assert _coverage_without_pack_metadata_extensions(suite_report["coverage"]) == {
         "comp_dependency": "comp @ git+https://github.com/minntcho/comp@main",
         "covered_comp_scenario_ids": EXPECTED_COVERED_COMP_SCENARIO_IDS,
         "cutover_states": [
@@ -323,6 +323,10 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
         pack["pack_id"]: pack["source_refs"]
         for pack in suite_report["coverage"]["packs"]
     }
+    runnable_contracts_by_pack = {
+        pack["pack_id"]: pack["runnable_contracts"]
+        for pack in suite_report["coverage"]["packs"]
+    }
     esg_platform_case = [
         {
             "repo": "minntcho/esg-platform",
@@ -335,17 +339,28 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
     )
     assert source_refs_by_pack["public_projection_smoke"] == []
     assert source_refs_by_pack["synthetic_pcf_smoke"] == []
+    assert runnable_contracts_by_pack["l_energy_pcf_governance"] == [
+        "canonical_projection_smoke"
+    ]
+    assert runnable_contracts_by_pack["l_energy_alpha_invalid_allocation_rfi"] == [
+        "canonical_blocked_projection_smoke"
+    ]
+    assert runnable_contracts_by_pack["public_projection_smoke"] == []
     assert suite_report["scenarios"] == [
         {"scenario_id": scenario_id, "status": "passed"}
         for scenario_id in EXPECTED_SCENARIO_IDS
     ]
 
 
-def _coverage_without_source_refs(coverage):
+def _coverage_without_pack_metadata_extensions(coverage):
     return {
         **coverage,
         "packs": [
-            {key: value for key, value in pack.items() if key != "source_refs"}
+            {
+                key: value
+                for key, value in pack.items()
+                if key not in {"runnable_contracts", "source_refs"}
+            }
             for pack in coverage["packs"]
         ],
     }
