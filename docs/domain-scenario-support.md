@@ -27,10 +27,15 @@ src/comp_scenario_packs/
       fields.py
       filters.py
       rows.py
+
+  adapters/
+    csv_public_projection.py
 ```
 
 `common/` is for domain-neutral benchmark mechanics. `domains/*` is for
 downstream scenario helpers that make examples and benchmark commands reusable.
+`adapters/` is for small raw input conversion rehearsals that produce candidate
+prepared bundles before `comp.scenario_contracts` runs the authority path.
 
 ## Import Rules
 
@@ -43,6 +48,10 @@ package-level public surfaces declared in `compat/comp-main.json` and
 completed compiler run into replay material, keep that logic in benchmark or
 suite code that calls public `comp.scenario_contracts` or `comp.runtime`
 surfaces.
+
+Adapters may load CSV, YAML, platform exports, or supplier inputs, but they are
+candidate producers only. They must not mint receipts, validate claims,
+canonicalize references, or authorize public projection.
 
 ## Current Presets
 
