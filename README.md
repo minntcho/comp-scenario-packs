@@ -119,8 +119,10 @@ summary report to `reports/suite.json`.
 
 The suite summary includes a `coverage` envelope that lists checked-in packs,
 cutover states, covered `comp` scenario ids, source refs, and the expected
-pre-v1 `comp` dependency. That envelope is review evidence only; it does not
-authorize public projection or replace `comp` receipt replay.
+pre-v1 `comp` dependency. The envelope is generated from checked-in pack
+metadata, while the import-time registry remains a convenience surface. That
+envelope is review evidence only; it does not authorize public projection or
+replace `comp` receipt replay.
 
 Run the lightweight benchmark smoke:
 

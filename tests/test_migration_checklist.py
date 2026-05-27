@@ -25,6 +25,8 @@ def test_migration_checklist_defines_shadow_migration_rules():
         "authority_invariant",
         "source_refs",
         "provenance signal",
+        "suite coverage",
+        "checked-in `pack.json` metadata",
         "public_projection_smoke",
         "tests/domain_scenarios",
         "comp.scenario_contracts",
