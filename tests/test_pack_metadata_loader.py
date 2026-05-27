@@ -25,6 +25,8 @@ def test_discovers_pack_metadata_from_checked_in_scenarios():
         "l_energy_l_materials_composition_rollup",
         "l_energy_pcf_governance",
         "l_energy_steel_frame_proxy_assignment",
+        "l_energy_supplier_evidence_match_acceptance",
+        "l_energy_supplier_evidence_mismatch_rfi",
         "l_energy_tier0_physical_allocation",
         "public_projection_smoke",
         "synthetic_pcf_anomaly",
@@ -51,6 +53,10 @@ def test_discovers_pack_metadata_from_checked_in_scenarios():
         "l_energy_steel_frame_proxy_assignment": (
             "l_energy.steel_frame_proxy_assignment.v1",
         ),
+        "l_energy_supplier_evidence_match_acceptance": (
+            "l_energy.supplier_evidence_match_acceptance.v1",
+        ),
+        "l_energy_supplier_evidence_mismatch_rfi": (),
         "l_energy_tier0_physical_allocation": (
             "l_energy.tier0_physical_allocation.v1",
         ),
@@ -75,6 +81,12 @@ def test_discovers_pack_metadata_from_checked_in_scenarios():
         "l_energy_l_materials_composition_rollup": ("canonical_projection_smoke",),
         "l_energy_pcf_governance": ("canonical_projection_smoke",),
         "l_energy_steel_frame_proxy_assignment": ("canonical_projection_smoke",),
+        "l_energy_supplier_evidence_match_acceptance": (
+            "canonical_projection_smoke",
+        ),
+        "l_energy_supplier_evidence_mismatch_rfi": (
+            "canonical_blocked_projection_smoke",
+        ),
         "l_energy_tier0_physical_allocation": ("canonical_projection_smoke",),
         "public_projection_smoke": (),
         "synthetic_pcf_anomaly": ("canonical_blocked_projection_smoke",),
@@ -93,6 +105,16 @@ def test_discovers_pack_metadata_from_checked_in_scenarios():
             "path": "tests/e2e/cases/001-l-energy-pcf-governance.yaml",
         },
     )
+    supplier_evidence_case = (
+        {
+            "repo": "minntcho/esg-platform",
+            "path": "tests/e2e/cases/001-l-energy-pcf-governance.yaml",
+        },
+        {
+            "repo": "minntcho/evidence-toolchain",
+            "path": "docs/contracts/evidence-report.md",
+        },
+    )
     assert source_refs_by_id == {
         "l_energy_alpha_invalid_allocation_rfi": esg_platform_case,
         "l_energy_alpha_physical_allocation_correction": esg_platform_case,
@@ -102,6 +124,8 @@ def test_discovers_pack_metadata_from_checked_in_scenarios():
         "l_energy_l_materials_composition_rollup": esg_platform_case,
         "l_energy_pcf_governance": esg_platform_case,
         "l_energy_steel_frame_proxy_assignment": esg_platform_case,
+        "l_energy_supplier_evidence_match_acceptance": supplier_evidence_case,
+        "l_energy_supplier_evidence_mismatch_rfi": supplier_evidence_case,
         "l_energy_tier0_physical_allocation": esg_platform_case,
         "public_projection_smoke": (),
         "synthetic_pcf_anomaly": (),

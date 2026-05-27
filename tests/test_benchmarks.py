@@ -19,6 +19,8 @@ EXPECTED_SCENARIO_IDS = [
     "l_energy_l_materials_composition_rollup",
     "l_energy_pcf_governance",
     "l_energy_steel_frame_proxy_assignment",
+    "l_energy_supplier_evidence_match_acceptance",
+    "l_energy_supplier_evidence_mismatch_rfi",
     "l_energy_tier0_physical_allocation",
     "public_projection_smoke",
     "synthetic_pcf_anomaly",
@@ -37,7 +39,7 @@ def test_benchmark_smoke_runs_scenarios_and_writes_report(tmp_path):
 
     assert result["status"] == "passed"
     assert result["benchmark_id"] == "scenario_runtime_smoke"
-    assert result["scenario_count"] == 13
+    assert result["scenario_count"] == 15
     assert [item["scenario_id"] for item in result["scenarios"]] == (
         EXPECTED_SCENARIO_IDS
     )
@@ -55,6 +57,8 @@ def test_benchmark_smoke_runs_scenarios_and_writes_report(tmp_path):
         "l_energy_l_materials_composition_rollup": (1, 1),
         "l_energy_pcf_governance": (1, 1),
         "l_energy_steel_frame_proxy_assignment": (1, 1),
+        "l_energy_supplier_evidence_match_acceptance": (1, 1),
+        "l_energy_supplier_evidence_mismatch_rfi": (0, 0),
         "l_energy_tier0_physical_allocation": (1, 1),
         "public_projection_smoke": (1, 1),
         "synthetic_pcf_anomaly": (0, 0),
