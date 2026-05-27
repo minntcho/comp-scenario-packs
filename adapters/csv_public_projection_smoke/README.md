@@ -17,3 +17,9 @@ Run the smoke test with:
 ```bash
 python -m pytest tests/test_csv_public_projection_adapter.py -q
 ```
+
+Generate a replayable bundle from the fixture with:
+
+```bash
+python -m comp_scenario_packs.cli adapt-csv-public-projection adapters/csv_public_projection_smoke/sample.csv --bundle-dir out/csv-public-projection
+```

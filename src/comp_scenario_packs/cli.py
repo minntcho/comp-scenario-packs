@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from collections.abc import Sequence
 
+from comp_scenario_packs.adapters import write_csv_public_projection_bundle
 from comp_scenario_packs.benchmarks import (
     run_benchmark_smoke,
     run_projection_query_benchmark,
@@ -18,6 +19,14 @@ from comp_scenario_packs.suite import run_scenario_suite
 def main(argv: Sequence[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
+    if args.command == "adapt-csv-public-projection":
+        bundle = write_csv_public_projection_bundle(
+            args.csv_path,
+            args.bundle_dir,
+            force=args.force,
+        )
+        print(f"{bundle.scenario_id}: wrote {bundle.manifest_path}")
+        return 0
     if args.command == "run-all":
         result = run_scenario_suite(args.scenarios_dir, reports_dir=args.reports_dir)
         print(f"scenario suite: {result.status} ({result.scenario_count} scenarios)")
@@ -74,6 +83,17 @@ def main(argv: Sequence[str] | None = None) -> int:
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="comp-scenario-packs")
     subparsers = parser.add_subparsers(dest="command", required=True)
+    csv_adapter = subparsers.add_parser(
+        "adapt-csv-public-projection",
+        help="Convert one CSV public-projection fixture into a replay bundle.",
+    )
+    csv_adapter.add_argument("csv_path")
+    csv_adapter.add_argument("--bundle-dir", required=True)
+    csv_adapter.add_argument(
+        "--force",
+        action="store_true",
+        help="Allow writing into an existing non-empty bundle directory.",
+    )
     run_all = subparsers.add_parser(
         "run-all",
         help="Run every checked-in scenario manifest through comp.",
