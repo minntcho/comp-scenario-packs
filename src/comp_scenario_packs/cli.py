@@ -13,6 +13,7 @@ from comp_scenario_packs.domains.presets import (
     get_projection_filter_preset,
     get_projection_row_preset,
 )
+from comp_scenario_packs.lat_check import validate_lat_document
 from comp_scenario_packs.suite import run_scenario_suite
 
 
@@ -76,6 +77,15 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"({result['materialized_query']['matched_count']} matches)"
         )
         return 0 if result["status"] == "passed" else 1
+    if args.command == "lat-check":
+        result = validate_lat_document(args.path)
+        if result.errors:
+            print("lat-check: failed")
+            for error in result.errors:
+                print(f"- {error}")
+            return 1
+        print(f"lat-check: passed ({args.path})")
+        return 0
     parser.print_help()
     return 2
 
@@ -127,6 +137,11 @@ def _build_parser() -> argparse.ArgumentParser:
     projection_query.add_argument("--max-index-build-ms", type=float, default=None)
     projection_query.add_argument("--max-selectivity-ratio", type=float, default=None)
     projection_query.add_argument("--report", default="benchmarks/projection-query.json")
+    lat_check = subparsers.add_parser(
+        "lat-check",
+        help="Validate the lightweight architecture trace.",
+    )
+    lat_check.add_argument("path", nargs="?", default="lat.md")
     return parser
 
 

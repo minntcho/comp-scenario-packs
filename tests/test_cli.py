@@ -33,6 +33,12 @@ def test_adapt_csv_public_projection_cli_writes_replayable_bundle(tmp_path, caps
     assert result.status == "passed"
 
 
+def test_lat_check_cli_validates_current_lat():
+    exit_code = main(["lat-check", str(ROOT / "lat.md")])
+
+    assert exit_code == 0
+
+
 def test_bench_replay_scale_cli_writes_report(tmp_path):
     report_path = tmp_path / "replay-scale.json"
 
