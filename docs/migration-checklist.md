@@ -35,6 +35,9 @@ For shadowed scenarios, pack metadata `runnable_contracts` must include every
 `authority_invariant` named under `shadowed_comp_scenarios`. This keeps the
 downstream pack's migration claim tied to a contract the pack actually runs
 through the public scenario bridge.
+The suite coverage envelope should carry the runnable contract list for each
+pack as review evidence; the list describes what the downstream pack exercises
+and does not authorize projection.
 
 Pack metadata `source_refs` should name the external repository and path that a
 downstream fixture represents. Treat source refs as a provenance signal for

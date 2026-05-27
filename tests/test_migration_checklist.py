@@ -29,6 +29,7 @@ def test_migration_checklist_defines_shadow_migration_rules():
         "checked-in `pack.json` metadata",
         "SCENARIO_PACKS",
         "derived convenience export",
+        "runnable contract list",
         "public_projection_smoke",
         "tests/domain_scenarios",
         "comp.scenario_contracts",

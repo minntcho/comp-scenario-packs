@@ -52,6 +52,7 @@ def test_scenario_pack_coverage_uses_metadata_when_provided():
                 "covered_comp_scenario_ids": ["metadata.scenario.v1"],
                 "authority_policy": AUTHORITY_POLICY,
                 "comp_relationship": "public_api_consumer",
+                "runnable_contracts": ["canonical_projection_smoke"],
                 "source_refs": [
                     {
                         "repo": "minntcho/example-platform",

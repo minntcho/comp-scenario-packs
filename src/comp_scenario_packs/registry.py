@@ -70,6 +70,9 @@ def scenario_pack_coverage(
                 "covered_comp_scenario_ids": list(pack.covered_comp_scenario_ids),
                 "authority_policy": pack.authority_policy,
                 "comp_relationship": pack.comp_relationship,
+                "runnable_contracts": _runnable_contracts_to_list(
+                    metadata_by_id.get(pack.pack_id)
+                ),
                 "source_refs": _source_refs_to_dicts(
                     metadata_by_id.get(pack.pack_id)
                 ),
@@ -95,6 +98,12 @@ def _source_refs_to_dicts(metadata: PackMetadata | None) -> list[dict[str, str]]
     if metadata is None:
         return []
     return [_source_ref_to_dict(source_ref) for source_ref in metadata.source_refs]
+
+
+def _runnable_contracts_to_list(metadata: PackMetadata | None) -> list[str]:
+    if metadata is None:
+        return []
+    return list(metadata.runnable_contracts)
 
 
 def _source_ref_to_dict(source_ref: SourceRef) -> dict[str, str]:
