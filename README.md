@@ -64,6 +64,12 @@ validation:
 the corresponding internal rollup scenarios while `comp` remains the receipt
 and replay authority.
 
+The supplier evidence-review packs are seeded in parallel validation:
+`l_energy_supplier_evidence_match_acceptance` covers the accepted path where a
+supplier evidence report matches declared activity and receipt-gated projection
+is present, while `l_energy_supplier_evidence_mismatch_rfi` covers the RFI path
+where disputed supplier evidence must not enter public projection.
+
 `synthetic_pcf_smoke`, `synthetic_pcf_anomaly`, and
 `synthetic_pcf_resolution` are seeded synthetic-generator packs in parallel
 validation for the corresponding `comp` internal synthetic PCF scenarios. Raw

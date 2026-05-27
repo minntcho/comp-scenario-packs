@@ -1,0 +1,25 @@
+{
+  "artifact_envelopes": {
+    "path": "prepared/artifact_envelopes.jsonl"
+  },
+  "expected": {
+    "covers_comp_scenario_id": "l_energy.supplier_evidence_mismatch_rfi.v1",
+    "decision": "blocked",
+    "evidence_review": "mismatch_rfi",
+    "invariants": [
+      "replay_succeeds",
+      "blocking_hazards_absent"
+    ],
+    "projection": "none"
+  },
+  "id": "l_energy_supplier_evidence_mismatch_rfi",
+  "input_mode": "canonical_bundle",
+  "report": {
+    "format": "json",
+    "path": "reports/latest.json"
+  },
+  "runtime_case": {
+    "path": "prepared/runtime_case.json"
+  }
+}
+

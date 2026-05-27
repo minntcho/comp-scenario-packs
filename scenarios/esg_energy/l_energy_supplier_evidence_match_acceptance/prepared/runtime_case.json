@@ -1,0 +1,444 @@
+{
+  "case_id": "l_energy_supplier_evidence_match_acceptance",
+  "projections": [
+    {
+      "draft_id": "draft:l-energy-supplier-evidence-review:match",
+      "output_fields": [
+        "supplier_id",
+        "site",
+        "period",
+        "component_id",
+        "activity_type",
+        "amount",
+        "unit",
+        "emissions_kgco2e",
+        "evidence_report_id",
+        "evidence_status",
+        "review_decision"
+      ],
+      "projection_id": "l-energy-supplier-evidence-review",
+      "public_row_id": "public-row:l-energy-supplier-evidence-review:match",
+      "row": {
+        "activity_type": "electricity",
+        "amount": 8400,
+        "component_id": "component:battery-housing-plate",
+        "emissions_kgco2e": 3612,
+        "evidence_report_id": "evidence-report:alpha-metal:2026-01:electricity",
+        "evidence_status": "matched",
+        "period": "2026-01",
+        "review_decision": "accepted",
+        "site": "plant-alpha-a",
+        "supplier_id": "supplier:alpha-metal",
+        "unit": "kWh"
+      }
+    }
+  ],
+  "receipts": [
+    {
+      "authorized_fields": [
+        "supplier_id",
+        "site",
+        "period",
+        "component_id",
+        "activity_type",
+        "amount",
+        "unit",
+        "emissions_kgco2e",
+        "evidence_report_id",
+        "evidence_status",
+        "review_decision"
+      ],
+      "barrier_snapshot": [
+        [
+          "governance_decision_id",
+          "governance_decision:l-energy-supplier-evidence-review:match"
+        ],
+        [
+          "governance_status",
+          "commit"
+        ],
+        [
+          "governance_reasons",
+          [
+            "evidence_report_matches_supplier_activity"
+          ]
+        ],
+        [
+          "commit_package_id",
+          "commit_package:l-energy-supplier-evidence-review:match"
+        ],
+        [
+          "commit_package_complete",
+          true
+        ],
+        [
+          "subject_id",
+          "supplier:alpha-metal:plant-alpha-a"
+        ],
+        [
+          "projection_id",
+          "l-energy-supplier-evidence-review"
+        ],
+        [
+          "authorized_fields",
+          [
+            "supplier_id",
+            "site",
+            "period",
+            "component_id",
+            "activity_type",
+            "amount",
+            "unit",
+            "emissions_kgco2e",
+            "evidence_report_id",
+            "evidence_status",
+            "review_decision"
+          ]
+        ],
+        [
+          "profile_id",
+          "profile:l-energy-supplier-evidence-review:match"
+        ],
+        [
+          "report_status",
+          "accepted"
+        ],
+        [
+          "checked_claim_fields",
+          [
+            "supplier_id",
+            "site",
+            "period",
+            "component_id",
+            "activity_type",
+            "amount",
+            "unit",
+            "emissions_kgco2e",
+            "evidence_report_id",
+            "evidence_status",
+            "review_decision"
+          ]
+        ],
+        [
+          "checked_claim_witness_ids",
+          [
+            "evidence-report:alpha-metal:2026-01:electricity"
+          ]
+        ],
+        [
+          "semantic_judgment_ids",
+          [
+            "review:alpha-metal:2026-01:evidence-match"
+          ]
+        ],
+        [
+          "reference_binding_ids",
+          [
+            "supplier-declaration:alpha-metal:2026-01"
+          ]
+        ],
+        [
+          "derived_claim_fields",
+          []
+        ],
+        [
+          "derived_claim_ids",
+          []
+        ],
+        [
+          "calculation_trace_ids",
+          [
+            "calc:alpha-metal:2026-01:electricity-pcf"
+          ]
+        ],
+        [
+          "formula_ids",
+          [
+            "ef:korea-grid-electricity:2026-01"
+          ]
+        ],
+        [
+          "resolved_obligation_ids",
+          [
+            "rfi:alpha-metal:2026-01:electricity-variance"
+          ]
+        ],
+        [
+          "open_obligation_ids",
+          []
+        ],
+        [
+          "hazard_ids",
+          []
+        ],
+        [
+          "projection_value_commitments",
+          [
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "supplier_id",
+                "source_id": "checked_claim:l-energy-supplier-evidence-review:supplier_id",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:6ac34bc814e836b701129445164ff0e21b9fc6d1e75a17099cb5da43286171ce"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "site",
+                "source_id": "checked_claim:l-energy-supplier-evidence-review:site",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:2f12910ef34723aabfd2655e0810df43f6c6c5e7f332624c9780d5bcc5c979d5"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "period",
+                "source_id": "checked_claim:l-energy-supplier-evidence-review:period",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:ad57116f1c4df2cd4c5aba6dd954bc9dbccab13064e6c35b822efdf562602c8a"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "component_id",
+                "source_id": "checked_claim:l-energy-supplier-evidence-review:component_id",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:4ef8c3b9d73c3bca7f23cba09b1e7b24090dc1015965dddcd3c90776325fbea5"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "activity_type",
+                "source_id": "checked_claim:l-energy-supplier-evidence-review:activity_type",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:ea2fe822e19fdc3b069075b9e7f8d6ce7e72c9863350a5b4e29a4527c8d839cd"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "amount",
+                "source_id": "checked_claim:l-energy-supplier-evidence-review:amount",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:2ecba9625374484a01cd03a84d1bb88547e1147a8c3ef8958d96b8b3d3c11ee7"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "unit",
+                "source_id": "checked_claim:l-energy-supplier-evidence-review:unit",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:2cfbd63a5121d265558a28fe2b7b85adc69b95493b333175893559a43dc8b41a"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "emissions_kgco2e",
+                "source_id": "checked_claim:l-energy-supplier-evidence-review:emissions_kgco2e",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:d5d5eb7444e8ef5d641f7c3458b0ba98e346a962bfabf4258205fb11091cdbbe"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "evidence_report_id",
+                "source_id": "checked_claim:l-energy-supplier-evidence-review:evidence_report_id",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:4e9777b60f3ec1be5bb518bc9ffa4a49f0ae3c4e87900ae905a0b10b906fee4b"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "evidence_status",
+                "source_id": "checked_claim:l-energy-supplier-evidence-review:evidence_status",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:3b09ab7ee3c4988291b6cc584a2eafcad3bbd8a1f326a970c35cfa673165e7d3"
+              }
+            },
+            {
+              "__receipt_type__": "projection_value_commitment",
+              "value": {
+                "digest_alg": "sha256",
+                "field": "review_decision",
+                "source_id": "checked_claim:l-energy-supplier-evidence-review:review_decision",
+                "source_kind": "checked_claim",
+                "value_digest": "sha256:c36738dc1b781eac0d73f5d526f2936a3c99647057e6b5ae219f51d364a7537e"
+              }
+            }
+          ]
+        ],
+        [
+          "dependency_fingerprints",
+          []
+        ]
+      ],
+      "citations": {
+        "authorized_fields": [
+          "supplier_id",
+          "site",
+          "period",
+          "component_id",
+          "activity_type",
+          "amount",
+          "unit",
+          "emissions_kgco2e",
+          "evidence_report_id",
+          "evidence_status",
+          "review_decision"
+        ],
+        "calculation_trace_ids": [
+          "calc:alpha-metal:2026-01:electricity-pcf"
+        ],
+        "checked_claim_fields": [
+          "supplier_id",
+          "site",
+          "period",
+          "component_id",
+          "activity_type",
+          "amount",
+          "unit",
+          "emissions_kgco2e",
+          "evidence_report_id",
+          "evidence_status",
+          "review_decision"
+        ],
+        "checked_claim_witness_ids": [
+          "evidence-report:alpha-metal:2026-01:electricity"
+        ],
+        "commit_package_complete": true,
+        "commit_package_id": "commit_package:l-energy-supplier-evidence-review:match",
+        "dependency_fingerprints": [],
+        "derived_claim_fields": [],
+        "derived_claim_ids": [],
+        "formula_ids": [
+          "ef:korea-grid-electricity:2026-01"
+        ],
+        "governance_decision_id": "governance_decision:l-energy-supplier-evidence-review:match",
+        "governance_reasons": [
+          "evidence_report_matches_supplier_activity"
+        ],
+        "governance_status": "commit",
+        "hazard_ids": [],
+        "open_obligation_ids": [],
+        "profile_id": "profile:l-energy-supplier-evidence-review:match",
+        "projection_id": "l-energy-supplier-evidence-review",
+        "projection_value_commitments": [
+          {
+            "digest_alg": "sha256",
+            "field": "supplier_id",
+            "source_id": "checked_claim:l-energy-supplier-evidence-review:supplier_id",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:6ac34bc814e836b701129445164ff0e21b9fc6d1e75a17099cb5da43286171ce"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "site",
+            "source_id": "checked_claim:l-energy-supplier-evidence-review:site",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:2f12910ef34723aabfd2655e0810df43f6c6c5e7f332624c9780d5bcc5c979d5"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "period",
+            "source_id": "checked_claim:l-energy-supplier-evidence-review:period",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:ad57116f1c4df2cd4c5aba6dd954bc9dbccab13064e6c35b822efdf562602c8a"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "component_id",
+            "source_id": "checked_claim:l-energy-supplier-evidence-review:component_id",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:4ef8c3b9d73c3bca7f23cba09b1e7b24090dc1015965dddcd3c90776325fbea5"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "activity_type",
+            "source_id": "checked_claim:l-energy-supplier-evidence-review:activity_type",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:ea2fe822e19fdc3b069075b9e7f8d6ce7e72c9863350a5b4e29a4527c8d839cd"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "amount",
+            "source_id": "checked_claim:l-energy-supplier-evidence-review:amount",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:2ecba9625374484a01cd03a84d1bb88547e1147a8c3ef8958d96b8b3d3c11ee7"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "unit",
+            "source_id": "checked_claim:l-energy-supplier-evidence-review:unit",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:2cfbd63a5121d265558a28fe2b7b85adc69b95493b333175893559a43dc8b41a"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "emissions_kgco2e",
+            "source_id": "checked_claim:l-energy-supplier-evidence-review:emissions_kgco2e",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:d5d5eb7444e8ef5d641f7c3458b0ba98e346a962bfabf4258205fb11091cdbbe"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "evidence_report_id",
+            "source_id": "checked_claim:l-energy-supplier-evidence-review:evidence_report_id",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:4e9777b60f3ec1be5bb518bc9ffa4a49f0ae3c4e87900ae905a0b10b906fee4b"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "evidence_status",
+            "source_id": "checked_claim:l-energy-supplier-evidence-review:evidence_status",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:3b09ab7ee3c4988291b6cc584a2eafcad3bbd8a1f326a970c35cfa673165e7d3"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "review_decision",
+            "source_id": "checked_claim:l-energy-supplier-evidence-review:review_decision",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:c36738dc1b781eac0d73f5d526f2936a3c99647057e6b5ae219f51d364a7537e"
+          }
+        ],
+        "reference_binding_ids": [
+          "supplier-declaration:alpha-metal:2026-01"
+        ],
+        "report_status": "accepted",
+        "resolved_obligation_ids": [
+          "rfi:alpha-metal:2026-01:electricity-variance"
+        ],
+        "semantic_judgment_ids": [
+          "review:alpha-metal:2026-01:evidence-match"
+        ],
+        "subject_id": "supplier:alpha-metal:plant-alpha-a"
+      },
+      "draft_id": "draft:l-energy-supplier-evidence-review:match",
+      "projection_id": "l-energy-supplier-evidence-review",
+      "public_row_id": "public-row:l-energy-supplier-evidence-review:match",
+      "winner_receipt_ids": [
+        "governance_decision:l-energy-supplier-evidence-review:match"
+      ]
+    }
+  ]
+}
+

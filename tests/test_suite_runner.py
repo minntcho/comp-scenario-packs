@@ -19,6 +19,8 @@ EXPECTED_SCENARIO_IDS = [
     "l_energy_l_materials_composition_rollup",
     "l_energy_pcf_governance",
     "l_energy_steel_frame_proxy_assignment",
+    "l_energy_supplier_evidence_match_acceptance",
+    "l_energy_supplier_evidence_mismatch_rfi",
     "l_energy_tier0_physical_allocation",
     "public_projection_smoke",
     "synthetic_pcf_anomaly",
@@ -34,6 +36,8 @@ EXPECTED_COVERED_COMP_SCENARIO_IDS = [
     "l_energy.final_bottom_up_pcf_rollup.v1",
     "l_energy.l_materials_composition_rollup.v1",
     "l_energy.steel_frame_proxy_assignment.v1",
+    "l_energy.supplier_evidence_match_acceptance.v1",
+    "l_energy.supplier_evidence_mismatch_rfi.v1",
     "l_energy.tier0_physical_allocation.v1",
     "l_energy_pcf_governance.v1",
     "synthetic_pcf.anomaly.v1",
@@ -85,6 +89,16 @@ def test_discovers_all_checked_in_scenario_manifests():
         / "scenarios"
         / "esg_energy"
         / "l_energy_steel_frame_proxy_assignment"
+        / "scenario.json",
+        ROOT
+        / "scenarios"
+        / "esg_energy"
+        / "l_energy_supplier_evidence_match_acceptance"
+        / "scenario.json",
+        ROOT
+        / "scenarios"
+        / "esg_energy"
+        / "l_energy_supplier_evidence_mismatch_rfi"
         / "scenario.json",
         ROOT
         / "scenarios"
@@ -149,9 +163,9 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
     )
 
     assert result.status == "passed"
-    assert result.scenario_count == 13
+    assert result.scenario_count == 15
     assert [item.scenario_id for item in result.results] == EXPECTED_SCENARIO_IDS
-    assert [item.status for item in result.results] == ["passed"] * 13
+    assert [item.status for item in result.results] == ["passed"] * 15
 
     report_paths = sorted(tmp_path.glob("*.json"))
     assert [path.name for path in report_paths] == [
@@ -163,6 +177,8 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
         "l_energy_l_materials_composition_rollup.json",
         "l_energy_pcf_governance.json",
         "l_energy_steel_frame_proxy_assignment.json",
+        "l_energy_supplier_evidence_match_acceptance.json",
+        "l_energy_supplier_evidence_mismatch_rfi.json",
         "l_energy_tier0_physical_allocation.json",
         "public_projection_smoke.json",
         "suite.json",
@@ -173,8 +189,8 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
 
     suite_report = json.loads((tmp_path / "suite.json").read_text(encoding="utf-8"))
     assert suite_report["status"] == "passed"
-    assert suite_report["scenario_count"] == 13
-    assert suite_report["pack_count"] == 13
+    assert suite_report["scenario_count"] == 15
+    assert suite_report["pack_count"] == 15
     assert suite_report["authority_policy"] == (
         "compatibility_signal_not_authority_source"
     )
@@ -266,6 +282,28 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
                 "cutover_state": "parallel-validation",
                 "covered_comp_scenario_ids": [
                     "l_energy.steel_frame_proxy_assignment.v1"
+                ],
+                "authority_policy": "compatibility_signal_not_authority_source",
+                "comp_relationship": "public_api_consumer",
+            },
+            {
+                "pack_id": "l_energy_supplier_evidence_match_acceptance",
+                "status": "seed",
+                "scope": "large-domain-and-product-e2e",
+                "cutover_state": "parallel-validation",
+                "covered_comp_scenario_ids": [
+                    "l_energy.supplier_evidence_match_acceptance.v1"
+                ],
+                "authority_policy": "compatibility_signal_not_authority_source",
+                "comp_relationship": "public_api_consumer",
+            },
+            {
+                "pack_id": "l_energy_supplier_evidence_mismatch_rfi",
+                "status": "seed",
+                "scope": "large-domain-and-product-e2e",
+                "cutover_state": "parallel-validation",
+                "covered_comp_scenario_ids": [
+                    "l_energy.supplier_evidence_mismatch_rfi.v1"
                 ],
                 "authority_policy": "compatibility_signal_not_authority_source",
                 "comp_relationship": "public_api_consumer",

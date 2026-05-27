@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "pack_id": "l_energy_supplier_evidence_mismatch_rfi",
+  "status": "seed",
+  "scope": "large-domain-and-product-e2e",
+  "cutover_state": "parallel-validation",
+  "covers_comp_scenario_ids": [
+    "l_energy.supplier_evidence_mismatch_rfi.v1"
+  ],
+  "comp_relationship": "public_api_consumer",
+  "authority_policy": "compatibility_signal_not_authority_source",
+  "public_surfaces": [
+    "comp.scenario_contracts"
+  ],
+  "input_mode": "canonical_bundle",
+  "scenario_manifest": "scenario.json",
+  "prepared_inputs": [
+    "prepared/runtime_case.json",
+    "prepared/artifact_envelopes.jsonl"
+  ],
+  "runnable_contracts": [
+    "canonical_blocked_projection_smoke"
+  ],
+  "source_refs": [
+    {
+      "repo": "minntcho/esg-platform",
+      "path": "tests/e2e/cases/001-l-energy-pcf-governance.yaml"
+    },
+    {
+      "repo": "minntcho/evidence-toolchain",
+      "path": "docs/contracts/evidence-report.md"
+    }
+  ],
+  "planned_flows": [
+    "supplier_activity_submission",
+    "evidence_toolchain_verification_report_binding",
+    "supplier_rfi_workflow",
+    "no_projection_receipt_gate"
+  ]
+}
