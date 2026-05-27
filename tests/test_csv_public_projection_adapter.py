@@ -55,6 +55,7 @@ def test_csv_adapter_docs_keep_authority_boundary_explicit():
     readme = (
         ROOT / "adapters" / "csv_public_projection_smoke" / "README.md"
     ).read_text(encoding="utf-8")
+    project_readme = (ROOT / "README.md").read_text(encoding="utf-8")
     blueprint = (ROOT / "docs" / "scenario-support-blueprint.md").read_text(
         encoding="utf-8"
     )
@@ -62,5 +63,7 @@ def test_csv_adapter_docs_keep_authority_boundary_explicit():
     assert "candidate producer" in readme
     assert "does not mint receipts" in readme
     assert "comp.scenario_contracts.run_scenario" in readme
+    assert "adapt-csv-public-projection" in readme
+    assert "adapt-csv-public-projection" in project_readme
     assert "Adding An Adapter Smoke" in blueprint
     assert "adapters prepare candidate inputs" in blueprint

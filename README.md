@@ -130,6 +130,12 @@ Run the adapter smoke:
 python -m pytest tests/test_csv_public_projection_adapter.py -q
 ```
 
+Generate a replayable bundle from the CSV adapter fixture:
+
+```bash
+python -m comp_scenario_packs.cli adapt-csv-public-projection adapters/csv_public_projection_smoke/sample.csv --bundle-dir out/csv-public-projection
+```
+
 Run all checked-in scenario manifests:
 
 ```bash

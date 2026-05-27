@@ -1,10 +1,36 @@
 import json
 from pathlib import Path
 
+from comp.scenario_contracts import load_manifest, run_scenario
+
 from comp_scenario_packs.cli import main
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_adapt_csv_public_projection_cli_writes_replayable_bundle(tmp_path, capsys):
+    bundle_dir = tmp_path / "csv-public-projection"
+
+    exit_code = main(
+        [
+            "adapt-csv-public-projection",
+            str(ROOT / "adapters" / "csv_public_projection_smoke" / "sample.csv"),
+            "--bundle-dir",
+            str(bundle_dir),
+        ]
+    )
+
+    output = capsys.readouterr().out
+    result = run_scenario(
+        load_manifest(bundle_dir / "scenario.json"),
+        report_path=tmp_path / "report.json",
+    )
+
+    assert exit_code == 0
+    assert "csv_public_projection_smoke: wrote" in output
+    assert str(bundle_dir / "scenario.json") in output
+    assert result.status == "passed"
 
 
 def test_bench_replay_scale_cli_writes_report(tmp_path):
