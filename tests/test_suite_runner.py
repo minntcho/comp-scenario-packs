@@ -1,7 +1,11 @@
 import json
 from pathlib import Path
 
-from comp_scenario_packs.suite import discover_scenario_manifests, run_scenario_suite
+from comp_scenario_packs.suite import (
+    ScenarioSuiteResult,
+    discover_scenario_manifests,
+    run_scenario_suite,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -120,6 +124,22 @@ def test_discovers_nested_domain_scenario_manifests(tmp_path):
         nested / "scenario.json",
         shallow / "scenario.json",
     )
+
+
+def test_suite_result_pack_count_comes_from_coverage_envelope():
+    result = ScenarioSuiteResult(
+        status="passed",
+        scenario_count=0,
+        results=(),
+        coverage={
+            "packs": [
+                {"pack_id": "one"},
+                {"pack_id": "two"},
+            ],
+        },
+    )
+
+    assert result.to_dict()["pack_count"] == 2
 
 
 def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):

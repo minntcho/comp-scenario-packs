@@ -124,10 +124,23 @@ SCENARIO_PACKS = (
 
 
 def scenario_pack_coverage(
-    pack_metadata: Iterable[PackMetadata] = (),
+    pack_metadata: Iterable[PackMetadata] | None = None,
 ) -> dict[str, object]:
-    packs = tuple(sorted(SCENARIO_PACKS, key=lambda pack: pack.pack_id))
-    metadata_by_id = {metadata.pack_id: metadata for metadata in pack_metadata}
+    metadata = (
+        None
+        if pack_metadata is None
+        else tuple(sorted(pack_metadata, key=lambda pack: pack.pack_id))
+    )
+    packs = (
+        tuple(_pack_from_metadata(item) for item in metadata)
+        if metadata is not None
+        else tuple(sorted(SCENARIO_PACKS, key=lambda pack: pack.pack_id))
+    )
+    metadata_by_id = (
+        {}
+        if metadata is None
+        else {item.pack_id: item for item in metadata}
+    )
     covered_ids = sorted(
         {
             scenario_id
@@ -157,6 +170,18 @@ def scenario_pack_coverage(
             for pack in packs
         ],
     }
+
+
+def _pack_from_metadata(metadata: PackMetadata) -> ScenarioPack:
+    return ScenarioPack(
+        pack_id=metadata.pack_id,
+        status=metadata.status,
+        scope=metadata.scope,
+        cutover_state=metadata.cutover_state,
+        covered_comp_scenario_ids=metadata.covers_comp_scenario_ids,
+        authority_policy=metadata.authority_policy,
+        comp_relationship=metadata.comp_relationship,
+    )
 
 
 def _source_refs_to_dicts(metadata: PackMetadata | None) -> list[dict[str, str]]:

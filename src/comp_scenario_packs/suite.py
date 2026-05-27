@@ -9,7 +9,6 @@ from comp.scenario_contracts import ScenarioResult, load_manifest, run_scenario
 from comp_scenario_packs.metadata import discover_pack_metadata
 from comp_scenario_packs.registry import (
     AUTHORITY_POLICY,
-    SCENARIO_PACKS,
     scenario_pack_coverage,
 )
 
@@ -23,12 +22,13 @@ class ScenarioSuiteResult:
     coverage: Mapping[str, object] | None = None
 
     def to_dict(self) -> dict[str, object]:
+        coverage = dict(self.coverage or scenario_pack_coverage())
         return {
             "status": self.status,
             "scenario_count": self.scenario_count,
-            "pack_count": len(SCENARIO_PACKS),
+            "pack_count": len(coverage.get("packs", ())),
             "authority_policy": AUTHORITY_POLICY,
-            "coverage": dict(self.coverage or scenario_pack_coverage()),
+            "coverage": coverage,
             "scenarios": [
                 {
                     "scenario_id": result.scenario_id,

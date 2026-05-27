@@ -21,6 +21,9 @@ internal `comp` test.
 Use `discover_pack_metadata(...)` when a test or report needs to inspect
 checked-in `pack.json` files generically. Invalid shadow coverage should raise
 `PackMetadataError` instead of silently producing a compatibility report.
+The suite coverage envelope should be built from checked-in `pack.json` metadata,
+while the import-time registry remains a convenience surface for callers that
+only need the coarse pack list.
 
 Pack metadata `public_surfaces` must only name `comp` surfaces declared by
 `ALLOWED_COMP_IMPORTS`. Invalid implementation submodules should raise
