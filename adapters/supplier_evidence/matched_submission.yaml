@@ -1,0 +1,38 @@
+case_id: supplier_evidence_adapter_smoke
+subject_id: supplier:alpha-metal:plant-alpha-a
+public_row_id: public-row:supplier-evidence-adapter:matched
+projection_id: supplier-evidence-public-row
+sources:
+  supplier_submission:
+    ref: supplier_upload:alpha-metal-2026-01.yaml
+  evidence_report:
+    ref: evidence_report:evidence-report-alpha-metal-2026-01.json
+claims:
+  supplier_id:
+    value: supplier:alpha-metal
+    source: supplier_submission
+    span: supplier.id
+  site:
+    value: plant-alpha-a
+    source: supplier_submission
+    span: facility.site
+  activity_type:
+    value: electricity
+    source: supplier_submission
+    span: activity.type
+  amount:
+    value: 8400
+    source: evidence_report
+    span: evidence.activity.amount
+  unit:
+    value: kWh
+    source: evidence_report
+    span: evidence.activity.unit
+  evidence_report_id:
+    value: evidence-report:alpha-metal:2026-01:electricity
+    source: evidence_report
+    span: report.id
+  evidence_status:
+    value: matched
+    source: evidence_report
+    span: review.status

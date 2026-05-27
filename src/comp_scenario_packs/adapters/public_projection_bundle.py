@@ -54,6 +54,8 @@ def write_public_projection_bundle(
     public_row: Mapping[str, Any],
     origin: str,
     evidence: Mapping[str, Mapping[str, str]] | None = None,
+    artifact_source_refs: tuple[str, ...] | None = None,
+    allowed_units: frozenset[str] = frozenset(),
     force: bool = False,
 ) -> PublicProjectionBundle:
     """Write a replay bundle through public comp validation and runtime APIs."""
@@ -67,7 +69,10 @@ def write_public_projection_bundle(
     artifact_envelopes_path = prepared / "artifact_envelopes.jsonl"
     manifest_path = target / "scenario.json"
 
-    report = CompilerTool(known_fields=frozenset(field_order)).compile_interpretation(
+    report = CompilerTool(
+        allowed_units=allowed_units,
+        known_fields=frozenset(field_order),
+    ).compile_interpretation(
         InterpretationHypothesis(
             hypothesis_id=f"adapter:{case_id}",
             subject_id=subject_id,
@@ -84,7 +89,7 @@ def write_public_projection_bundle(
                 EvidenceRef(
                     witness_id=f"{case_id}:{field}",
                     field=field,
-                    source=source_ref,
+                    source=_evidence_value(evidence, field, "source", source_ref),
                     span=_evidence_value(evidence, field, "span", field),
                     text=_evidence_value(
                         evidence,
@@ -132,7 +137,7 @@ def write_public_projection_bundle(
                 artifact_kind=material.artifact_kind,
                 schema_version=material.schema_version,
                 body=material.body,
-                source_refs=(source_ref,),
+                source_refs=artifact_source_refs or (source_ref,),
                 meta=material.meta,
             )
             for material in materialize_compiler_run_artifacts(report, preparation)
