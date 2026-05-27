@@ -39,6 +39,35 @@ def test_lat_check_cli_validates_current_lat():
     assert exit_code == 0
 
 
+def test_adapt_yaml_public_projection_cli_writes_replayable_bundle(tmp_path, capsys):
+    bundle_dir = tmp_path / "yaml-public-projection"
+
+    exit_code = main(
+        [
+            "adapt-yaml-public-projection",
+            str(
+                ROOT
+                / "adapters"
+                / "yaml_case_loader"
+                / "public_projection_smoke.yaml"
+            ),
+            "--bundle-dir",
+            str(bundle_dir),
+        ]
+    )
+
+    output = capsys.readouterr().out
+    result = run_scenario(
+        load_manifest(bundle_dir / "scenario.json"),
+        report_path=tmp_path / "report.json",
+    )
+
+    assert exit_code == 0
+    assert "yaml_public_projection_smoke: wrote" in output
+    assert str(bundle_dir / "scenario.json") in output
+    assert result.status == "passed"
+
+
 def test_bench_replay_scale_cli_writes_report(tmp_path):
     report_path = tmp_path / "replay-scale.json"
 

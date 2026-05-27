@@ -1,0 +1,15 @@
+case_id: yaml_public_projection_smoke
+subject_id: facility:yaml-smoke
+public_row_id: public-row:yaml-smoke
+projection_id: public-row
+claims:
+  site:
+    value: plant-a
+    evidence:
+      span: claims.site.value
+      text: plant-a
+  amount:
+    value: 100
+    evidence:
+      span: claims.amount.value
+      text: "100"

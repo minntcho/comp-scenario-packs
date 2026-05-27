@@ -3,7 +3,10 @@ from __future__ import annotations
 import argparse
 from collections.abc import Sequence
 
-from comp_scenario_packs.adapters import write_csv_public_projection_bundle
+from comp_scenario_packs.adapters import (
+    write_csv_public_projection_bundle,
+    write_yaml_public_projection_bundle,
+)
 from comp_scenario_packs.benchmarks import (
     run_benchmark_smoke,
     run_projection_query_benchmark,
@@ -23,6 +26,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "adapt-csv-public-projection":
         bundle = write_csv_public_projection_bundle(
             args.csv_path,
+            args.bundle_dir,
+            force=args.force,
+        )
+        print(f"{bundle.scenario_id}: wrote {bundle.manifest_path}")
+        return 0
+    if args.command == "adapt-yaml-public-projection":
+        bundle = write_yaml_public_projection_bundle(
+            args.yaml_path,
             args.bundle_dir,
             force=args.force,
         )
@@ -100,6 +111,17 @@ def _build_parser() -> argparse.ArgumentParser:
     csv_adapter.add_argument("csv_path")
     csv_adapter.add_argument("--bundle-dir", required=True)
     csv_adapter.add_argument(
+        "--force",
+        action="store_true",
+        help="Allow writing into an existing non-empty bundle directory.",
+    )
+    yaml_adapter = subparsers.add_parser(
+        "adapt-yaml-public-projection",
+        help="Convert one YAML public-projection case into a replay bundle.",
+    )
+    yaml_adapter.add_argument("yaml_path")
+    yaml_adapter.add_argument("--bundle-dir", required=True)
+    yaml_adapter.add_argument(
         "--force",
         action="store_true",
         help="Allow writing into an existing non-empty bundle directory.",
