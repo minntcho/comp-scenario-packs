@@ -24,6 +24,8 @@ checked-in `pack.json` files generically. Invalid shadow coverage should raise
 The suite coverage envelope should be built from checked-in `pack.json` metadata,
 while the import-time registry remains a convenience surface for callers that
 only need the coarse pack list.
+`SCENARIO_PACKS` should stay a derived convenience export, not a second place to
+hand-maintain pack coverage.
 
 Pack metadata `public_surfaces` must only name `comp` surfaces declared by
 `ALLOWED_COMP_IMPORTS`. Invalid implementation submodules should raise
