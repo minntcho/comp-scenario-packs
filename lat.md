@@ -42,6 +42,8 @@ lat.md                         = what we learned
 accepted docs / code / tests   = what changed
 ```
 
+LAT tooling automates architecture attention, not architecture decisions.
+
 ---
 
 ## 1. Agent Rules
@@ -129,6 +131,7 @@ date: 2026-05-27
 owner: both
 class: diagnostic_gap
 target: scenario reports
+fingerprint: diagnostic_gap:unknown:scenario_reports:unknown_failed_reason
 authority_impact: none
 public_api_impact: possible
 source:
@@ -211,6 +214,7 @@ Preferred checks:
 ```bash
 python -m comp_scenario_packs.cli run-all --scenarios-dir scenarios --reports-dir reports/latest
 python -m comp_scenario_packs.cli bench-smoke --scenarios-dir scenarios --report benchmarks/latest.json
+python -m comp_scenario_packs.cli lat-suggest --suite reports/latest/suite.json --lat lat.md --out .lat/drafts
 ```
 
 Before closing an item, run the relevant checks and update the trace entry with:

@@ -39,6 +39,57 @@ def test_lat_check_cli_validates_current_lat():
     assert exit_code == 0
 
 
+def test_lat_suggest_cli_writes_signal_artifact(tmp_path, capsys):
+    reports_dir = tmp_path / "reports"
+    reports_dir.mkdir()
+    suite_path = reports_dir / "suite.json"
+    suite_path.write_text(
+        json.dumps(
+            {
+                "status": "passed",
+                "scenario_count": 1,
+                "scenarios": [
+                    {
+                        "scenario_id": "public_projection_smoke",
+                        "status": "passed",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (reports_dir / "public_projection_smoke.json").write_text(
+        json.dumps(
+            {
+                "scenario_id": "public_projection_smoke",
+                "status": "passed",
+                "replay": {"checked": 1, "failed": 0},
+            }
+        ),
+        encoding="utf-8",
+    )
+    lat_path = tmp_path / "lat.md"
+    lat_path.write_text("# LAT - Lightweight Architecture Trace\n", encoding="utf-8")
+    out_dir = tmp_path / ".lat" / "drafts"
+
+    exit_code = main(
+        [
+            "lat-suggest",
+            "--suite",
+            str(suite_path),
+            "--lat",
+            str(lat_path),
+            "--out",
+            str(out_dir),
+        ]
+    )
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert "lat-suggest: observed 1, drafted 0, suppressed 0" in output
+    assert (tmp_path / ".lat" / "run" / "latest-signals.json").exists()
+
+
 def test_adapt_yaml_public_projection_cli_writes_replayable_bundle(tmp_path, capsys):
     bundle_dir = tmp_path / "yaml-public-projection"
 

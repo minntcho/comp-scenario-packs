@@ -8,3 +8,4 @@ build/
 /reports/*.json
 /scenarios/*/reports/*.json
 /benchmarks/*.json
+.lat/
