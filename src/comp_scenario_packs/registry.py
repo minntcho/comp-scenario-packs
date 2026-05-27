@@ -2,8 +2,13 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from pathlib import Path
 
-from comp_scenario_packs.metadata import PackMetadata, SourceRef
+from comp_scenario_packs.metadata import (
+    PackMetadata,
+    SourceRef,
+    discover_pack_metadata,
+)
 
 
 AUTHORITY_POLICY = "compatibility_signal_not_authority_source"
@@ -21,126 +26,28 @@ class ScenarioPack:
     comp_relationship: str = "public_api_consumer"
 
 
-SCENARIO_PACKS = (
-    ScenarioPack(
-        pack_id="public_projection_smoke",
-        status="active",
-        scope="canonical-runtime-smoke",
-        cutover_state="baseline-public-surface",
-    ),
-    ScenarioPack(
-        pack_id="l_energy_alpha_invalid_allocation_rfi",
-        status="seed",
-        scope="large-domain-and-product-e2e",
-        cutover_state="parallel-validation",
-        covered_comp_scenario_ids=("l_energy.alpha_invalid_allocation_rfi.v1",),
-    ),
-    ScenarioPack(
-        pack_id="l_energy_alpha_physical_allocation_correction",
-        status="seed",
-        scope="large-domain-and-product-e2e",
-        cutover_state="parallel-validation",
-        covered_comp_scenario_ids=(
-            "l_energy.alpha_physical_allocation_correction.v1",
-        ),
-    ),
-    ScenarioPack(
-        pack_id="l_energy_steel_frame_proxy_assignment",
-        status="seed",
-        scope="large-domain-and-product-e2e",
-        cutover_state="parallel-validation",
-        covered_comp_scenario_ids=("l_energy.steel_frame_proxy_assignment.v1",),
-    ),
-    ScenarioPack(
-        pack_id="l_energy_carbon_tech_certificate_submission",
-        status="seed",
-        scope="large-domain-and-product-e2e",
-        cutover_state="parallel-validation",
-        covered_comp_scenario_ids=(
-            "l_energy.carbon_tech_certificate_submission.v1",
-        ),
-    ),
-    ScenarioPack(
-        pack_id="l_energy_l_materials_composition_rollup",
-        status="seed",
-        scope="large-domain-and-product-e2e",
-        cutover_state="parallel-validation",
-        covered_comp_scenario_ids=(
-            "l_energy.l_materials_composition_rollup.v1",
-        ),
-    ),
-    ScenarioPack(
-        pack_id="l_energy_c_pack_yield_rollup",
-        status="seed",
-        scope="large-domain-and-product-e2e",
-        cutover_state="parallel-validation",
-        covered_comp_scenario_ids=("l_energy.c_pack_yield_rollup.v1",),
-    ),
-    ScenarioPack(
-        pack_id="l_energy_tier0_physical_allocation",
-        status="seed",
-        scope="large-domain-and-product-e2e",
-        cutover_state="parallel-validation",
-        covered_comp_scenario_ids=("l_energy.tier0_physical_allocation.v1",),
-    ),
-    ScenarioPack(
-        pack_id="l_energy_final_bottom_up_pcf_rollup",
-        status="seed",
-        scope="large-domain-and-product-e2e",
-        cutover_state="parallel-validation",
-        covered_comp_scenario_ids=(
-            "l_energy.final_bottom_up_pcf_rollup.v1",
-        ),
-    ),
-    ScenarioPack(
-        pack_id="l_energy_pcf_governance",
-        status="seed",
-        scope="large-domain-and-product-e2e",
-        cutover_state="parallel-validation",
-        covered_comp_scenario_ids=("l_energy_pcf_governance.v1",),
-    ),
-    ScenarioPack(
-        pack_id="synthetic_pcf_smoke",
-        status="seed",
-        scope="synthetic-generator-e2e",
-        cutover_state="parallel-validation",
-        covered_comp_scenario_ids=("synthetic_pcf.smoke.v1",),
-    ),
-    ScenarioPack(
-        pack_id="synthetic_pcf_anomaly",
-        status="seed",
-        scope="synthetic-generator-e2e",
-        cutover_state="parallel-validation",
-        covered_comp_scenario_ids=("synthetic_pcf.anomaly.v1",),
-    ),
-    ScenarioPack(
-        pack_id="synthetic_pcf_resolution",
-        status="seed",
-        scope="synthetic-generator-e2e",
-        cutover_state="parallel-validation",
-        covered_comp_scenario_ids=("synthetic_pcf.resolution.v1",),
-    ),
-)
+DEFAULT_SCENARIOS_DIR = Path(__file__).resolve().parents[2] / "scenarios"
+
+
+def discover_registered_scenario_packs(
+    scenarios_dir: str | Path = DEFAULT_SCENARIOS_DIR,
+) -> tuple[ScenarioPack, ...]:
+    return tuple(
+        _pack_from_metadata(metadata)
+        for metadata in discover_pack_metadata(scenarios_dir)
+    )
 
 
 def scenario_pack_coverage(
     pack_metadata: Iterable[PackMetadata] | None = None,
 ) -> dict[str, object]:
     metadata = (
-        None
+        discover_pack_metadata(DEFAULT_SCENARIOS_DIR)
         if pack_metadata is None
         else tuple(sorted(pack_metadata, key=lambda pack: pack.pack_id))
     )
-    packs = (
-        tuple(_pack_from_metadata(item) for item in metadata)
-        if metadata is not None
-        else tuple(sorted(SCENARIO_PACKS, key=lambda pack: pack.pack_id))
-    )
-    metadata_by_id = (
-        {}
-        if metadata is None
-        else {item.pack_id: item for item in metadata}
-    )
+    packs = tuple(_pack_from_metadata(item) for item in metadata)
+    metadata_by_id = {item.pack_id: item for item in metadata}
     covered_ids = sorted(
         {
             scenario_id
@@ -197,10 +104,15 @@ def _source_ref_to_dict(source_ref: SourceRef) -> dict[str, str]:
     }
 
 
+SCENARIO_PACKS = discover_registered_scenario_packs()
+
+
 __all__ = [
     "AUTHORITY_POLICY",
     "COMP_DEPENDENCY_BEFORE_V1",
+    "DEFAULT_SCENARIOS_DIR",
     "SCENARIO_PACKS",
     "ScenarioPack",
+    "discover_registered_scenario_packs",
     "scenario_pack_coverage",
 ]

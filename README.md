@@ -124,6 +124,10 @@ metadata, while the import-time registry remains a convenience surface. That
 envelope is review evidence only; it does not authorize public projection or
 replace `comp` receipt replay.
 
+The top-level `SCENARIO_PACKS` export is derived from checked-in `pack.json`
+metadata in this checkout. Treat it as an import convenience for coarse pack
+lists, not as a separate coverage source to edit by hand.
+
 Run the lightweight benchmark smoke:
 
 ```bash

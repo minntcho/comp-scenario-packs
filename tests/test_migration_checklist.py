@@ -27,6 +27,8 @@ def test_migration_checklist_defines_shadow_migration_rules():
         "provenance signal",
         "suite coverage",
         "checked-in `pack.json` metadata",
+        "SCENARIO_PACKS",
+        "derived convenience export",
         "public_projection_smoke",
         "tests/domain_scenarios",
         "comp.scenario_contracts",
