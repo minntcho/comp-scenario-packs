@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
   "comp @ git+https://github.com/minntcho/comp@main",
+  "PyYAML>=6.0",
 ]
 
 [project.optional-dependencies]
