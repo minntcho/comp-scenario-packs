@@ -17,6 +17,7 @@ from comp_scenario_packs.domains.presets import (
     get_projection_filter_preset,
     get_projection_row_preset,
 )
+from comp_scenario_packs.lat_apply import LatApplyError, apply_lat_draft
 from comp_scenario_packs.lat_check import validate_lat_document
 from comp_scenario_packs.lat_reactor import suggest_lat_updates
 from comp_scenario_packs.suite import run_scenario_suite
@@ -124,6 +125,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         for draft_path in result.draft_paths:
             print(f"lat-suggest: draft {draft_path}")
         return 0
+    if args.command == "lat-apply":
+        try:
+            result = apply_lat_draft(draft_path=args.draft, lat_path=args.lat)
+        except LatApplyError as error:
+            print(f"lat-apply: failed: {error}")
+            return 1
+        print(f"lat-apply: {result.action} {result.item_id}")
+        return 0
     parser.print_help()
     return 2
 
@@ -209,6 +218,12 @@ def _build_parser() -> argparse.ArgumentParser:
     lat_suggest.add_argument("--suite", required=True)
     lat_suggest.add_argument("--lat", default="lat.md")
     lat_suggest.add_argument("--out", default=".lat/drafts")
+    lat_apply = subparsers.add_parser(
+        "lat-apply",
+        help="Apply one generated LAT draft to the durable trace.",
+    )
+    lat_apply.add_argument("draft")
+    lat_apply.add_argument("--lat", default="lat.md")
     return parser
 
 

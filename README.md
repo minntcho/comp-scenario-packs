@@ -140,6 +140,16 @@ python -m comp_scenario_packs.cli lat-suggest --suite reports/latest/suite.json 
 `lat.md`; only accepted attention candidates should be copied into the durable
 trace.
 
+Apply one reviewed LAT draft to the durable trace:
+
+```bash
+python -m comp_scenario_packs.cli lat-apply .lat/drafts/LAT-0002-example.md --lat lat.md
+```
+
+`lat-apply` runs `lat-check` after mutation. If the draft fingerprint already
+exists in `lat.md`, it updates the existing entry's evidence instead of adding a
+new LAT item.
+
 Run the adapter smoke:
 
 ```bash

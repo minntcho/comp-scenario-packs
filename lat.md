@@ -215,6 +215,7 @@ Preferred checks:
 python -m comp_scenario_packs.cli run-all --scenarios-dir scenarios --reports-dir reports/latest
 python -m comp_scenario_packs.cli bench-smoke --scenarios-dir scenarios --report benchmarks/latest.json
 python -m comp_scenario_packs.cli lat-suggest --suite reports/latest/suite.json --lat lat.md --out .lat/drafts
+python -m comp_scenario_packs.cli lat-apply .lat/drafts/LAT-0002-example.md --lat lat.md
 ```
 
 Before closing an item, run the relevant checks and update the trace entry with:
