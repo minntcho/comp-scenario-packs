@@ -148,6 +148,12 @@ Generate a replayable bundle from the YAML adapter fixture:
 python -m comp_scenario_packs.cli adapt-yaml-public-projection adapters/yaml_case_loader/public_projection_smoke.yaml --bundle-dir out/yaml-public-projection
 ```
 
+Generate a replayable bundle from the supplier evidence adapter fixture:
+
+```bash
+python -m comp_scenario_packs.cli adapt-supplier-evidence adapters/supplier_evidence/matched_submission.yaml --bundle-dir out/supplier-evidence
+```
+
 Run all checked-in scenario manifests:
 
 ```bash

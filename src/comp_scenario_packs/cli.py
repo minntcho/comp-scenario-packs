@@ -5,6 +5,7 @@ from collections.abc import Sequence
 
 from comp_scenario_packs.adapters import (
     write_csv_public_projection_bundle,
+    write_supplier_evidence_bundle,
     write_yaml_public_projection_bundle,
 )
 from comp_scenario_packs.benchmarks import (
@@ -34,6 +35,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "adapt-yaml-public-projection":
         bundle = write_yaml_public_projection_bundle(
             args.yaml_path,
+            args.bundle_dir,
+            force=args.force,
+        )
+        print(f"{bundle.scenario_id}: wrote {bundle.manifest_path}")
+        return 0
+    if args.command == "adapt-supplier-evidence":
+        bundle = write_supplier_evidence_bundle(
+            args.submission_path,
             args.bundle_dir,
             force=args.force,
         )
@@ -122,6 +131,17 @@ def _build_parser() -> argparse.ArgumentParser:
     yaml_adapter.add_argument("yaml_path")
     yaml_adapter.add_argument("--bundle-dir", required=True)
     yaml_adapter.add_argument(
+        "--force",
+        action="store_true",
+        help="Allow writing into an existing non-empty bundle directory.",
+    )
+    supplier_adapter = subparsers.add_parser(
+        "adapt-supplier-evidence",
+        help="Convert one supplier evidence submission into a replay bundle.",
+    )
+    supplier_adapter.add_argument("submission_path")
+    supplier_adapter.add_argument("--bundle-dir", required=True)
+    supplier_adapter.add_argument(
         "--force",
         action="store_true",
         help="Allow writing into an existing non-empty bundle directory.",

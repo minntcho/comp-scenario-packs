@@ -68,6 +68,30 @@ def test_adapt_yaml_public_projection_cli_writes_replayable_bundle(tmp_path, cap
     assert result.status == "passed"
 
 
+def test_adapt_supplier_evidence_cli_writes_replayable_bundle(tmp_path, capsys):
+    bundle_dir = tmp_path / "supplier-evidence"
+
+    exit_code = main(
+        [
+            "adapt-supplier-evidence",
+            str(ROOT / "adapters" / "supplier_evidence" / "matched_submission.yaml"),
+            "--bundle-dir",
+            str(bundle_dir),
+        ]
+    )
+
+    output = capsys.readouterr().out
+    result = run_scenario(
+        load_manifest(bundle_dir / "scenario.json"),
+        report_path=tmp_path / "report.json",
+    )
+
+    assert exit_code == 0
+    assert "supplier_evidence_adapter_smoke: wrote" in output
+    assert str(bundle_dir / "scenario.json") in output
+    assert result.status == "passed"
+
+
 def test_bench_replay_scale_cli_writes_report(tmp_path):
     report_path = tmp_path / "replay-scale.json"
 
