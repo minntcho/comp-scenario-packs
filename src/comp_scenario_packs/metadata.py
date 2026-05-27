@@ -36,6 +36,7 @@ class PackMetadata:
     input_mode: str
     scenario_manifest: str
     prepared_inputs: tuple[str, ...]
+    runnable_contracts: tuple[str, ...] = ()
     shadowed_comp_scenarios: tuple[ShadowedCompScenario, ...] = ()
 
     @property
@@ -56,6 +57,7 @@ def load_pack_metadata(path: str | Path) -> PackMetadata:
     metadata = _pack_from_mapping(payload, path=pack_path)
     _validate_public_surfaces(metadata, path=pack_path)
     _validate_shadow_coverage(metadata, path=pack_path)
+    _validate_runnable_contract_coverage(metadata, path=pack_path)
     return metadata
 
 
@@ -82,6 +84,11 @@ def _pack_from_mapping(payload: Mapping[str, Any], *, path: Path) -> PackMetadat
         prepared_inputs=_string_tuple(
             payload.get("prepared_inputs"),
             "prepared_inputs",
+            path=path,
+        ),
+        runnable_contracts=_string_tuple(
+            payload.get("runnable_contracts", []),
+            "runnable_contracts",
             path=path,
         ),
         shadowed_comp_scenarios=tuple(
@@ -137,6 +144,19 @@ def _validate_public_surfaces(metadata: PackMetadata, *, path: Path) -> None:
         raise PackMetadataError(
             "Pack metadata public_surfaces must use declared comp surfaces: "
             f"{', '.join(undeclared)} in {path}."
+        )
+
+
+def _validate_runnable_contract_coverage(metadata: PackMetadata, *, path: Path) -> None:
+    missing = tuple(
+        shadow.authority_invariant
+        for shadow in metadata.shadowed_comp_scenarios
+        if shadow.authority_invariant not in metadata.runnable_contracts
+    )
+    if missing:
+        raise PackMetadataError(
+            "Pack metadata runnable_contracts must cover shadowed "
+            f"authority_invariant values: {', '.join(missing)} in {path}."
         )
 
 

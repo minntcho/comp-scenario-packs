@@ -59,6 +59,28 @@ def test_discovers_pack_metadata_from_checked_in_scenarios():
         "synthetic_pcf_resolution": ("synthetic_pcf.resolution.v1",),
         "synthetic_pcf_smoke": ("synthetic_pcf.smoke.v1",),
     }
+    runnable_by_id = {pack.pack_id: pack.runnable_contracts for pack in packs}
+    assert runnable_by_id == {
+        "l_energy_alpha_invalid_allocation_rfi": (
+            "canonical_blocked_projection_smoke",
+        ),
+        "l_energy_alpha_physical_allocation_correction": (
+            "canonical_projection_smoke",
+        ),
+        "l_energy_c_pack_yield_rollup": ("canonical_projection_smoke",),
+        "l_energy_carbon_tech_certificate_submission": (
+            "canonical_projection_smoke",
+        ),
+        "l_energy_final_bottom_up_pcf_rollup": ("canonical_projection_smoke",),
+        "l_energy_l_materials_composition_rollup": ("canonical_projection_smoke",),
+        "l_energy_pcf_governance": ("canonical_projection_smoke",),
+        "l_energy_steel_frame_proxy_assignment": ("canonical_projection_smoke",),
+        "l_energy_tier0_physical_allocation": ("canonical_projection_smoke",),
+        "public_projection_smoke": (),
+        "synthetic_pcf_anomaly": ("canonical_blocked_projection_smoke",),
+        "synthetic_pcf_resolution": ("canonical_projection_smoke",),
+        "synthetic_pcf_smoke": ("canonical_projection_smoke",),
+    }
 
 
 def test_registry_matches_checked_in_pack_metadata():
@@ -143,4 +165,45 @@ def test_public_surfaces_must_be_declared_compat_surfaces(tmp_path):
     )
 
     with pytest.raises(PackMetadataError, match="public_surfaces"):
+        load_pack_metadata(pack_dir / "pack.json")
+
+
+def test_shadowed_pack_runnable_contracts_cover_authority_invariants(tmp_path):
+    pack_dir = tmp_path / "pack"
+    pack_dir.mkdir()
+    (pack_dir / "pack.json").write_text(
+        """
+        {
+          "schema_version": 1,
+          "pack_id": "bad_runnable_contract",
+          "status": "seed",
+          "scope": "large-domain-and-product-e2e",
+          "cutover_state": "parallel-validation",
+          "covers_comp_scenario_ids": ["scenario.a"],
+          "comp_relationship": "public_api_consumer",
+          "authority_policy": "compatibility_signal_not_authority_source",
+          "public_surfaces": ["comp.scenario_contracts"],
+          "input_mode": "canonical_bundle",
+          "scenario_manifest": "scenario.json",
+          "prepared_inputs": [
+            "prepared/runtime_case.json",
+            "prepared/artifact_envelopes.jsonl"
+          ],
+          "runnable_contracts": ["unrelated_smoke"],
+          "shadowed_comp_scenarios": [
+            {
+              "scenario_id": "scenario.a",
+              "residency_tier": "downstream-candidate",
+              "status": "parallel-validation",
+              "comp_path": "tests/domain_scenarios/a/scenario.py",
+              "authority_invariant": "canonical_projection_smoke",
+              "removal_policy": "keep_internal_until_external_green_and_kernel_smoke_remains"
+            }
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(PackMetadataError, match="runnable_contracts"):
         load_pack_metadata(pack_dir / "pack.json")
