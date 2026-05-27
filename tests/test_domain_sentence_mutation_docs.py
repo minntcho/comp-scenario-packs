@@ -1,0 +1,56 @@
+from pathlib import Path
+
+import yaml
+
+
+ROOT = Path(__file__).resolve().parents[1]
+DOC = ROOT / "docs" / "domain-sentence-mutation.md"
+AUTHORING = (
+    ROOT / "scenarios" / "esg_energy" / "supplier_evidence_review" / "authoring.yaml"
+)
+
+
+def test_domain_sentence_mutation_doc_keeps_authority_boundary():
+    doc = DOC.read_text(encoding="utf-8")
+
+    assert "LLM-assisted" in doc
+    assert "controlled mutations" in doc
+    assert "Generated mutations are scenario intents, not authority decisions" in doc
+    assert "receipt, replay, and public projection" in doc
+    assert "authority remain owned by `comp`" in doc
+    assert "must not generate `runtime_case.json`" in doc
+    assert "Each mutation card changes exactly one slot or one relation" in doc
+
+
+def test_supplier_evidence_authoring_seed_uses_expected_sections():
+    payload = yaml.safe_load(AUTHORING.read_text(encoding="utf-8"))
+
+    assert payload["status"] == "authoring-seed"
+    assert payload["authority_policy"] == "compatibility_signal_not_authority_source"
+    assert set(payload) >= {
+        "canonical_sentence",
+        "semantic_frame",
+        "grammar",
+        "mutation_cards",
+        "generated_output_policy",
+    }
+    assert payload["generated_output_policy"]["authority_note"] == (
+        "comp_owns_receipt_replay_and_projection_authority"
+    )
+
+
+def test_supplier_evidence_mutation_cards_are_single_delta_intents():
+    payload = yaml.safe_load(AUTHORING.read_text(encoding="utf-8"))
+    cards = payload["mutation_cards"]
+
+    assert [card["id"] for card in cards] == [
+        "invoice_amount_conflict",
+        "stale_meter_log",
+        "supplier_alias_unresolved",
+    ]
+    for card in cards:
+        assert len(card["semantic_delta"]) == 1
+        assert "runtime_case" not in card
+        assert "artifact_envelopes" not in card
+        assert card["contract_intent"]["public_projection"] == "absent"
+        assert card["contract_intent"]["rfi"] == "present"

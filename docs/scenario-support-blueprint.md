@@ -72,9 +72,12 @@ domain-specific query shapes, field sets, expected summaries, and synthetic
 fixture helpers belong. These modules should be boring, mostly pure data and
 small helpers.
 
-scenarios/ contains prepared canonical bundles. A scenario directory owns
-manifest files, prepared runtime cases, artifact envelopes, README notes, and
-pack metadata. Scenario data may move into nested domain directories over time.
+scenarios/ contains prepared canonical bundles and authoring seeds. A runnable
+scenario directory owns manifest files, prepared runtime cases, artifact
+envelopes, README notes, and pack metadata. An authoring-only directory may own
+`authoring.yaml`, `golden/`, `prepared/`, and `reports/` before any
+`scenario.json` exists. Scenario data may move into nested domain directories
+over time.
 
 adapters/ contains raw input rehearsals. These adapters prepare candidate inputs
 from CSV, YAML, platform exports, supplier uploads, or other product-shaped
@@ -184,6 +187,33 @@ scenarios can coexist.
 Prefer moving scenarios gradually. Do not relocate all existing scenarios in the
 same PR as a new helper unless the migration itself is the point of the PR.
 
+## Adding A Domain Sentence Authoring Spec
+
+Use `docs/domain-sentence-mutation.md` before introducing an LLM-assisted or
+generator-assisted scenario family. The first authoring slice should usually be
+one file:
+
+```text
+scenarios/
+  esg_energy/
+    supplier_evidence_review/
+      authoring.yaml
+      golden/
+      prepared/
+      reports/
+```
+
+`authoring.yaml` may contain a canonical sentence, semantic frame, slot and
+relation grammar, mutation cards, and contract intent. It is not a runnable
+`comp` scenario manifest. Do not add `scenario.json` until selected mutation
+cards can be lowered into deterministic candidate bundles that run through
+public `comp.scenario_contracts`.
+
+LLMs may propose canonical sentences and mutation cards, but they must not
+generate `runtime_case.json`, artifact envelopes, body digests, receipt ids, or
+projection value commitments. Generated bundles are candidate inputs only;
+`comp` remains the receipt, replay, and public projection authority.
+
 ## Adding An Adapter Smoke
 
 Adding an adapter smoke should follow this path:
@@ -226,6 +256,7 @@ domain-specific benchmark presets
 Put this in `scenarios/<domain>/<scenario>/`:
 
 ```text
+authoring.yaml for scenario production seeds
 manifest
 prepared canonical bundle
 pack metadata
