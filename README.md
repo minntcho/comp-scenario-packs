@@ -124,6 +124,12 @@ Run tests:
 python -m pytest -q
 ```
 
+Validate the lightweight architecture trace:
+
+```bash
+python -m comp_scenario_packs.cli lat-check lat.md
+```
+
 Run the adapter smoke:
 
 ```bash
