@@ -159,6 +159,61 @@ def test_lat_apply_cli_appends_draft(tmp_path, capsys):
     assert "lat-apply: appended LAT-0001" in output
 
 
+def test_lat_status_cli_prints_summary(tmp_path, capsys):
+    lat_path = tmp_path / "lat.md"
+    lat_path.write_text(
+        "\n".join(
+            [
+                "# LAT - Lightweight Architecture Trace",
+                "",
+                "## 0. Charter",
+                "",
+                "## 1. Agent Rules",
+                "",
+                "## 2. Signal Vocabulary",
+                "",
+                "## 3. Active Board",
+                "",
+                "| id | status | class | owner | target | next |",
+                "|---|---|---|---|---|---|",
+                "| LAT-0001 | open | diagnostic_gap | both | scenario reports | inspect |",
+                "",
+                "## 4. Trace Log",
+                "",
+                "### LAT-0001 - Example",
+                "",
+                "```yaml",
+                "kind: finding",
+                "status: open",
+                "class: diagnostic_gap",
+                "owner: both",
+                "target: scenario reports",
+                "fingerprint: diagnostic_gap:example:target:reason",
+                "authority_impact: none",
+                "public_api_impact: possible",
+                "```",
+                "",
+                "## 5. Promotion Rules",
+                "",
+                "## 6. Agent Commands",
+                "",
+                "## 7. Compaction Rule",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(["lat-status", "--lat", str(lat_path)])
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert "LAT status" in output
+    assert "active: 1" in output
+    assert "open: 1" in output
+    assert "diagnostic_gap: 1" in output
+
+
 def test_adapt_yaml_public_projection_cli_writes_replayable_bundle(tmp_path, capsys):
     bundle_dir = tmp_path / "yaml-public-projection"
 

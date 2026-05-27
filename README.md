@@ -150,6 +150,15 @@ python -m comp_scenario_packs.cli lat-apply .lat/drafts/LAT-0002-example.md --la
 exists in `lat.md`, it updates the existing entry's evidence instead of adding a
 new LAT item.
 
+Summarize the current LAT board and trace:
+
+```bash
+python -m comp_scenario_packs.cli lat-status --lat lat.md
+```
+
+`lat-status` is read-only. It reports active items, status/class counts, and
+entries that still need human acceptance or verification evidence.
+
 Run the adapter smoke:
 
 ```bash
