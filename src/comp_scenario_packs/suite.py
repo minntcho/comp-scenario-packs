@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
 from comp.scenario_contracts import ScenarioResult, load_manifest, run_scenario
+from comp_scenario_packs.metadata import discover_pack_metadata
 from comp_scenario_packs.registry import (
     AUTHORITY_POLICY,
     SCENARIO_PACKS,
@@ -18,6 +20,7 @@ class ScenarioSuiteResult:
     scenario_count: int
     results: tuple[ScenarioResult, ...]
     report_path: str | None = None
+    coverage: Mapping[str, object] | None = None
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -25,7 +28,7 @@ class ScenarioSuiteResult:
             "scenario_count": self.scenario_count,
             "pack_count": len(SCENARIO_PACKS),
             "authority_policy": AUTHORITY_POLICY,
-            "coverage": scenario_pack_coverage(),
+            "coverage": dict(self.coverage or scenario_pack_coverage()),
             "scenarios": [
                 {
                     "scenario_id": result.scenario_id,
@@ -62,6 +65,7 @@ def run_scenario_suite(
         scenario_count=len(results),
         results=results,
         report_path=str(suite_report_path),
+        coverage=scenario_pack_coverage(discover_pack_metadata(scenarios_dir)),
     )
     suite_report_path.write_text(
         json.dumps(suite_result.to_dict(), indent=2, sort_keys=True),

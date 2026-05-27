@@ -158,7 +158,7 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
     assert suite_report["authority_policy"] == (
         "compatibility_signal_not_authority_source"
     )
-    assert suite_report["coverage"] == {
+    assert _coverage_without_source_refs(suite_report["coverage"]) == {
         "comp_dependency": "comp @ git+https://github.com/minntcho/comp@main",
         "covered_comp_scenario_ids": EXPECTED_COVERED_COMP_SCENARIO_IDS,
         "cutover_states": [
@@ -299,7 +299,33 @@ def test_run_scenario_suite_writes_one_report_per_manifest(tmp_path):
             },
         ],
     }
+    source_refs_by_pack = {
+        pack["pack_id"]: pack["source_refs"]
+        for pack in suite_report["coverage"]["packs"]
+    }
+    esg_platform_case = [
+        {
+            "repo": "minntcho/esg-platform",
+            "path": "tests/e2e/cases/001-l-energy-pcf-governance.yaml",
+        }
+    ]
+    assert source_refs_by_pack["l_energy_pcf_governance"] == esg_platform_case
+    assert source_refs_by_pack["l_energy_alpha_invalid_allocation_rfi"] == (
+        esg_platform_case
+    )
+    assert source_refs_by_pack["public_projection_smoke"] == []
+    assert source_refs_by_pack["synthetic_pcf_smoke"] == []
     assert suite_report["scenarios"] == [
         {"scenario_id": scenario_id, "status": "passed"}
         for scenario_id in EXPECTED_SCENARIO_IDS
     ]
+
+
+def _coverage_without_source_refs(coverage):
+    return {
+        **coverage,
+        "packs": [
+            {key: value for key, value in pack.items() if key != "source_refs"}
+            for pack in coverage["packs"]
+        ],
+    }

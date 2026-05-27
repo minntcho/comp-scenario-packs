@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
+
+from comp_scenario_packs.metadata import PackMetadata, SourceRef
 
 
 AUTHORITY_POLICY = "compatibility_signal_not_authority_source"
@@ -120,8 +123,11 @@ SCENARIO_PACKS = (
 )
 
 
-def scenario_pack_coverage() -> dict[str, object]:
+def scenario_pack_coverage(
+    pack_metadata: Iterable[PackMetadata] = (),
+) -> dict[str, object]:
     packs = tuple(sorted(SCENARIO_PACKS, key=lambda pack: pack.pack_id))
+    metadata_by_id = {metadata.pack_id: metadata for metadata in pack_metadata}
     covered_ids = sorted(
         {
             scenario_id
@@ -144,9 +150,25 @@ def scenario_pack_coverage() -> dict[str, object]:
                 "covered_comp_scenario_ids": list(pack.covered_comp_scenario_ids),
                 "authority_policy": pack.authority_policy,
                 "comp_relationship": pack.comp_relationship,
+                "source_refs": _source_refs_to_dicts(
+                    metadata_by_id.get(pack.pack_id)
+                ),
             }
             for pack in packs
         ],
+    }
+
+
+def _source_refs_to_dicts(metadata: PackMetadata | None) -> list[dict[str, str]]:
+    if metadata is None:
+        return []
+    return [_source_ref_to_dict(source_ref) for source_ref in metadata.source_refs]
+
+
+def _source_ref_to_dict(source_ref: SourceRef) -> dict[str, str]:
+    return {
+        "repo": source_ref.repo,
+        "path": source_ref.path,
     }
 
 

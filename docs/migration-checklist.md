@@ -31,6 +31,11 @@ For shadowed scenarios, pack metadata `runnable_contracts` must include every
 downstream pack's migration claim tied to a contract the pack actually runs
 through the public scenario bridge.
 
+Pack metadata `source_refs` should name the external repository and path that a
+downstream fixture represents. Treat source refs as a provenance signal for
+review and compatibility reporting only; they do not validate evidence,
+canonicalize references, authorize receipts, or replace `comp` replay.
+
 ## Keep In comp
 
 - Minimal kernel contract tests.

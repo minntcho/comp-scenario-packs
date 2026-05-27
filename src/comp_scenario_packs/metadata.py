@@ -24,6 +24,12 @@ class ShadowedCompScenario:
 
 
 @dataclass(frozen=True)
+class SourceRef:
+    repo: str
+    path: str
+
+
+@dataclass(frozen=True)
 class PackMetadata:
     pack_id: str
     status: str
@@ -37,6 +43,7 @@ class PackMetadata:
     scenario_manifest: str
     prepared_inputs: tuple[str, ...]
     runnable_contracts: tuple[str, ...] = ()
+    source_refs: tuple[SourceRef, ...] = ()
     shadowed_comp_scenarios: tuple[ShadowedCompScenario, ...] = ()
 
     @property
@@ -91,6 +98,14 @@ def _pack_from_mapping(payload: Mapping[str, Any], *, path: Path) -> PackMetadat
             "runnable_contracts",
             path=path,
         ),
+        source_refs=tuple(
+            _source_ref_from_mapping(item, path=path)
+            for item in _mapping_sequence(
+                payload.get("source_refs", []),
+                "source_refs",
+                path=path,
+            )
+        ),
         shadowed_comp_scenarios=tuple(
             _shadow_from_mapping(item, path=path)
             for item in _mapping_sequence(
@@ -100,6 +115,24 @@ def _pack_from_mapping(payload: Mapping[str, Any], *, path: Path) -> PackMetadat
             )
         ),
     )
+
+
+def _source_ref_from_mapping(
+    payload: Mapping[str, Any],
+    *,
+    path: Path,
+) -> SourceRef:
+    repo = payload.get("repo")
+    if not isinstance(repo, str) or not repo:
+        raise PackMetadataError(
+            f"Pack metadata source_refs.repo must be a non-empty string: {path}."
+        )
+    source_path = payload.get("path")
+    if not isinstance(source_path, str) or not source_path:
+        raise PackMetadataError(
+            f"Pack metadata source_refs.path must be a non-empty string: {path}."
+        )
+    return SourceRef(repo=repo, path=source_path)
 
 
 def _shadow_from_mapping(
@@ -199,6 +232,7 @@ __all__ = [
     "PackMetadata",
     "PackMetadataError",
     "ShadowedCompScenario",
+    "SourceRef",
     "discover_pack_metadata",
     "load_pack_metadata",
 ]
