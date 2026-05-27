@@ -207,6 +207,25 @@ contract_intent.
 The generated cards should then pass deterministic validation before any bundle
 lowering runs.
 
+## Authoring Validation
+
+Use `comp_scenario_packs.generation.load_authoring_spec` to load an
+`authoring.yaml` seed before any generator or adapter lowering code consumes it.
+The loader validates the current boundary rules:
+
+```text
+schema_version is supported
+public_surfaces stay on declared public comp surfaces
+required authoring sections are present
+mutation card ids are unique
+each mutation card changes exactly one semantic_delta
+each mutation card target references a declared slot or relation
+mutation cards do not embed comp bundle outputs
+```
+
+This loader is intentionally not a generator. It does not create receipts,
+runtime cases, artifact envelopes, or projection value commitments.
+
 ## Generated Output Policy
 
 `prepared/` contains generated candidate bundles and should stay mostly
