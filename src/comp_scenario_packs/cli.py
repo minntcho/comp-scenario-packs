@@ -20,6 +20,7 @@ from comp_scenario_packs.domains.presets import (
 from comp_scenario_packs.lat_apply import LatApplyError, apply_lat_draft
 from comp_scenario_packs.lat_check import validate_lat_document
 from comp_scenario_packs.lat_reactor import suggest_lat_updates
+from comp_scenario_packs.lat_status import summarize_lat_status
 from comp_scenario_packs.suite import run_scenario_suite
 
 
@@ -133,6 +134,23 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 1
         print(f"lat-apply: {result.action} {result.item_id}")
         return 0
+    if args.command == "lat-status":
+        summary = summarize_lat_status(args.lat)
+        print("LAT status")
+        print(f"  active: {summary.active_count}")
+        print("By status")
+        _print_counts(summary.status_counts)
+        print("By class")
+        _print_counts(summary.class_counts)
+        if summary.needs_human_acceptance:
+            print("Needs human acceptance")
+            for item_id in summary.needs_human_acceptance:
+                print(f"  {item_id}")
+        if summary.needs_verification:
+            print("Needs verification evidence")
+            for item_id in summary.needs_verification:
+                print(f"  {item_id}")
+        return 0
     parser.print_help()
     return 2
 
@@ -224,7 +242,20 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     lat_apply.add_argument("draft")
     lat_apply.add_argument("--lat", default="lat.md")
+    lat_status = subparsers.add_parser(
+        "lat-status",
+        help="Summarize the LAT board and trace attention state.",
+    )
+    lat_status.add_argument("--lat", default="lat.md")
     return parser
+
+
+def _print_counts(counts: dict[str, int]) -> None:
+    if not counts:
+        print("  none: 0")
+        return
+    for key, count in counts.items():
+        print(f"  {key}: {count}")
 
 
 def _parse_row_counts(value: str) -> tuple[int, ...]:
