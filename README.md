@@ -130,6 +130,16 @@ Validate the lightweight architecture trace:
 python -m comp_scenario_packs.cli lat-check lat.md
 ```
 
+Suggest LAT attention drafts from a suite report:
+
+```bash
+python -m comp_scenario_packs.cli lat-suggest --suite reports/latest/suite.json --lat lat.md --out .lat/drafts
+```
+
+`lat-suggest` writes generated artifacts under `.lat/`. It does not mutate
+`lat.md`; only accepted attention candidates should be copied into the durable
+trace.
+
 Run the adapter smoke:
 
 ```bash
