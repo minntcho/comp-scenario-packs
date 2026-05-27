@@ -31,6 +31,12 @@ and viewer payloads. `comp` still decides whether a claim can be checked,
 whether a reference is canonical, whether a derived claim is traceable, whether
 a receipt can be minted, and whether public projection is authorized.
 
+## Lightweight Architecture Trace
+
+Use `lat.md` as the lightweight control plane for scenario feedback. It records
+what scenario runs taught us and keeps improvement signals reviewable without
+turning scenario-pack reports into authority.
+
 ## Current Status
 
 Status: active bootstrap / parallel validation
