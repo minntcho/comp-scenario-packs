@@ -26,6 +26,11 @@ Pack metadata `public_surfaces` must only name `comp` surfaces declared by
 `ALLOWED_COMP_IMPORTS`. Invalid implementation submodules should raise
 `PackMetadataError` instead of becoming an implied public API.
 
+For shadowed scenarios, pack metadata `runnable_contracts` must include every
+`authority_invariant` named under `shadowed_comp_scenarios`. This keeps the
+downstream pack's migration claim tied to a contract the pack actually runs
+through the public scenario bridge.
+
 ## Keep In comp
 
 - Minimal kernel contract tests.

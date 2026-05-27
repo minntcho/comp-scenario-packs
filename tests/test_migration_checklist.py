@@ -21,6 +21,8 @@ def test_migration_checklist_defines_shadow_migration_rules():
         "PackMetadataError",
         "public_surfaces",
         "ALLOWED_COMP_IMPORTS",
+        "runnable_contracts",
+        "authority_invariant",
         "public_projection_smoke",
         "tests/domain_scenarios",
         "comp.scenario_contracts",
