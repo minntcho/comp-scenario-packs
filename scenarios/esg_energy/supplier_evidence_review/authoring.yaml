@@ -1,0 +1,155 @@
+schema_version: 1
+authoring_id: supplier_evidence_review.v1
+status: authoring-seed
+authority_policy: compatibility_signal_not_authority_source
+public_surfaces:
+  - comp.scenario_contracts
+  - comp.persistence
+
+canonical_sentence:
+  id: supplier_evidence_review.accepted.v1
+  text: >
+    Alpha Metal submitted electricity usage of 8,400 kWh for Plant Alpha A,
+    Battery Housing Plate, period 2026-01, supported by invoice INV-001 and
+    meter log MTR-001 covering the same period.
+  intent:
+    path: accepted
+    pressure_targets:
+      - canonical_binding
+      - evidence_matching
+      - public_projection_gate
+
+semantic_frame:
+  claim:
+    supplier: alpha_metal
+    site: plant_alpha_a
+    component: battery_housing_plate
+    period: 2026-01
+    activity:
+      kind: electricity
+      amount: 8400
+      unit: kWh
+  evidence:
+    invoice:
+      id: INV-001
+      amount: 8400
+      unit: kWh
+      period: 2026-01
+      relation_to_claim: supports
+    meter_log:
+      id: MTR-001
+      amount: 8400
+      unit: kWh
+      period: 2026-01
+      relation_to_claim: supports
+
+grammar:
+  slots:
+    supplier:
+      role: canonical_entity_ref
+      mutations:
+        - unresolved_alias
+        - ambiguous_alias
+        - old_name
+    period:
+      role: reporting_scope
+      mutations:
+        - previous_period
+        - next_period
+        - omitted
+    amount:
+      role: measured_quantity
+      mutations:
+        - plus_delta
+        - minus_delta
+        - rounded
+        - omitted
+  relations:
+    supplier_binding:
+      normal: resolved
+      mutations:
+        - unresolved_alias
+        - ambiguous_alias
+    invoice_supports_claim:
+      normal: supports_claim_amount_period_supplier
+      mutations:
+        - missing_invoice
+        - amount_conflict
+        - period_conflict
+        - superseded_by_correction
+    meter_log_supports_claim:
+      normal: supports_claim_amount_period_site
+      mutations:
+        - missing_meter_log
+        - stale_meter_log
+        - partial_period
+    projection_gate:
+      normal: allowed_after_receipt
+      mutations:
+        - blocked_by_rfi
+        - blocked_by_unresolved_binding
+        - blocked_by_conflicting_evidence
+
+mutation_cards:
+  - id: invoice_amount_conflict
+    operator: conflict
+    target: invoice_supports_claim.amount
+    mutated_sentence: >
+      Alpha Metal submitted electricity usage of 8,400 kWh for Plant Alpha A,
+      Battery Housing Plate, period 2026-01, supported by invoice INV-001
+      showing 8,900 kWh and meter log MTR-001 covering the same period.
+    semantic_delta:
+      invoice.amount_relation: conflicts_with_claim
+    pressure_targets:
+      - evidence_matching
+      - rfi_gate
+      - public_projection_gate
+    contract_intent:
+      public_projection: absent
+      rfi: present
+      diagnostics_should_include:
+        - amount_mismatch
+
+  - id: stale_meter_log
+    operator: substitute
+    target: meter_log_supports_claim.period
+    mutated_sentence: >
+      Alpha Metal submitted electricity usage of 8,400 kWh for Plant Alpha A,
+      Battery Housing Plate, period 2026-01, supported by invoice INV-001 and
+      meter log MTR-001 covering 2025-12.
+    semantic_delta:
+      meter_log.period_relation: previous_period
+    pressure_targets:
+      - stale_evidence
+      - rfi_gate
+      - public_projection_gate
+    contract_intent:
+      public_projection: absent
+      rfi: present
+      diagnostics_should_include:
+        - stale_meter_log
+
+  - id: supplier_alias_unresolved
+    operator: alias
+    target: supplier_binding
+    mutated_sentence: >
+      Alpha Metal Co. submitted electricity usage of 8,400 kWh for Plant Alpha A,
+      Battery Housing Plate, period 2026-01, supported by invoice INV-001 and
+      meter log MTR-001 covering the same period.
+    semantic_delta:
+      supplier.binding_relation: unresolved_alias
+    pressure_targets:
+      - canonical_binding
+      - rfi_gate
+      - public_projection_gate
+    contract_intent:
+      public_projection: absent
+      rfi: present
+      diagnostics_should_include:
+        - supplier_alias_unresolved
+
+generated_output_policy:
+  prepared: generated_candidate_bundles
+  golden: hand_reviewed_regressions
+  reports: generated_coverage_and_freeze_candidates
+  authority_note: comp_owns_receipt_replay_and_projection_authority
