@@ -90,6 +90,75 @@ def test_lat_suggest_cli_writes_signal_artifact(tmp_path, capsys):
     assert (tmp_path / ".lat" / "run" / "latest-signals.json").exists()
 
 
+def test_lat_apply_cli_appends_draft(tmp_path, capsys):
+    lat_path = tmp_path / "lat.md"
+    lat_path.write_text(
+        "\n".join(
+            [
+                "# LAT - Lightweight Architecture Trace",
+                "",
+                "## 0. Charter",
+                "",
+                "## 1. Agent Rules",
+                "",
+                "## 2. Signal Vocabulary",
+                "",
+                "## 3. Active Board",
+                "",
+                "| id | status | class | owner | target | next |",
+                "|---|---|---|---|---|---|",
+                "",
+                "## 4. Trace Log",
+                "",
+                "## 5. Promotion Rules",
+                "",
+                "## 6. Agent Commands",
+                "",
+                "## 7. Compaction Rule",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    draft_path = tmp_path / "LAT-0001-diagnostic-gap-example.md"
+    draft_path.write_text(
+        "\n".join(
+            [
+                "### LAT-0001 - Diagnostic gap in example",
+                "",
+                "```yaml",
+                "kind: finding",
+                "status: open",
+                "date: 2026-05-27",
+                "class: diagnostic_gap",
+                "severity: high",
+                "owner: both",
+                "target: scenario reports",
+                "fingerprint: diagnostic_gap:example:scenario_reports:unknown_failed_reason",
+                "authority_impact: none",
+                "public_api_impact: possible",
+                "source:",
+                "  suite_report: reports/latest/suite.json",
+                "  scenario_id: example",
+                "  scenario_report: reports/latest/example.json",
+                "```",
+                "",
+                "#### Observation",
+                "",
+                "TODO(agent): Explain what happened.",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(["lat-apply", str(draft_path), "--lat", str(lat_path)])
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert "lat-apply: appended LAT-0001" in output
+
+
 def test_adapt_yaml_public_projection_cli_writes_replayable_bundle(tmp_path, capsys):
     bundle_dir = tmp_path / "yaml-public-projection"
 
