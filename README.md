@@ -69,6 +69,11 @@ and replay authority.
 validation for the corresponding `comp` internal synthetic PCF scenarios. Raw
 claim authority scenarios remain inside `comp`.
 
+`csv_public_projection_smoke` is the first adapter smoke. It keeps a one-row CSV
+fixture under `adapters/`, generates a prepared canonical bundle in tests, and
+then verifies that bundle through public `comp.scenario_contracts`. It is an
+input conversion rehearsal, not receipt or projection authority.
+
 ## Dependency Direction
 
 Before `comp` v1.0, this repository may install `comp` from a Git ref:
@@ -105,6 +110,12 @@ Run tests:
 
 ```bash
 python -m pytest -q
+```
+
+Run the adapter smoke:
+
+```bash
+python -m pytest tests/test_csv_public_projection_adapter.py -q
 ```
 
 Run all checked-in scenario manifests:

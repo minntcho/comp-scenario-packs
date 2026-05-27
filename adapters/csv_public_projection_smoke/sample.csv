@@ -1,0 +1,2 @@
+case_id,subject_id,public_row_id,projection_id,site,amount
+csv_public_projection_smoke,facility:csv-smoke,public-row:csv-smoke,public-row,plant-a,100

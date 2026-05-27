@@ -76,6 +76,13 @@ scenarios/ contains prepared canonical bundles. A scenario directory owns
 manifest files, prepared runtime cases, artifact envelopes, README notes, and
 pack metadata. Scenario data may move into nested domain directories over time.
 
+adapters/ contains raw input rehearsals. These adapters prepare candidate inputs
+from CSV, YAML, platform exports, supplier uploads, or other product-shaped
+sources. They should write or feed prepared canonical bundles that still run
+through public `comp` replay. adapters prepare candidate inputs; they do not
+mint receipts, validate claims, canonicalize references, or authorize public
+projection.
+
 ## Current Flow
 
 ```text
@@ -177,6 +184,24 @@ scenarios can coexist.
 Prefer moving scenarios gradually. Do not relocate all existing scenarios in the
 same PR as a new helper unless the migration itself is the point of the PR.
 
+## Adding An Adapter Smoke
+
+Adding an adapter smoke should follow this path:
+
+1. Add a tiny source fixture under `adapters/<adapter_name>/`.
+2. Add a focused adapter module under `src/comp_scenario_packs/adapters/`.
+3. Have the adapter write a prepared canonical bundle with public
+   `comp.scenario_contracts` and `comp.persistence` surfaces.
+4. Run the generated bundle through `comp.scenario_contracts.run_scenario` in
+   tests.
+5. Document that the adapter is a candidate producer and does not mint receipts
+   or authorize public projection.
+
+Use adapter smokes for import-boundary rehearsal, not for domain authority.
+Large product workflows can build on the same shape later, but the first guard
+is simply that externally shaped input can become replayable public `comp`
+material without private imports.
+
 ## What Belongs Where
 
 Put this in `common/`:
@@ -206,6 +231,14 @@ prepared canonical bundle
 pack metadata
 scenario README
 small checked-in fixture data
+```
+
+Put this in `adapters/`:
+
+```text
+small raw input fixtures
+adapter README notes
+candidate input conversion examples
 ```
 
 Keep this out of `comp-scenario-packs`:
