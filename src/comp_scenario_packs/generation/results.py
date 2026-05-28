@@ -7,9 +7,12 @@ import json
 from pathlib import Path
 from typing import Any
 
-from comp_scenario_packs.generation.apply import SemanticCase
+from comp_scenario_packs.generation.apply import SemanticCase, apply_mutation_card
 from comp_scenario_packs.generation.authoring import AuthoringSpec
-from comp_scenario_packs.generation.evaluate import SyndromeEvaluation
+from comp_scenario_packs.generation.evaluate import (
+    SyndromeEvaluation,
+    evaluate_semantic_case,
+)
 
 
 CASE_RESULT_SCHEMA_VERSION = "case_result.v1"
@@ -302,6 +305,31 @@ def write_case_result_selection_plan_json(
         json.dumps(_jsonable(selection_plan), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+
+
+def load_case_result_selection_plan_json(path: str | Path) -> dict[str, Any]:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def build_case_results_from_selection_plan(
+    spec: AuthoringSpec,
+    selection_plan: Mapping[str, Any],
+    *,
+    context: CaseResultContext,
+) -> list[dict[str, Any]]:
+    events: list[dict[str, Any]] = []
+    for selection in _selection_plan_cards(selection_plan):
+        semantic_case = apply_mutation_card(spec, str(selection["mutation_card"]))
+        evaluation = evaluate_semantic_case(spec, semantic_case)
+        event = build_case_result(
+            spec=spec,
+            semantic_case=semantic_case,
+            evaluation=evaluation,
+            context=context,
+        )
+        event["selection"] = _selection_metadata(selection)
+        events.append(event)
+    return events
 
 
 def stable_hash(value: Any) -> str:
@@ -621,6 +649,27 @@ def _sampling_plan_freeze_candidates(
     ]
 
 
+def _selection_plan_cards(selection_plan: Mapping[str, Any]) -> list[Mapping[str, Any]]:
+    cards = selection_plan.get("selected_cards", [])
+    if not isinstance(cards, Sequence):
+        return []
+    return [
+        card
+        for card in cards
+        if isinstance(card, Mapping) and "mutation_card" in card
+    ]
+
+
+def _selection_metadata(selection: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "syndrome": str(selection.get("syndrome", "")),
+        "min_cases": int(selection.get("min_cases", 0)),
+        "priority": str(selection.get("priority", "unknown")),
+        "source": str(selection.get("source", "unknown")),
+        "reason": str(selection.get("reason", "")),
+    }
+
+
 def _parse_syndrome_bucket_key(syndrome: str) -> dict[str, str]:
     if not syndrome or syndrome == "empty_syndrome":
         return {}
@@ -852,8 +901,10 @@ __all__ = [
     "build_case_result",
     "build_case_result_sampling_plan",
     "build_case_result_selection_plan",
+    "build_case_results_from_selection_plan",
     "compare_case_result_summaries",
     "load_case_result_sampling_plan_json",
+    "load_case_result_selection_plan_json",
     "load_case_result_summary_comparison_json",
     "load_case_result_summary_json",
     "stable_hash",

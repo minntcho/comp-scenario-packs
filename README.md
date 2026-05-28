@@ -248,6 +248,16 @@ The selection plan maps target syndrome buckets to reviewed authoring mutation
 cards. It is still a read model and does not apply mutations, generate runtime
 bundles, or run `comp`.
 
+Dry-run a selection plan into generation-only case-result events:
+
+```bash
+python -m comp_scenario_packs.cli dry-run-case-result-selection-plan scenarios/esg_energy/supplier_evidence_review/authoring.yaml reports/runs/pr.selection-plan.json --out reports/runs/pr.case_results.jsonl --run-id 2026-05-28-dry-run --domain esg_energy --scenario supplier_evidence_review
+```
+
+The dry run applies selected mutation cards to the structured base case,
+computes invariant syndromes, and writes `case_result.v1` JSONL. It leaves
+`actual_gate`, diagnostics, replay, and all comp authority fields unevaluated.
+
 Run the lightweight benchmark smoke:
 
 ```bash

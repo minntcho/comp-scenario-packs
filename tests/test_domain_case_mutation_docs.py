@@ -33,6 +33,7 @@ def test_domain_case_mutation_doc_keeps_authority_boundary():
     assert "build-case-result-sampling-plan" in doc
     assert "case_result_selection_plan.v1" in doc
     assert "build-case-result-selection-plan" in doc
+    assert "dry-run-case-result-selection-plan" in doc
     assert "generator_quality" in doc
     assert "comp_quality" in doc
     assert "Generated mutations are scenario intents, not authority decisions" in doc
