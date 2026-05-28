@@ -139,6 +139,30 @@ def test_loads_sampling_plan_and_writes_selection_plan_json(tmp_path):
     assert payload["selected_cards"][0]["mutation_card"] == "invoice_amount_conflict"
 
 
+def test_loads_sampling_plan_json_with_utf8_bom(tmp_path):
+    sampling_plan_path = tmp_path / "sampling-plan.json"
+    sampling_plan_path.write_text(
+        json.dumps(
+            _sampling_plan(
+                {
+                    "syndrome": "supplier_binding_resolved=F",
+                    "min_cases": 10,
+                    "priority": "medium",
+                    "source": "ci_rehearsal",
+                    "reason": "PowerShell-created JSON can include a BOM.",
+                }
+            ),
+            sort_keys=True,
+        ),
+        encoding="utf-8-sig",
+    )
+
+    payload = load_case_result_sampling_plan_json(sampling_plan_path)
+
+    assert payload["schema_version"] == "case_result_sampling_plan.v1"
+    assert payload["sampling_targets"][0]["syndrome"] == "supplier_binding_resolved=F"
+
+
 def test_builds_generation_only_case_results_from_selection_plan():
     spec = load_authoring_spec(AUTHORING)
     selection_plan = {
