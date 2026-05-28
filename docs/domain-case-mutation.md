@@ -480,6 +480,21 @@ selection plan does not apply mutations, lower semantic cases into
 `runtime_case.json`, run `comp`, or decide receipt, replay, diagnostic, or
 projection authority.
 
+Use `lower-case-result-selection-plan` when selected cards should become
+canonical scenario bundles that `comp.scenario_contracts.run_scenario` can
+consume:
+
+```bash
+python -m comp_scenario_packs.cli lower-case-result-selection-plan scenarios/esg_energy/supplier_evidence_review/authoring.yaml reports/runs/pr.selection-plan.json --out-dir reports/runs/lowered/
+```
+
+This first lowering slice only supports mutation cards whose contract intent
+keeps public projection absent. It writes blocked canonical scenario bundles
+with empty receipts/projections after verifying the selected syndrome still
+matches the generated target/computed syndrome. The bundles are runnable
+compatibility candidates, not authority decisions; receipt, replay, and public
+projection authority remain owned by `comp`.
+
 Use `build_case_results_from_selection_plan` or the CLI to dry-run selected
 cards into generation-only `case_result.v1` events:
 

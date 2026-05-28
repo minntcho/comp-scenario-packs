@@ -30,6 +30,7 @@ from comp_scenario_packs.generation import (
     load_case_result_summary_json,
     summarize_case_result_jsonl,
     summarize_case_results,
+    write_case_result_selection_plan_bundles,
     write_case_result_jsonl,
     write_case_result_sampling_plan_json,
     write_case_result_selection_plan_json,
@@ -125,6 +126,20 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"{len(plan['unmatched_targets'])} unmatched targets"
         )
         print(f"case-result-selection-plan: wrote {args.out}")
+        return 0
+    if args.command == "lower-case-result-selection-plan":
+        bundles = write_case_result_selection_plan_bundles(
+            load_authoring_spec(args.authoring),
+            load_case_result_selection_plan_json(args.selection_plan),
+            args.out_dir,
+            force=args.force,
+        )
+        print(
+            f"case-result-selection-lower: "
+            f"wrote {len(bundles)} canonical bundles"
+        )
+        for bundle in bundles:
+            print(f"{bundle.scenario_id}: wrote {bundle.manifest_path}")
         return 0
     if args.command == "dry-run-case-result-sampling-plan":
         spec = load_authoring_spec(args.authoring)
@@ -377,6 +392,14 @@ def _build_parser() -> argparse.ArgumentParser:
     selection_plan.add_argument("authoring")
     selection_plan.add_argument("sampling_plan")
     selection_plan.add_argument("--out", required=True)
+    lower_selection_plan = subparsers.add_parser(
+        "lower-case-result-selection-plan",
+        help="Lower selected mutation cards into canonical scenario bundles.",
+    )
+    lower_selection_plan.add_argument("authoring")
+    lower_selection_plan.add_argument("selection_plan")
+    lower_selection_plan.add_argument("--out-dir", required=True)
+    lower_selection_plan.add_argument("--force", action="store_true")
     dry_run_sampling_plan = subparsers.add_parser(
         "dry-run-case-result-sampling-plan",
         help=(
