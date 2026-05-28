@@ -21,7 +21,12 @@ def test_domain_case_mutation_doc_keeps_authority_boundary():
     assert "target_computed_mismatch" in doc
     assert "invalid_generation" in doc
     assert "case_result.v1" in doc
+    assert "case_result_summary.v1" in doc
     assert "write_case_result_jsonl" in doc
+    assert "summarize_case_result_jsonl" in doc
+    assert "write_case_result_summary_json" in doc
+    assert "generator_quality" in doc
+    assert "comp_quality" in doc
     assert "Generated mutations are scenario intents, not authority decisions" in doc
     assert "Rendered sentences are views, not parse targets" in doc
     assert "receipt, replay, and public projection" in doc

@@ -62,6 +62,9 @@ comp authority layer
         v
 reporter layer
   case_result.jsonl
+  summary.json
+  generator quality versus comp quality
+  syndrome bucket aggregation
   contract intent versus actual result
   diagnostics coverage
   shrink and freeze candidates
@@ -403,6 +406,52 @@ The event shape is intentionally append-friendly:
 }
 ```
 
+## Case Result Summary
+
+Use `comp_scenario_packs.generation.summarize_case_results` or
+`summarize_case_result_jsonl` to build a `case_result_summary.v1` read model
+from `case_result.v1` events. Use `write_case_result_summary_json` to write the
+read model as `summary.json`.
+
+The summary keeps generation quality separate from comp quality. Cases whose
+target syndrome does not match the computed syndrome are counted as
+`invalid_generation` in `generator_quality`. They are excluded from
+`comp_quality` and syndrome gate/diagnostic/replay statistics.
+
+The MVP summary groups valid generation cases by syndrome bucket. A bucket is
+derived from F/X states in the target syndrome, such as:
+
+```text
+invoice_amount_matches_claim=F
+invoice_amount_matches_claim=X|invoice_exists=F|invoice_period_matches_claim=X
+```
+
+The first summary tracks:
+
+```text
+generator_quality:
+  cases
+  valid_syndrome_cases
+  invalid_generation
+  target_computed_mismatch_rate
+
+comp_quality:
+  eligible_cases
+  evaluated_cases
+  public_projection_leaks
+  receipt_leaks
+  diagnostic_mismatches
+  replay_flakes
+
+by_syndrome:
+  cases
+  evaluated_cases
+  pass
+  fail
+  not_evaluated
+  leak and mismatch counters
+```
+
 ## Generated Output Policy
 
 `prepared/` contains generated candidate bundles and should stay mostly
@@ -418,6 +467,7 @@ authoring.yaml
   -> apply selected cards to base-case data
   -> compute invariant syndrome
   -> write case_result.v1 events
+  -> summarize case_result.v1 events by syndrome bucket
   -> exclude invalid generation from comp-quality stats
   -> lower mutated cases into prepared bundles
   -> run comp
