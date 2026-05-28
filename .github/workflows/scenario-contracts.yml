@@ -24,23 +24,7 @@ jobs:
       - name: Run sampling dry-run gate
         run: |
           mkdir -p reports/runs
-          cat > reports/runs/ci.sampling-plan.json <<'JSON'
-          {
-            "schema_version": "case_result_sampling_plan.v1",
-            "source_status": "yellow",
-            "sampling_targets": [
-              {
-                "syndrome": "supplier_binding_resolved=F",
-                "min_cases": 10,
-                "priority": "medium",
-                "source": "ci_rehearsal",
-                "reason": "exercise generation-only sampling gates in CI."
-              }
-            ],
-            "freeze_candidates": []
-          }
-          JSON
-          python -m comp_scenario_packs.cli dry-run-case-result-sampling-plan scenarios/esg_energy/supplier_evidence_review/authoring.yaml reports/runs/ci.sampling-plan.json --selection-out reports/runs/ci.selection-plan.json --case-results-out reports/runs/ci.case_results.jsonl --summary-out reports/runs/ci.summary.json --run-id ci-sampling-dry-run --domain esg_energy --scenario supplier_evidence_review --fail-on-unmatched-targets --fail-on-invalid-generation
+          python -m comp_scenario_packs.cli dry-run-case-result-sampling-plan scenarios/esg_energy/supplier_evidence_review/authoring.yaml scenarios/esg_energy/supplier_evidence_review/ci_sampling_plan.json --selection-out reports/runs/ci.selection-plan.json --case-results-out reports/runs/ci.case_results.jsonl --summary-out reports/runs/ci.summary.json --run-id ci-sampling-dry-run --domain esg_energy --scenario supplier_evidence_review --fail-on-unmatched-targets --fail-on-invalid-generation
       - name: Run benchmark smoke
         run: python -m comp_scenario_packs.cli bench-smoke --scenarios-dir scenarios --report benchmarks/latest.json
       - name: Run replay scale smoke
