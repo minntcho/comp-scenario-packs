@@ -21,9 +21,14 @@ from comp_scenario_packs.generation.evaluate import (
 )
 from comp_scenario_packs.generation.results import (
     CASE_RESULT_SCHEMA_VERSION,
+    CASE_RESULT_SUMMARY_SCHEMA_VERSION,
     CaseResultContext,
     build_case_result,
     stable_hash,
+    summarize_case_result_jsonl,
+    summarize_case_results,
+    syndrome_bucket_key,
+    write_case_result_summary_json,
     write_case_result_jsonl,
 )
 
@@ -32,6 +37,7 @@ __all__ = [
     "AuthoringSpecError",
     "BaseCase",
     "CASE_RESULT_SCHEMA_VERSION",
+    "CASE_RESULT_SUMMARY_SCHEMA_VERSION",
     "CaseResultContext",
     "Grammar",
     "Invariant",
@@ -45,5 +51,9 @@ __all__ = [
     "evaluate_semantic_case",
     "load_authoring_spec",
     "stable_hash",
+    "summarize_case_result_jsonl",
+    "summarize_case_results",
+    "syndrome_bucket_key",
+    "write_case_result_summary_json",
     "write_case_result_jsonl",
 ]

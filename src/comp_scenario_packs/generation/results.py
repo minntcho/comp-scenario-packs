@@ -13,6 +13,7 @@ from comp_scenario_packs.generation.evaluate import SyndromeEvaluation
 
 
 CASE_RESULT_SCHEMA_VERSION = "case_result.v1"
+CASE_RESULT_SUMMARY_SCHEMA_VERSION = "case_result_summary.v1"
 NOT_EVALUATED = "not_evaluated"
 
 
@@ -86,6 +87,56 @@ def write_case_result_jsonl(
             stream.write("\n")
 
 
+def summarize_case_result_jsonl(path: str | Path) -> dict[str, Any]:
+    events: list[Mapping[str, Any]] = []
+    with Path(path).open(encoding="utf-8") as stream:
+        for line in stream:
+            line = line.strip()
+            if line:
+                events.append(json.loads(line))
+    return summarize_case_results(events)
+
+
+def summarize_case_results(events: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
+    event_list = list(events)
+    total_cases = len(event_list)
+    valid_events = [event for event in event_list if _is_valid_generation(event)]
+    invalid_generation = total_cases - len(valid_events)
+
+    comp_quality = _summarize_comp_quality(valid_events)
+    by_syndrome = _summarize_by_syndrome(valid_events)
+    return {
+        "schema_version": CASE_RESULT_SUMMARY_SCHEMA_VERSION,
+        "total_cases": total_cases,
+        "status": _summary_status(
+            invalid_generation=invalid_generation,
+            comp_quality=comp_quality,
+        ),
+        "generator_quality": {
+            "cases": total_cases,
+            "valid_syndrome_cases": len(valid_events),
+            "invalid_generation": invalid_generation,
+            "target_computed_mismatch_rate": (
+                invalid_generation / total_cases if total_cases else 0
+            ),
+        },
+        "comp_quality": comp_quality,
+        "by_syndrome": by_syndrome,
+    }
+
+
+def write_case_result_summary_json(
+    path: str | Path,
+    summary: Mapping[str, Any],
+) -> None:
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        json.dumps(_jsonable(summary), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
 def stable_hash(value: Any) -> str:
     payload = json.dumps(
         _jsonable(value),
@@ -93,6 +144,169 @@ def stable_hash(value: Any) -> str:
         separators=(",", ":"),
     ).encode("utf-8")
     return f"sha256:{sha256(payload).hexdigest()}"
+
+
+def _summarize_comp_quality(events: Sequence[Mapping[str, Any]]) -> dict[str, int]:
+    evaluated_events = [event for event in events if _is_comp_evaluated(event)]
+    return {
+        "eligible_cases": len(events),
+        "evaluated_cases": len(evaluated_events),
+        "public_projection_leaks": sum(
+            1 for event in evaluated_events if _has_public_projection_leak(event)
+        ),
+        "receipt_leaks": sum(1 for event in evaluated_events if _has_receipt_leak(event)),
+        "diagnostic_mismatches": sum(
+            1 for event in evaluated_events if _has_diagnostic_mismatch(event)
+        ),
+        "replay_flakes": sum(1 for event in evaluated_events if _has_replay_flake(event)),
+    }
+
+
+def _summarize_by_syndrome(events: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    buckets: dict[str, dict[str, Any]] = {}
+    for event in events:
+        key = syndrome_bucket_key(event.get("target_syndrome", {}))
+        bucket = buckets.setdefault(
+            key,
+            {
+                "syndrome": key,
+                "cases": 0,
+                "evaluated_cases": 0,
+                "pass": 0,
+                "fail": 0,
+                "not_evaluated": 0,
+                "public_projection_leaks": 0,
+                "receipt_leaks": 0,
+                "diagnostic_mismatches": 0,
+                "replay_flakes": 0,
+                "status": "not_evaluated",
+            },
+        )
+        bucket["cases"] += 1
+        if _is_comp_evaluated(event):
+            bucket["evaluated_cases"] += 1
+            if _is_comp_pass(event):
+                bucket["pass"] += 1
+            else:
+                bucket["fail"] += 1
+            if _has_public_projection_leak(event):
+                bucket["public_projection_leaks"] += 1
+            if _has_receipt_leak(event):
+                bucket["receipt_leaks"] += 1
+            if _has_diagnostic_mismatch(event):
+                bucket["diagnostic_mismatches"] += 1
+            if _has_replay_flake(event):
+                bucket["replay_flakes"] += 1
+        else:
+            bucket["not_evaluated"] += 1
+
+    summaries = []
+    for key in sorted(buckets):
+        bucket = buckets[key]
+        bucket["status"] = _bucket_status(bucket)
+        summaries.append(bucket)
+    return summaries
+
+
+def syndrome_bucket_key(syndrome: Mapping[str, Any]) -> str:
+    meaningful = {
+        str(code): str(state)
+        for code, state in syndrome.items()
+        if str(state) in {"F", "X"}
+    }
+    if not meaningful:
+        meaningful = {str(code): str(state) for code, state in syndrome.items()}
+    if not meaningful:
+        return "empty_syndrome"
+    return "|".join(f"{code}={meaningful[code]}" for code in sorted(meaningful))
+
+
+def _is_valid_generation(event: Mapping[str, Any]) -> bool:
+    statuses = _statuses(event)
+    return statuses.get("generation") == "valid" and statuses.get("syndrome") == "match"
+
+
+def _is_comp_evaluated(event: Mapping[str, Any]) -> bool:
+    return _statuses(event).get("gate") != NOT_EVALUATED
+
+
+def _is_comp_pass(event: Mapping[str, Any]) -> bool:
+    return _statuses(event).get("overall") == "pass"
+
+
+def _has_public_projection_leak(event: Mapping[str, Any]) -> bool:
+    return (
+        _gate_value(event, "expected_gate", "public_projection") == "absent"
+        and _gate_value(event, "actual_gate", "public_projection") == "present"
+    )
+
+
+def _has_receipt_leak(event: Mapping[str, Any]) -> bool:
+    return (
+        _gate_value(event, "expected_gate", "receipt") == "absent"
+        and _gate_value(event, "actual_gate", "receipt") == "present"
+    )
+
+
+def _has_diagnostic_mismatch(event: Mapping[str, Any]) -> bool:
+    return _statuses(event).get("diagnostic") in {
+        "diagnostic_mismatch",
+        "fail",
+    }
+
+
+def _has_replay_flake(event: Mapping[str, Any]) -> bool:
+    return _statuses(event).get("replay") in {
+        "flaky",
+        "nondeterministic",
+        "replay_nondeterminism",
+    }
+
+
+def _gate_value(event: Mapping[str, Any], gate_key: str, field: str) -> str:
+    gate = event.get(gate_key, {})
+    if not isinstance(gate, Mapping):
+        return NOT_EVALUATED
+    return str(gate.get(field, NOT_EVALUATED))
+
+
+def _statuses(event: Mapping[str, Any]) -> Mapping[str, str]:
+    statuses = event.get("statuses", {})
+    if not isinstance(statuses, Mapping):
+        return {}
+    return {str(key): str(value) for key, value in statuses.items()}
+
+
+def _bucket_status(bucket: Mapping[str, Any]) -> str:
+    if (
+        bucket["public_projection_leaks"]
+        or bucket["receipt_leaks"]
+        or bucket["replay_flakes"]
+    ):
+        return "red"
+    if bucket["diagnostic_mismatches"] or bucket["fail"]:
+        return "yellow"
+    if bucket["evaluated_cases"] == 0:
+        return "not_evaluated"
+    return "green"
+
+
+def _summary_status(
+    *,
+    invalid_generation: int,
+    comp_quality: Mapping[str, int],
+) -> str:
+    if (
+        comp_quality["public_projection_leaks"]
+        or comp_quality["receipt_leaks"]
+        or comp_quality["replay_flakes"]
+    ):
+        return "red"
+    if invalid_generation or comp_quality["diagnostic_mismatches"]:
+        return "yellow"
+    if comp_quality["eligible_cases"] and comp_quality["evaluated_cases"] == 0:
+        return "not_evaluated"
+    return "green"
 
 
 def _authoring_hash_payload(spec: AuthoringSpec) -> Mapping[str, Any]:
@@ -131,8 +345,13 @@ def _jsonable(value: Any) -> Any:
 
 __all__ = [
     "CASE_RESULT_SCHEMA_VERSION",
+    "CASE_RESULT_SUMMARY_SCHEMA_VERSION",
     "CaseResultContext",
     "build_case_result",
     "stable_hash",
+    "summarize_case_result_jsonl",
+    "summarize_case_results",
+    "syndrome_bucket_key",
+    "write_case_result_summary_json",
     "write_case_result_jsonl",
 ]
