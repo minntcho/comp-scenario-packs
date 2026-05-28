@@ -313,6 +313,22 @@ mutation cards do not embed comp bundle outputs
 This loader is intentionally not a generator. It does not create receipts,
 runtime cases, artifact envelopes, or projection value commitments.
 
+## Semantic Apply Layer
+
+Use `comp_scenario_packs.generation.apply_mutation_card` to apply one reviewed
+mutation card to the structured base case. The result is a semantic case: a
+deep-copied base-case payload with the card's path operation applied, plus the
+card's semantic delta, target syndrome, pressure targets, contract intent, and
+provenance.
+
+This layer supports small deterministic path operations such as `replace` and
+`delete`. It verifies that a declared `from` value still matches the base case
+before mutating the copy. The original base case is not changed.
+
+The semantic apply layer is still not the comp bundle layer. It does not create
+`runtime_case.json`, artifact envelopes, receipts, diagnostics, or public
+projection decisions.
+
 ## Generated Output Policy
 
 `prepared/` contains generated candidate bundles and should stay mostly
