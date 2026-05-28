@@ -28,6 +28,7 @@ from comp_scenario_packs.generation import (
     load_case_result_selection_plan_json,
     load_case_result_summary_comparison_json,
     load_case_result_summary_json,
+    run_case_result_selection_plan_bundles,
     summarize_case_result_jsonl,
     summarize_case_results,
     write_case_result_selection_plan_bundles,
@@ -140,6 +141,37 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         for bundle in bundles:
             print(f"{bundle.scenario_id}: wrote {bundle.manifest_path}")
+        return 0
+    if args.command == "run-lowered-case-result-selection-plan":
+        events = run_case_result_selection_plan_bundles(
+            load_authoring_spec(args.authoring),
+            load_case_result_selection_plan_json(args.selection_plan),
+            args.out_dir,
+            reports_dir=args.reports_dir,
+            context=CaseResultContext(
+                run_id=args.run_id,
+                domain=args.domain,
+                scenario=args.scenario,
+                seed=args.seed,
+                generator_version=args.generator_version,
+                comp_version=args.comp_version,
+            ),
+            force=args.force,
+        )
+        write_case_result_jsonl(args.case_results_out, events)
+        if args.summary_out:
+            summary = summarize_case_results(events)
+            write_case_result_summary_json(args.summary_out, summary)
+        print(
+            f"case-result-selection-lowered-run: "
+            f"wrote {len(events)} evaluated results"
+        )
+        print(f"case-result-selection-lowered-run: wrote {args.case_results_out}")
+        if args.summary_out:
+            print(
+                f"case-result-selection-lowered-run: "
+                f"wrote summary {args.summary_out}"
+            )
         return 0
     if args.command == "dry-run-case-result-sampling-plan":
         spec = load_authoring_spec(args.authoring)
@@ -400,6 +432,26 @@ def _build_parser() -> argparse.ArgumentParser:
     lower_selection_plan.add_argument("selection_plan")
     lower_selection_plan.add_argument("--out-dir", required=True)
     lower_selection_plan.add_argument("--force", action="store_true")
+    run_lowered_selection_plan = subparsers.add_parser(
+        "run-lowered-case-result-selection-plan",
+        help=(
+            "Lower selected mutation cards, run their scenario bundles, and "
+            "write evaluated case results."
+        ),
+    )
+    run_lowered_selection_plan.add_argument("authoring")
+    run_lowered_selection_plan.add_argument("selection_plan")
+    run_lowered_selection_plan.add_argument("--out-dir", required=True)
+    run_lowered_selection_plan.add_argument("--reports-dir", required=True)
+    run_lowered_selection_plan.add_argument("--case-results-out", required=True)
+    run_lowered_selection_plan.add_argument("--summary-out")
+    run_lowered_selection_plan.add_argument("--run-id", required=True)
+    run_lowered_selection_plan.add_argument("--domain", required=True)
+    run_lowered_selection_plan.add_argument("--scenario", required=True)
+    run_lowered_selection_plan.add_argument("--seed", type=int, default=None)
+    run_lowered_selection_plan.add_argument("--generator-version", default=None)
+    run_lowered_selection_plan.add_argument("--comp-version", default="unknown")
+    run_lowered_selection_plan.add_argument("--force", action="store_true")
     dry_run_sampling_plan = subparsers.add_parser(
         "dry-run-case-result-sampling-plan",
         help=(

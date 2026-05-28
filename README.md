@@ -259,6 +259,15 @@ mutation cards after checking the selected syndrome still matches the generated
 target/computed syndrome. The bundles can be run by `comp.scenario_contracts`,
 but they remain compatibility candidates rather than authority decisions.
 
+Lower, run, and write evaluated case-result events in one step:
+
+```bash
+python -m comp_scenario_packs.cli run-lowered-case-result-selection-plan scenarios/esg_energy/supplier_evidence_review/authoring.yaml reports/runs/pr.selection-plan.json --out-dir reports/runs/lowered/ --reports-dir reports/runs/lowered-reports/ --case-results-out reports/runs/pr.evaluated.case_results.jsonl --summary-out reports/runs/pr.evaluated.summary.json --run-id 2026-05-28-lowered-run --domain esg_energy --scenario supplier_evidence_review
+```
+
+This records `actual_gate` from observed `comp.scenario_contracts` results while
+leaving unsupported RFI and diagnostic fields as `not_evaluated`.
+
 Dry-run a selection plan into generation-only case-result events:
 
 ```bash

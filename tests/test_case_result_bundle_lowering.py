@@ -8,9 +8,14 @@ from comp.scenario_contracts import (
     run_scenario,
 )
 
-from comp_scenario_packs.generation import load_authoring_spec
+from comp_scenario_packs.generation import (
+    CaseResultContext,
+    load_authoring_spec,
+    summarize_case_results,
+)
 from comp_scenario_packs.generation.lowering import (
     ScenarioLoweringError,
+    run_case_result_selection_plan_bundles,
     write_case_result_selection_plan_bundles,
 )
 
@@ -78,6 +83,43 @@ def test_lowering_refuses_to_overwrite_existing_bundle(tmp_path):
             _selection_plan("supplier_binding_resolved=F", "supplier_alias_unresolved"),
             out_dir,
         )
+
+
+def test_runs_lowered_bundles_as_comp_evaluated_case_results(tmp_path):
+    spec = load_authoring_spec(AUTHORING)
+    events = run_case_result_selection_plan_bundles(
+        spec,
+        _selection_plan("supplier_binding_resolved=F", "supplier_alias_unresolved"),
+        tmp_path / "generated",
+        reports_dir=tmp_path / "reports",
+        context=CaseResultContext(
+            run_id="2026-05-28-lowered-run",
+            domain="esg_energy",
+            scenario="supplier_evidence_review",
+        ),
+    )
+
+    assert len(events) == 1
+    event = events[0]
+    summary = summarize_case_results(events)
+    assert event["case_id"] == (
+        "supplier_evidence_review.accepted.v1__supplier_alias_unresolved"
+    )
+    assert event["actual_gate"] == {
+        "receipt": "absent",
+        "rfi": "not_evaluated",
+        "public_projection": "absent",
+    }
+    assert event["actual_comp_result"]["status"] == "passed"
+    assert event["actual_comp_result"]["receipt_count"] == 0
+    assert event["actual_comp_result"]["public_row_count"] == 0
+    assert event["actual_comp_result"]["replay_failed_count"] == 0
+    assert event["statuses"]["gate"] == "pass"
+    assert event["statuses"]["replay"] == "pass"
+    assert event["statuses"]["overall"] == "pass"
+    assert summary["status"] == "green"
+    assert summary["comp_quality"]["evaluated_cases"] == 1
+    assert summary["by_syndrome"][0]["pass"] == 1
 
 
 def _selection_plan(syndrome: str, mutation_card: str) -> dict:
