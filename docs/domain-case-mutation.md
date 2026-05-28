@@ -509,6 +509,13 @@ The command still writes `case_result_selection_plan.v1` as an intermediate
 artifact so selected cards, unmatched targets, and freeze candidates remain
 reviewable before any future runtime bundle lowering is introduced.
 
+For CI use, pass `--fail-on-unmatched-targets` to return a non-zero exit code
+when sampling targets cannot be matched to mutation cards. Pass
+`--fail-on-invalid-generation` to return a non-zero exit code when generated
+events contain target/computed syndrome mismatches. Both gates run only after
+the selection plan, `case_result.v1` JSONL, and summary have been written, so
+the artifacts remain available for review.
+
 The summary keeps generation quality separate from comp quality. Cases whose
 target syndrome does not match the computed syndrome are counted as
 `invalid_generation` in `generator_quality`. They are excluded from

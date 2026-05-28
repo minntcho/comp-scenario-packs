@@ -1,8 +1,9 @@
 import json
 from pathlib import Path
 
-from comp.scenario_contracts import load_manifest, run_scenario
+import yaml
 
+from comp.scenario_contracts import load_manifest, run_scenario
 from comp_scenario_packs.cli import main
 
 
@@ -625,6 +626,140 @@ def test_dry_run_case_result_sampling_plan_cli_writes_pipeline_outputs(
     assert event["selection"]["syndrome"] == "supplier_binding_resolved=F"
     assert summary["schema_version"] == "case_result_summary.v1"
     assert summary["total_cases"] == 1
+
+
+def test_dry_run_case_result_sampling_plan_cli_can_fail_on_unmatched_targets(
+    tmp_path,
+    capsys,
+):
+    sampling_plan_path = tmp_path / "sampling-plan.json"
+    selection_plan_path = tmp_path / "selection-plan.json"
+    case_results_path = tmp_path / "case-results.jsonl"
+    summary_path = tmp_path / "summary.json"
+    _write_json(
+        sampling_plan_path,
+        {
+            "schema_version": "case_result_sampling_plan.v1",
+            "source_status": "yellow",
+            "sampling_targets": [
+                {
+                    "syndrome": "unknown_invariant=F",
+                    "min_cases": 10,
+                    "priority": "medium",
+                    "source": "coverage_gap",
+                    "reason": "no current coverage.",
+                }
+            ],
+            "freeze_candidates": [],
+        },
+    )
+
+    exit_code = main(
+        [
+            "dry-run-case-result-sampling-plan",
+            str(
+                ROOT
+                / "scenarios"
+                / "esg_energy"
+                / "supplier_evidence_review"
+                / "authoring.yaml"
+            ),
+            str(sampling_plan_path),
+            "--selection-out",
+            str(selection_plan_path),
+            "--case-results-out",
+            str(case_results_path),
+            "--summary-out",
+            str(summary_path),
+            "--run-id",
+            "2026-05-28-dry-run",
+            "--domain",
+            "esg_energy",
+            "--scenario",
+            "supplier_evidence_review",
+            "--fail-on-unmatched-targets",
+        ]
+    )
+
+    output = capsys.readouterr().out
+    selection = json.loads(selection_plan_path.read_text(encoding="utf-8"))
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert exit_code == 1
+    assert "case-result-sampling-dry-run: gate failed unmatched targets 1" in output
+    assert selection["unmatched_targets"][0]["syndrome"] == "unknown_invariant=F"
+    assert case_results_path.read_text(encoding="utf-8") == ""
+    assert summary["total_cases"] == 0
+
+
+def test_dry_run_case_result_sampling_plan_cli_can_fail_on_invalid_generation(
+    tmp_path,
+    capsys,
+):
+    authoring_path = tmp_path / "authoring.yaml"
+    sampling_plan_path = tmp_path / "sampling-plan.json"
+    selection_plan_path = tmp_path / "selection-plan.json"
+    case_results_path = tmp_path / "case-results.jsonl"
+    summary_path = tmp_path / "summary.json"
+    authoring = yaml.safe_load(
+        (
+            ROOT
+            / "scenarios"
+            / "esg_energy"
+            / "supplier_evidence_review"
+            / "authoring.yaml"
+        ).read_text(encoding="utf-8")
+    )
+    authoring["mutation_cards"][0]["target_syndrome"] = {
+        "supplier_binding_resolved": "F"
+    }
+    authoring_path.write_text(
+        yaml.safe_dump(authoring, sort_keys=False),
+        encoding="utf-8",
+    )
+    _write_json(
+        sampling_plan_path,
+        {
+            "schema_version": "case_result_sampling_plan.v1",
+            "source_status": "yellow",
+            "sampling_targets": [
+                {
+                    "syndrome": "supplier_binding_resolved=F",
+                    "min_cases": 10,
+                    "priority": "medium",
+                    "source": "coverage_gap",
+                    "reason": "current run has 0 cases.",
+                }
+            ],
+            "freeze_candidates": [],
+        },
+    )
+
+    exit_code = main(
+        [
+            "dry-run-case-result-sampling-plan",
+            str(authoring_path),
+            str(sampling_plan_path),
+            "--selection-out",
+            str(selection_plan_path),
+            "--case-results-out",
+            str(case_results_path),
+            "--summary-out",
+            str(summary_path),
+            "--run-id",
+            "2026-05-28-dry-run",
+            "--domain",
+            "esg_energy",
+            "--scenario",
+            "supplier_evidence_review",
+            "--fail-on-invalid-generation",
+        ]
+    )
+
+    output = capsys.readouterr().out
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert exit_code == 1
+    assert "case-result-sampling-dry-run: gate failed invalid generation 1" in output
+    assert summary["generator_quality"]["invalid_generation"] == 1
 
 
 def test_adapt_yaml_public_projection_cli_writes_replayable_bundle(tmp_path, capsys):

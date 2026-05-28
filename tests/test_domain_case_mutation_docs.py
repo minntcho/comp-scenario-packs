@@ -36,6 +36,8 @@ def test_domain_case_mutation_doc_keeps_authority_boundary():
     assert "dry-run-case-result-selection-plan" in doc
     assert "dry-run-case-result-sampling-plan" in doc
     assert "--summary-out" in doc
+    assert "--fail-on-unmatched-targets" in doc
+    assert "--fail-on-invalid-generation" in doc
     assert "generator_quality" in doc
     assert "comp_quality" in doc
     assert "Generated mutations are scenario intents, not authority decisions" in doc
