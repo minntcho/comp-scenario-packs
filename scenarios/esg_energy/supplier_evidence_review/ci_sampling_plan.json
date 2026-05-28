@@ -1,0 +1,14 @@
+{
+  "freeze_candidates": [],
+  "sampling_targets": [
+    {
+      "min_cases": 10,
+      "priority": "medium",
+      "reason": "exercise generation-only sampling gates in CI.",
+      "source": "ci_rehearsal",
+      "syndrome": "supplier_binding_resolved=F"
+    }
+  ],
+  "schema_version": "case_result_sampling_plan.v1",
+  "source_status": "yellow"
+}

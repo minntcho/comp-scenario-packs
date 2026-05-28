@@ -1,8 +1,16 @@
+import json
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "scenario-contracts.yml"
+CI_SAMPLING_PLAN = (
+    ROOT
+    / "scenarios"
+    / "esg_energy"
+    / "supplier_evidence_review"
+    / "ci_sampling_plan.json"
+)
 
 
 def test_ci_runs_sampling_dry_run_with_generation_gates():
@@ -10,6 +18,25 @@ def test_ci_runs_sampling_dry_run_with_generation_gates():
 
     assert "Run sampling dry-run gate" in workflow
     assert "dry-run-case-result-sampling-plan" in workflow
+    assert str(CI_SAMPLING_PLAN.relative_to(ROOT)).replace("\\", "/") in workflow
+    assert "cat > reports/runs/ci.sampling-plan.json" not in workflow
     assert "--fail-on-unmatched-targets" in workflow
     assert "--fail-on-invalid-generation" in workflow
-    assert "supplier_binding_resolved=F" in workflow
+    assert "supplier_binding_resolved=F" not in workflow
+
+
+def test_ci_sampling_plan_fixture_targets_reviewed_syndrome():
+    payload = json.loads(CI_SAMPLING_PLAN.read_text(encoding="utf-8"))
+
+    assert payload["schema_version"] == "case_result_sampling_plan.v1"
+    assert payload["source_status"] == "yellow"
+    assert payload["freeze_candidates"] == []
+    assert payload["sampling_targets"] == [
+        {
+            "syndrome": "supplier_binding_resolved=F",
+            "min_cases": 10,
+            "priority": "medium",
+            "source": "ci_rehearsal",
+            "reason": "exercise generation-only sampling gates in CI.",
+        }
+    ]
