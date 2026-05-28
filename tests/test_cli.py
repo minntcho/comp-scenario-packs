@@ -301,6 +301,41 @@ def test_summarize_case_results_cli_returns_failure_for_red_summary(
     assert payload["comp_quality"]["public_projection_leaks"] == 1
 
 
+def test_assert_case_result_summary_cli_passes_green_summary(tmp_path, capsys):
+    summary_path = tmp_path / "summary.json"
+    _write_json(
+        summary_path,
+        _summary_result(
+            buckets=[_summary_bucket("supplier_binding_resolved=F", 1, 0)]
+        ),
+    )
+
+    exit_code = main(
+        ["assert-case-result-summary", str(summary_path), "--require-green"]
+    )
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert "case-result-summary-gate: green" in output
+
+
+def test_assert_case_result_summary_cli_fails_non_green_summary(tmp_path, capsys):
+    summary_path = tmp_path / "summary.json"
+    summary = _summary_result(
+        buckets=[_summary_bucket("supplier_binding_resolved=F", 1, 0)]
+    )
+    summary["status"] = "yellow"
+    _write_json(summary_path, summary)
+
+    exit_code = main(
+        ["assert-case-result-summary", str(summary_path), "--require-green"]
+    )
+
+    output = capsys.readouterr().out
+    assert exit_code == 1
+    assert "case-result-summary-gate: failed status yellow" in output
+
+
 def test_compare_case_result_summaries_cli_writes_comparison(tmp_path, capsys):
     baseline_path = tmp_path / "baseline.summary.json"
     current_path = tmp_path / "current.summary.json"

@@ -26,6 +26,7 @@ def test_domain_case_mutation_doc_keeps_authority_boundary():
     assert "summarize_case_result_jsonl" in doc
     assert "write_case_result_summary_json" in doc
     assert "summarize-case-results" in doc
+    assert "assert-case-result-summary" in doc
     assert "case_result_summary_comparison.v1" in doc
     assert "compare-case-result-summaries" in doc
     assert "recommended_actions" in doc

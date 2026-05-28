@@ -28,6 +28,7 @@ jobs:
       - name: Run evaluated lowered gate
         run: |
           python -m comp_scenario_packs.cli run-lowered-case-result-selection-plan scenarios/esg_energy/supplier_evidence_review/authoring.yaml reports/runs/ci.selection-plan.json --out-dir reports/runs/ci-lowered --reports-dir reports/runs/ci-lowered-reports --case-results-out reports/runs/ci.evaluated.case_results.jsonl --summary-out reports/runs/ci.evaluated.summary.json --run-id ci-lowered-run --domain esg_energy --scenario supplier_evidence_review
+          python -m comp_scenario_packs.cli assert-case-result-summary reports/runs/ci.evaluated.summary.json --require-green
       - name: Run benchmark smoke
         run: python -m comp_scenario_packs.cli bench-smoke --scenarios-dir scenarios --report benchmarks/latest.json
       - name: Run replay scale smoke
