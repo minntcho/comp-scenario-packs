@@ -257,6 +257,8 @@ python -m comp_scenario_packs.cli dry-run-case-result-selection-plan scenarios/e
 The dry run applies selected mutation cards to the structured base case,
 computes invariant syndromes, and writes `case_result.v1` JSONL. It leaves
 `actual_gate`, diagnostics, replay, and all comp authority fields unevaluated.
+Add `--summary-out reports/runs/pr.summary.json` to write the matching
+`case_result_summary.v1` in the same pass.
 
 Run the lightweight benchmark smoke:
 
