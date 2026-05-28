@@ -149,7 +149,7 @@ def write_case_result_summary_json(
 
 
 def load_case_result_summary_json(path: str | Path) -> dict[str, Any]:
-    return json.loads(Path(path).read_text(encoding="utf-8"))
+    return _load_json_file(path)
 
 
 def compare_case_result_summaries(
@@ -207,7 +207,7 @@ def write_case_result_summary_comparison_json(
 
 
 def load_case_result_summary_comparison_json(path: str | Path) -> dict[str, Any]:
-    return json.loads(Path(path).read_text(encoding="utf-8"))
+    return _load_json_file(path)
 
 
 def build_case_result_sampling_plan(
@@ -243,7 +243,7 @@ def write_case_result_sampling_plan_json(
 
 
 def load_case_result_sampling_plan_json(path: str | Path) -> dict[str, Any]:
-    return json.loads(Path(path).read_text(encoding="utf-8"))
+    return _load_json_file(path)
 
 
 def build_case_result_selection_plan(
@@ -308,7 +308,7 @@ def write_case_result_selection_plan_json(
 
 
 def load_case_result_selection_plan_json(path: str | Path) -> dict[str, Any]:
-    return json.loads(Path(path).read_text(encoding="utf-8"))
+    return _load_json_file(path)
 
 
 def build_case_results_from_selection_plan(
@@ -339,6 +339,10 @@ def stable_hash(value: Any) -> str:
         separators=(",", ":"),
     ).encode("utf-8")
     return f"sha256:{sha256(payload).hexdigest()}"
+
+
+def _load_json_file(path: str | Path) -> dict[str, Any]:
+    return json.loads(Path(path).read_text(encoding="utf-8-sig"))
 
 
 def _summarize_comp_quality(events: Sequence[Mapping[str, Any]]) -> dict[str, int]:
