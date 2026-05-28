@@ -7,12 +7,15 @@ from comp_scenario_packs.generation.evaluate import evaluate_semantic_case
 from comp_scenario_packs.generation.results import (
     CaseResultContext,
     build_case_result,
+    build_case_result_sampling_plan,
     compare_case_result_summaries,
     load_case_result_summary_json,
+    load_case_result_summary_comparison_json,
     summarize_case_result_jsonl,
     summarize_case_results,
     write_case_result_summary_comparison_json,
     write_case_result_summary_json,
+    write_case_result_sampling_plan_json,
     write_case_result_jsonl,
 )
 
@@ -294,6 +297,109 @@ def test_loads_and_writes_summary_comparison_json(tmp_path):
     assert json.loads(comparison_path.read_text(encoding="utf-8"))[
         "schema_version"
     ] == "case_result_summary_comparison.v1"
+
+
+def test_builds_sampling_plan_for_coverage_gaps():
+    baseline = _summary(
+        buckets=[
+            _bucket("invoice_amount_matches_claim=F", passed=10, failed=0),
+            _bucket("supplier_binding_resolved=F", passed=10, failed=0),
+        ]
+    )
+    current = _summary(
+        buckets=[_bucket("invoice_amount_matches_claim=F", passed=10, failed=0)]
+    )
+    comparison = compare_case_result_summaries(baseline, current)
+
+    plan = build_case_result_sampling_plan(comparison)
+
+    assert plan["schema_version"] == "case_result_sampling_plan.v1"
+    assert plan["source_status"] == "yellow"
+    assert plan["sampling_targets"] == [
+        {
+            "syndrome": "supplier_binding_resolved=F",
+            "min_cases": 10,
+            "priority": "medium",
+            "source": "coverage_gap",
+            "reason": "current run has 0 cases; baseline had 10.",
+        }
+    ]
+    assert plan["freeze_candidates"] == []
+
+
+def test_builds_sampling_plan_for_regression_investigation():
+    baseline = _summary(
+        buckets=[_bucket("meter_log_period_matches_claim=F", passed=20, failed=0)]
+    )
+    current = _summary(
+        buckets=[_bucket("meter_log_period_matches_claim=F", passed=17, failed=3)]
+    )
+    comparison = compare_case_result_summaries(baseline, current)
+
+    plan = build_case_result_sampling_plan(comparison)
+
+    assert plan["sampling_targets"] == [
+        {
+            "syndrome": "meter_log_period_matches_claim=F",
+            "min_cases": 30,
+            "priority": "high",
+            "source": "syndrome_pass_rate_drop",
+            "reason": "pass rate dropped by 0.15.",
+        }
+    ]
+
+
+def test_builds_sampling_plan_freeze_candidates_without_sampling():
+    baseline = _summary(
+        comp_quality={"public_projection_leaks": 0},
+        buckets=[_bucket("supplier_binding_resolved=F", passed=10, failed=0)],
+    )
+    current = _summary(
+        status="red",
+        comp_quality={"public_projection_leaks": 1},
+        buckets=[
+            _bucket(
+                "supplier_binding_resolved=F",
+                passed=10,
+                failed=0,
+                public_projection_leaks=1,
+                status="red",
+            )
+        ],
+    )
+    comparison = compare_case_result_summaries(baseline, current)
+
+    plan = build_case_result_sampling_plan(comparison)
+
+    assert plan["sampling_targets"] == []
+    assert plan["freeze_candidates"] == [
+        {
+            "metric": "public_projection_leaks",
+            "priority": "critical",
+            "source": "critical_counter_increase",
+            "reason": "public_projection_leaks increased by 1.",
+        }
+    ]
+
+
+def test_loads_comparison_and_writes_sampling_plan_json(tmp_path):
+    comparison_path = tmp_path / "comparison.json"
+    plan_path = tmp_path / "sampling-plan.json"
+    baseline = _summary(
+        buckets=[_bucket("invoice_amount_matches_claim=F", passed=10, failed=0)]
+    )
+    current = _summary(buckets=[])
+    comparison = compare_case_result_summaries(baseline, current)
+    write_case_result_summary_comparison_json(comparison_path, comparison)
+
+    plan = build_case_result_sampling_plan(
+        load_case_result_summary_comparison_json(comparison_path)
+    )
+    write_case_result_sampling_plan_json(plan_path, plan)
+
+    assert json.loads(plan_path.read_text(encoding="utf-8"))["schema_version"] == (
+        "case_result_sampling_plan.v1"
+    )
 
 
 def _summary(

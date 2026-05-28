@@ -347,6 +347,51 @@ def test_compare_case_result_summaries_cli_writes_comparison(tmp_path, capsys):
     ]
 
 
+def test_build_case_result_sampling_plan_cli_writes_plan(tmp_path, capsys):
+    comparison_path = tmp_path / "comparison.json"
+    plan_path = tmp_path / "sampling-plan.json"
+    _write_json(
+        comparison_path,
+        {
+            "schema_version": "case_result_summary_comparison.v1",
+            "status": "yellow",
+            "recommended_actions": [
+                {
+                    "action": "increase_sampling",
+                    "priority": "medium",
+                    "source": "coverage_gap",
+                    "syndrome": "supplier_binding_resolved=F",
+                    "reason": "current run has 0 cases; baseline had 10.",
+                }
+            ],
+        },
+    )
+
+    exit_code = main(
+        [
+            "build-case-result-sampling-plan",
+            str(comparison_path),
+            "--out",
+            str(plan_path),
+        ]
+    )
+
+    output = capsys.readouterr().out
+    payload = json.loads(plan_path.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert "case-result-sampling-plan: wrote" in output
+    assert payload["schema_version"] == "case_result_sampling_plan.v1"
+    assert payload["sampling_targets"] == [
+        {
+            "syndrome": "supplier_binding_resolved=F",
+            "min_cases": 10,
+            "priority": "medium",
+            "source": "coverage_gap",
+            "reason": "current run has 0 cases; baseline had 10.",
+        }
+    ]
+
+
 def test_adapt_yaml_public_projection_cli_writes_replayable_bundle(tmp_path, capsys):
     bundle_dir = tmp_path / "yaml-public-projection"
 
