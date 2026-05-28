@@ -133,6 +133,8 @@ invariants:
     check:
       kind: resolves
       path: claim.supplier
+      resolved_values:
+        - alpha_metal
     pressure_targets:
       - canonical_binding
       - public_projection_gate

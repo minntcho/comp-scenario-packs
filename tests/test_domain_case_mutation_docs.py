@@ -18,6 +18,8 @@ def test_domain_case_mutation_doc_keeps_authority_boundary():
     assert "base case" in doc
     assert "tri-state syndrome" in doc
     assert "P, F, or X" in doc
+    assert "target_computed_mismatch" in doc
+    assert "invalid_generation" in doc
     assert "Generated mutations are scenario intents, not authority decisions" in doc
     assert "Rendered sentences are views, not parse targets" in doc
     assert "receipt, replay, and public projection" in doc
