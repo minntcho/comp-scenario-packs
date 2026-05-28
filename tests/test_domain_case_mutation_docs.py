@@ -43,6 +43,7 @@ def test_domain_case_mutation_doc_keeps_authority_boundary():
     assert "--summary-out" in doc
     assert "--fail-on-unmatched-targets" in doc
     assert "--fail-on-invalid-generation" in doc
+    assert "multi-syndrome coverage rehearsal" in doc
     assert "generator_quality" in doc
     assert "comp_quality" in doc
     assert "Generated mutations are scenario intents, not authority decisions" in doc

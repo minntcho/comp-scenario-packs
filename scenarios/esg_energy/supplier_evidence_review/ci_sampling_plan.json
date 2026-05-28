@@ -4,9 +4,30 @@
     {
       "min_cases": 10,
       "priority": "medium",
-      "reason": "exercise generation-only sampling gates in CI.",
+      "reason": "exercise invoice amount mismatch coverage in CI.",
+      "source": "ci_rehearsal",
+      "syndrome": "invoice_amount_matches_claim=F"
+    },
+    {
+      "min_cases": 10,
+      "priority": "medium",
+      "reason": "exercise stale meter log coverage in CI.",
+      "source": "ci_rehearsal",
+      "syndrome": "meter_log_period_matches_claim=F"
+    },
+    {
+      "min_cases": 10,
+      "priority": "medium",
+      "reason": "exercise supplier binding coverage in CI.",
       "source": "ci_rehearsal",
       "syndrome": "supplier_binding_resolved=F"
+    },
+    {
+      "min_cases": 10,
+      "priority": "medium",
+      "reason": "exercise missing invoice coverage in CI.",
+      "source": "ci_rehearsal",
+      "syndrome": "invoice_amount_matches_claim=X|invoice_exists=F|invoice_period_matches_claim=X"
     }
   ],
   "schema_version": "case_result_sampling_plan.v1",
