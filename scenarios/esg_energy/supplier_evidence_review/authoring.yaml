@@ -48,6 +48,7 @@ grammar:
     - claim.component
     - claim.period
     - claim.activity.amount
+    - evidence.invoice
     - evidence.invoice.amount
     - evidence.invoice.period
     - evidence.meter_log.amount
@@ -78,12 +79,74 @@ grammar:
         - blocked_by_unresolved_binding
         - blocked_by_conflicting_evidence
 
+invariants:
+  - code: invoice_exists
+    check:
+      kind: exists
+      path: evidence.invoice
+    pressure_targets:
+      - evidence_presence
+      - rfi_gate
+
+  - code: meter_log_exists
+    check:
+      kind: exists
+      path: evidence.meter_log
+    pressure_targets:
+      - evidence_presence
+      - rfi_gate
+
+  - code: invoice_amount_matches_claim
+    depends_on:
+      - invoice_exists
+    check:
+      kind: equals
+      left: evidence.invoice.amount
+      right: claim.activity.amount
+    pressure_targets:
+      - evidence_matching
+      - public_projection_gate
+
+  - code: invoice_period_matches_claim
+    depends_on:
+      - invoice_exists
+    check:
+      kind: equals
+      left: evidence.invoice.period
+      right: claim.period
+    pressure_targets:
+      - period_matching
+      - public_projection_gate
+
+  - code: meter_log_period_matches_claim
+    depends_on:
+      - meter_log_exists
+    check:
+      kind: equals
+      left: evidence.meter_log.period
+      right: claim.period
+    pressure_targets:
+      - stale_evidence
+      - public_projection_gate
+
+  - code: supplier_binding_resolved
+    check:
+      kind: resolves
+      path: claim.supplier
+    pressure_targets:
+      - canonical_binding
+      - public_projection_gate
+
 mutation_cards:
   - id: invoice_amount_conflict
     op: replace
     path: evidence.invoice.amount
     from: 8400
     to: 8900
+    target_syndrome:
+      invoice_exists: P
+      invoice_amount_matches_claim: F
+      invoice_period_matches_claim: P
     semantic_delta:
       invoice.amount_relation: conflicts_with_claim
     pressure_targets:
@@ -101,6 +164,9 @@ mutation_cards:
     path: evidence.meter_log.period
     from: 2026-01
     to: 2025-12
+    target_syndrome:
+      meter_log_exists: P
+      meter_log_period_matches_claim: F
     semantic_delta:
       meter_log.period_relation: previous_period
     pressure_targets:
@@ -118,6 +184,8 @@ mutation_cards:
     path: claim.supplier
     from: alpha_metal
     to: alpha_metal_co_unresolved_alias
+    target_syndrome:
+      supplier_binding_resolved: F
     semantic_delta:
       supplier.binding_relation: unresolved_alias
     pressure_targets:
@@ -129,6 +197,25 @@ mutation_cards:
       rfi: present
       diagnostics_should_include:
         - supplier_alias_unresolved
+
+  - id: missing_invoice
+    op: delete
+    path: evidence.invoice
+    target_syndrome:
+      invoice_exists: F
+      invoice_amount_matches_claim: X
+      invoice_period_matches_claim: X
+    semantic_delta:
+      invoice.presence_relation: missing
+    pressure_targets:
+      - evidence_presence
+      - rfi_gate
+      - public_projection_gate
+    contract_intent:
+      public_projection: absent
+      rfi: present
+      diagnostics_should_include:
+        - missing_invoice
 
 generated_output_policy:
   prepared: generated_candidate_bundles

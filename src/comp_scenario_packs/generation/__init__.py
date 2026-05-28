@@ -5,6 +5,7 @@ from comp_scenario_packs.generation.authoring import (
     AuthoringSpecError,
     BaseCase,
     Grammar,
+    Invariant,
     MutationCard,
     load_authoring_spec,
 )
@@ -14,6 +15,7 @@ __all__ = [
     "AuthoringSpecError",
     "BaseCase",
     "Grammar",
+    "Invariant",
     "MutationCard",
     "load_authoring_spec",
 ]

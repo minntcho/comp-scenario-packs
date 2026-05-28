@@ -16,6 +16,8 @@ def test_domain_case_mutation_doc_keeps_authority_boundary():
     assert "LLM-assisted" in doc
     assert "source of truth" in doc
     assert "base case" in doc
+    assert "tri-state syndrome" in doc
+    assert "P, F, or X" in doc
     assert "Generated mutations are scenario intents, not authority decisions" in doc
     assert "Rendered sentences are views, not parse targets" in doc
     assert "receipt, replay, and public projection" in doc
@@ -32,6 +34,7 @@ def test_supplier_evidence_authoring_seed_uses_expected_sections():
     assert set(payload) >= {
         "base_case",
         "rendering",
+        "invariants",
         "grammar",
         "mutation_cards",
         "generated_output_policy",
@@ -39,6 +42,14 @@ def test_supplier_evidence_authoring_seed_uses_expected_sections():
     assert "canonical_sentence" not in payload
     assert "semantic_frame" not in payload
     assert payload["rendering"]["generated_text_is_authoritative"] is False
+    assert [invariant["code"] for invariant in payload["invariants"]] == [
+        "invoice_exists",
+        "meter_log_exists",
+        "invoice_amount_matches_claim",
+        "invoice_period_matches_claim",
+        "meter_log_period_matches_claim",
+        "supplier_binding_resolved",
+    ]
     assert payload["generated_output_policy"]["authority_note"] == (
         "comp_owns_receipt_replay_and_projection_authority"
     )
@@ -52,9 +63,11 @@ def test_supplier_evidence_mutation_cards_are_single_delta_intents():
         "invoice_amount_conflict",
         "stale_meter_log",
         "supplier_alias_unresolved",
+        "missing_invoice",
     ]
     for card in cards:
         assert len(card["semantic_delta"]) == 1
+        assert set(card["target_syndrome"].values()) <= {"P", "F", "X"}
         assert "runtime_case" not in card
         assert "artifact_envelopes" not in card
         assert card["contract_intent"]["public_projection"] == "absent"

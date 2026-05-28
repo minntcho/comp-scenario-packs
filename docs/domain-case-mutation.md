@@ -6,6 +6,11 @@ intent. LLM-assisted generation may only propose controlled mutations over
 declared base-case paths or relations.
 Generated mutations are scenario intents, not authority decisions.
 
+Each mutation should also declare the intended invariant syndrome it is trying
+to produce. This tri-state syndrome is a vector over declared invariants:
+`P` means pass, `F` means fail, and `X` means blocked or not applicable because
+an upstream object is missing.
+
 Rendered sentences are views, not parse targets. They may appear in reports or
 LLM context, but generator code must not parse those sentences back into domain
 state.
@@ -21,7 +26,9 @@ authoring layer
   base case
   optional rendered sentence view
   allowed paths and relation grammar
+  invariant table
   mutation cards
+  target syndrome
   contract intent
         |
         v
@@ -61,8 +68,8 @@ reporter layer
 
 The authoring layer is the only layer that a human or LLM should edit directly
 while exploring new scenario ideas. It is allowed to describe a domain base
-case, the paths that may be mutated, relation grammar, mutation cards, pressure
-targets, and contract intent.
+case, the paths that may be mutated, relation grammar, invariants, mutation
+cards, target syndromes, pressure targets, and contract intent.
 
 The authoring layer must not generate `runtime_case.json`, receipt ids,
 projection value commitments, body digests, or artifact envelopes. Those values
@@ -75,8 +82,8 @@ into replayable bundles.
 
 ## Single Authoring File First
 
-The first slice should keep the base case, rendering metadata, grammar, and
-mutation cards in one `authoring.yaml` file:
+The first slice should keep the base case, rendering metadata, grammar,
+invariants, and mutation cards in one `authoring.yaml` file:
 
 ```text
 scenarios/esg_energy/supplier_evidence_review/
@@ -86,9 +93,9 @@ scenarios/esg_energy/supplier_evidence_review/
   reports/
 ```
 
-Splitting the authoring file into `base_case.yaml`, `grammar.yaml`, and
-`mutation_cards.yaml` can wait until the file grows large enough to justify
-physical separation.
+Splitting the authoring file into `base_case.yaml`, `invariants.yaml`,
+`grammar.yaml`, and `mutation_cards.yaml` can wait until the file grows large
+enough to justify physical separation.
 
 ## Authoring Spec Shape
 
@@ -133,6 +140,7 @@ grammar:
     - claim.supplier
     - claim.period
     - claim.activity.amount
+    - evidence.invoice
     - evidence.invoice.amount
     - evidence.invoice.period
     - evidence.meter_log.period
@@ -148,12 +156,35 @@ grammar:
         - stale_meter_log
         - partial_period
 
+invariants:
+  - code: invoice_exists
+    check:
+      kind: exists
+      path: evidence.invoice
+    pressure_targets:
+      - evidence_presence
+      - rfi_gate
+
+  - code: invoice_amount_matches_claim
+    depends_on:
+      - invoice_exists
+    check:
+      kind: equals
+      left: evidence.invoice.amount
+      right: claim.activity.amount
+    pressure_targets:
+      - evidence_matching
+      - public_projection_gate
+
 mutation_cards:
   - id: invoice_amount_conflict
     op: replace
     path: evidence.invoice.amount
     from: 8400
     to: 8900
+    target_syndrome:
+      invoice_exists: P
+      invoice_amount_matches_claim: F
     semantic_delta:
       invoice.amount_relation: conflicts_with_claim
     pressure_targets:
@@ -167,19 +198,59 @@ mutation_cards:
         - amount_mismatch
 ```
 
+## Invariant Syndrome
+
+Mutation card ids are review labels, not semantic authority. The machine
+meaning of a mutation comes from its `target_syndrome`: which declared
+invariants should pass, fail, or become blocked after the mutation is applied.
+
+Use these syndrome states:
+
+```text
+P = pass
+F = fail
+X = blocked or not applicable because an upstream object is missing
+```
+
+For example, an invoice amount mismatch should keep the invoice present while
+failing only the amount invariant:
+
+```yaml
+target_syndrome:
+  invoice_exists: P
+  invoice_amount_matches_claim: F
+  invoice_period_matches_claim: P
+```
+
+A missing invoice is different. The existence invariant fails, while amount and
+period comparisons are blocked:
+
+```yaml
+target_syndrome:
+  invoice_exists: F
+  invoice_amount_matches_claim: X
+  invoice_period_matches_claim: X
+```
+
+The target syndrome is still an intent. It describes the semantic pressure the
+case is designed to apply; `comp` remains the authority for receipt, replay,
+diagnostics, and public projection.
+
 ## Mutation Card Rules
 
 1. Each mutation card changes exactly one path or one relation.
 2. A mutation card may carry optional rendered text for reports, but its path
    operation and semantic delta are the contracts deterministic code should
    validate.
-3. Contract intent is pressure, not authority. It records what the case is
+3. Each mutation card must declare a `target_syndrome` using only declared
+   invariant codes and P, F, or X states.
+4. Contract intent is pressure, not authority. It records what the case is
    meant to stress; `comp` still decides the actual receipt, replay, and
    projection result.
-4. Do not combine independent failures in the first card for a mutation family.
+5. Do not combine independent failures in the first card for a mutation family.
    Add compound mutations only after single mutations have stable diagnostics.
-5. Mutation ids and diagnostic labels should be derived from path or relation
-   grammar, not improvised as free-form LLM tags.
+6. Mutation ids and diagnostic labels should be derived from path, relation, or
+   invariant grammar, not improvised as free-form LLM tags.
 
 Good first relation targets for supplier evidence review are:
 
@@ -208,11 +279,11 @@ outcomes.
 A safe LLM task is:
 
 ```text
-Given a structured base case, declared allowed paths, relation grammar, and
-allowed mutation operators, propose mutation cards. Modify exactly one path or
-one relation per card. Do not generate runtime_case.json. Do not invent comp
-internals. Return id, op, path, from, to, semantic_delta, pressure_targets, and
-contract_intent.
+Given a structured base case, declared allowed paths, relation grammar,
+invariant table, and allowed mutation operators, propose mutation cards. Modify
+exactly one path or one relation per card. Do not generate runtime_case.json.
+Do not invent comp internals. Return id, op, path, from, to, target_syndrome,
+semantic_delta, pressure_targets, and contract_intent.
 ```
 
 The generated cards should then pass deterministic validation before any bundle
@@ -230,9 +301,12 @@ schema_version is supported
 public_surfaces stay on declared public comp surfaces
 required authoring sections are present
 rendered text is explicitly non-authoritative
+invariant codes are unique
 mutation card ids are unique
 each mutation card changes exactly one semantic_delta
 each mutation card path references a declared allowed path
+each target_syndrome references declared invariant codes
+each target_syndrome state is P, F, or X
 mutation cards do not embed comp bundle outputs
 ```
 

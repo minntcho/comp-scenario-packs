@@ -29,10 +29,19 @@ class Grammar:
 
 
 @dataclass(frozen=True)
+class Invariant:
+    code: str
+    check: Mapping[str, Any]
+    pressure_targets: tuple[str, ...]
+    depends_on: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class MutationCard:
     id: str
     op: str
     path: str
+    target_syndrome: Mapping[str, str]
     semantic_delta: Mapping[str, Any]
     pressure_targets: tuple[str, ...]
     contract_intent: Mapping[str, Any]
@@ -51,6 +60,7 @@ class AuthoringSpec:
     base_case: BaseCase
     rendering: Mapping[str, Any]
     grammar: Grammar
+    invariants: tuple[Invariant, ...]
     mutation_cards: tuple[MutationCard, ...]
     generated_output_policy: Mapping[str, Any]
 
@@ -60,9 +70,15 @@ class AuthoringSpec:
             "pressure_targets",
             [],
         ), "base_case.intent.pressure_targets"))
+        for invariant in self.invariants:
+            targets.update(invariant.pressure_targets)
         for card in self.mutation_cards:
             targets.update(card.pressure_targets)
         return tuple(sorted(targets))
+
+    @property
+    def invariant_codes(self) -> frozenset[str]:
+        return frozenset(invariant.code for invariant in self.invariants)
 
 
 FORBIDDEN_MUTATION_CARD_KEYS = frozenset(
@@ -75,6 +91,8 @@ FORBIDDEN_MUTATION_CARD_KEYS = frozenset(
         "runtime_case",
     }
 )
+
+TRISTATE_SYNDROME_STATES = frozenset({"P", "F", "X"})
 
 
 def load_authoring_spec(path: str | Path) -> AuthoringSpec:
@@ -129,9 +147,11 @@ def _authoring_spec_from_mapping(
         _required_mapping(payload, "grammar", path=path),
         path=path,
     )
+    invariants = _invariants_from_sequence(payload.get("invariants"), path=path)
     mutation_cards = _mutation_cards_from_sequence(
         payload.get("mutation_cards"),
         grammar=grammar,
+        invariant_codes=frozenset(invariant.code for invariant in invariants),
         path=path,
     )
 
@@ -144,6 +164,7 @@ def _authoring_spec_from_mapping(
         base_case=base_case,
         rendering=rendering,
         grammar=grammar,
+        invariants=invariants,
         mutation_cards=mutation_cards,
         generated_output_policy=_required_mapping(
             payload,
@@ -200,10 +221,60 @@ def _grammar_from_mapping(payload: Mapping[str, Any], *, path: Path) -> Grammar:
     return Grammar(allowed_paths=allowed_paths, relations=relations)
 
 
+def _invariants_from_sequence(value: Any, *, path: Path) -> tuple[Invariant, ...]:
+    if not isinstance(value, list) or not value:
+        raise AuthoringSpecError(
+            f"Authoring spec invariants must be a non-empty list: {path}."
+        )
+
+    seen_codes: set[str] = set()
+    invariants: list[Invariant] = []
+    for item in value:
+        if not isinstance(item, Mapping):
+            raise AuthoringSpecError(
+                f"Authoring spec invariants entries must be mappings: {path}."
+            )
+        invariant = _invariant_from_mapping(item, path=path)
+        if invariant.code in seen_codes:
+            raise AuthoringSpecError(
+                "Authoring invariant codes must be unique: "
+                f"{invariant.code} in {path}."
+            )
+        seen_codes.add(invariant.code)
+        invariants.append(invariant)
+
+    codes = frozenset(seen_codes)
+    for invariant in invariants:
+        unknown_dependencies = tuple(
+            code for code in invariant.depends_on if code not in codes
+        )
+        if unknown_dependencies:
+            raise AuthoringSpecError(
+                "Authoring invariant depends_on must reference declared invariants: "
+                f"{', '.join(unknown_dependencies)} in {path}."
+            )
+
+    return tuple(invariants)
+
+
+def _invariant_from_mapping(payload: Mapping[str, Any], *, path: Path) -> Invariant:
+    return Invariant(
+        code=_required_str(payload, "code", path=path),
+        check=_required_mapping(payload, "check", path=path),
+        pressure_targets=tuple(
+            _string_sequence(payload.get("pressure_targets"), "pressure_targets")
+        ),
+        depends_on=tuple(
+            _string_sequence(payload.get("depends_on", []), "depends_on")
+        ),
+    )
+
+
 def _mutation_cards_from_sequence(
     value: Any,
     *,
     grammar: Grammar,
+    invariant_codes: frozenset[str],
     path: Path,
 ) -> tuple[MutationCard, ...]:
     if not isinstance(value, list) or not value:
@@ -218,7 +289,12 @@ def _mutation_cards_from_sequence(
             raise AuthoringSpecError(
                 f"Authoring spec mutation_cards entries must be mappings: {path}."
             )
-        card = _mutation_card_from_mapping(item, grammar=grammar, path=path)
+        card = _mutation_card_from_mapping(
+            item,
+            grammar=grammar,
+            invariant_codes=invariant_codes,
+            path=path,
+        )
         if card.id in seen_ids:
             raise AuthoringSpecError(
                 f"Authoring spec mutation card ids must be unique: {card.id} in {path}."
@@ -232,6 +308,7 @@ def _mutation_card_from_mapping(
     payload: Mapping[str, Any],
     *,
     grammar: Grammar,
+    invariant_codes: frozenset[str],
     path: Path,
 ) -> MutationCard:
     forbidden_keys = FORBIDDEN_MUTATION_CARD_KEYS.intersection(payload)
@@ -243,6 +320,11 @@ def _mutation_card_from_mapping(
 
     card_path = _required_str(payload, "path", path=path)
     _validate_card_path(card_path, grammar=grammar, path=path)
+    target_syndrome = _target_syndrome_from_mapping(
+        _required_mapping(payload, "target_syndrome", path=path),
+        invariant_codes=invariant_codes,
+        path=path,
+    )
     semantic_delta = _required_mapping(payload, "semantic_delta", path=path)
     if len(semantic_delta) != 1:
         raise AuthoringSpecError(
@@ -253,6 +335,7 @@ def _mutation_card_from_mapping(
         id=_required_str(payload, "id", path=path),
         op=_required_str(payload, "op", path=path),
         path=card_path,
+        target_syndrome=target_syndrome,
         semantic_delta=semantic_delta,
         pressure_targets=tuple(
             _string_sequence(payload.get("pressure_targets"), "pressure_targets")
@@ -262,6 +345,37 @@ def _mutation_card_from_mapping(
         to_value=payload.get("to"),
         rendered_text=_optional_str(payload.get("rendered_text")),
     )
+
+
+def _target_syndrome_from_mapping(
+    payload: Mapping[str, Any],
+    *,
+    invariant_codes: frozenset[str],
+    path: Path,
+) -> Mapping[str, str]:
+    if not payload:
+        raise AuthoringSpecError(
+            f"Authoring mutation card target_syndrome must not be empty: {path}."
+        )
+
+    syndrome: dict[str, str] = {}
+    for code, state in payload.items():
+        if not isinstance(code, str) or not code:
+            raise AuthoringSpecError(
+                f"Authoring mutation card target_syndrome keys must be strings: {path}."
+            )
+        if code not in invariant_codes:
+            raise AuthoringSpecError(
+                "Authoring mutation card target_syndrome must reference declared "
+                f"invariant codes: {code} in {path}."
+            )
+        if state not in TRISTATE_SYNDROME_STATES:
+            raise AuthoringSpecError(
+                "Authoring mutation card target_syndrome states must be P, F, or X: "
+                f"{code}={state} in {path}."
+            )
+        syndrome[code] = state
+    return syndrome
 
 
 def _validate_card_path(card_path: str, *, grammar: Grammar, path: Path) -> None:
@@ -319,6 +433,7 @@ __all__ = [
     "AuthoringSpecError",
     "BaseCase",
     "Grammar",
+    "Invariant",
     "MutationCard",
     "load_authoring_spec",
 ]
