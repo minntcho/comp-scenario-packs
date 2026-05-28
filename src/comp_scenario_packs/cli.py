@@ -126,6 +126,40 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         print(f"case-result-selection-plan: wrote {args.out}")
         return 0
+    if args.command == "dry-run-case-result-sampling-plan":
+        spec = load_authoring_spec(args.authoring)
+        selection_plan = build_case_result_selection_plan(
+            spec,
+            load_case_result_sampling_plan_json(args.sampling_plan),
+        )
+        write_case_result_selection_plan_json(args.selection_out, selection_plan)
+        events = build_case_results_from_selection_plan(
+            spec,
+            selection_plan,
+            context=CaseResultContext(
+                run_id=args.run_id,
+                domain=args.domain,
+                scenario=args.scenario,
+                seed=args.seed,
+                generator_version=args.generator_version,
+                comp_version=args.comp_version,
+            ),
+        )
+        write_case_result_jsonl(args.case_results_out, events)
+        summary = summarize_case_results(events)
+        write_case_result_summary_json(args.summary_out, summary)
+        print(
+            f"case-result-sampling-dry-run: "
+            f"{len(selection_plan['selected_cards'])} selected cards, "
+            f"{len(selection_plan['unmatched_targets'])} unmatched targets"
+        )
+        print(f"case-result-sampling-dry-run: wrote selection {args.selection_out}")
+        print(
+            f"case-result-sampling-dry-run: "
+            f"wrote case results {args.case_results_out}"
+        )
+        print(f"case-result-sampling-dry-run: wrote summary {args.summary_out}")
+        return 0
     if args.command == "dry-run-case-result-selection-plan":
         events = build_case_results_from_selection_plan(
             load_authoring_spec(args.authoring),
@@ -325,6 +359,24 @@ def _build_parser() -> argparse.ArgumentParser:
     selection_plan.add_argument("authoring")
     selection_plan.add_argument("sampling_plan")
     selection_plan.add_argument("--out", required=True)
+    dry_run_sampling_plan = subparsers.add_parser(
+        "dry-run-case-result-sampling-plan",
+        help=(
+            "Build a selection plan from sampling targets, then write "
+            "generation-only case results and summary."
+        ),
+    )
+    dry_run_sampling_plan.add_argument("authoring")
+    dry_run_sampling_plan.add_argument("sampling_plan")
+    dry_run_sampling_plan.add_argument("--selection-out", required=True)
+    dry_run_sampling_plan.add_argument("--case-results-out", required=True)
+    dry_run_sampling_plan.add_argument("--summary-out", required=True)
+    dry_run_sampling_plan.add_argument("--run-id", required=True)
+    dry_run_sampling_plan.add_argument("--domain", required=True)
+    dry_run_sampling_plan.add_argument("--scenario", required=True)
+    dry_run_sampling_plan.add_argument("--seed", type=int, default=None)
+    dry_run_sampling_plan.add_argument("--generator-version", default=None)
+    dry_run_sampling_plan.add_argument("--comp-version", default="unknown")
     dry_run_selection_plan = subparsers.add_parser(
         "dry-run-case-result-selection-plan",
         help="Apply selected mutation cards and write generation-only case results.",

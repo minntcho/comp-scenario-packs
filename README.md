@@ -260,6 +260,15 @@ computes invariant syndromes, and writes `case_result.v1` JSONL. It leaves
 Add `--summary-out reports/runs/pr.summary.json` to write the matching
 `case_result_summary.v1` in the same pass.
 
+Run the sampling-to-summary dry-run pipeline in one command:
+
+```bash
+python -m comp_scenario_packs.cli dry-run-case-result-sampling-plan scenarios/esg_energy/supplier_evidence_review/authoring.yaml reports/runs/pr.sampling-plan.json --selection-out reports/runs/pr.selection-plan.json --case-results-out reports/runs/pr.case_results.jsonl --summary-out reports/runs/pr.summary.json --run-id 2026-05-28-dry-run --domain esg_energy --scenario supplier_evidence_review
+```
+
+This convenience command still writes the intermediate selection plan so the
+chosen mutation cards and unmatched targets stay reviewable.
+
 Run the lightweight benchmark smoke:
 
 ```bash
