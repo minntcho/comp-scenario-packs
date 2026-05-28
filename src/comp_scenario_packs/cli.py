@@ -29,6 +29,7 @@ from comp_scenario_packs.generation import (
     load_case_result_summary_comparison_json,
     load_case_result_summary_json,
     summarize_case_result_jsonl,
+    summarize_case_results,
     write_case_result_jsonl,
     write_case_result_sampling_plan_json,
     write_case_result_selection_plan_json,
@@ -139,11 +140,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             ),
         )
         write_case_result_jsonl(args.out, events)
+        if args.summary_out:
+            summary = summarize_case_results(events)
+            write_case_result_summary_json(args.summary_out, summary)
         print(
             f"case-result-selection-dry-run: "
             f"{len(events)} case_result.v1 events"
         )
         print(f"case-result-selection-dry-run: wrote {args.out}")
+        if args.summary_out:
+            print(f"case-result-selection-dry-run: wrote summary {args.summary_out}")
         return 0
     if args.command == "bench-smoke":
         result = run_benchmark_smoke(args.scenarios_dir, report_path=args.report)
@@ -326,6 +332,7 @@ def _build_parser() -> argparse.ArgumentParser:
     dry_run_selection_plan.add_argument("authoring")
     dry_run_selection_plan.add_argument("selection_plan")
     dry_run_selection_plan.add_argument("--out", required=True)
+    dry_run_selection_plan.add_argument("--summary-out")
     dry_run_selection_plan.add_argument("--run-id", required=True)
     dry_run_selection_plan.add_argument("--domain", required=True)
     dry_run_selection_plan.add_argument("--scenario", required=True)

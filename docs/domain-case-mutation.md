@@ -493,6 +493,11 @@ the selection metadata for traceability, but it still does not generate
 `runtime_case.json`, run `comp`, or fill actual gate, diagnostic, replay, or
 projection authority fields.
 
+Pass `--summary-out reports/runs/pr.summary.json` when the same dry-run command
+should also write the matching `case_result_summary.v1`. This summary is built
+from the generated events and remains a generation-quality/reporting read
+model; it does not introduce new authority.
+
 The summary keeps generation quality separate from comp quality. Cases whose
 target syndrome does not match the computed syndrome are counted as
 `invalid_generation` in `generator_quality`. They are excluded from

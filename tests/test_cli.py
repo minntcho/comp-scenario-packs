@@ -497,6 +497,66 @@ def test_dry_run_case_result_selection_plan_cli_writes_case_results(tmp_path, ca
     assert payload["selection"]["syndrome"] == "supplier_binding_resolved=F"
 
 
+def test_dry_run_case_result_selection_plan_cli_writes_summary(tmp_path, capsys):
+    selection_plan_path = tmp_path / "selection-plan.json"
+    case_results_path = tmp_path / "case-results.jsonl"
+    summary_path = tmp_path / "summary.json"
+    _write_json(
+        selection_plan_path,
+        {
+            "schema_version": "case_result_selection_plan.v1",
+            "authoring_id": "supplier_evidence_review.v1",
+            "selected_cards": [
+                {
+                    "syndrome": "supplier_binding_resolved=F",
+                    "mutation_card": "supplier_alias_unresolved",
+                    "mutation_op": "replace",
+                    "path": "claim.supplier",
+                    "min_cases": 10,
+                    "priority": "medium",
+                    "source": "coverage_gap",
+                    "reason": "current run has 0 cases; baseline had 10.",
+                }
+            ],
+            "unmatched_targets": [],
+            "freeze_candidates": [],
+        },
+    )
+
+    exit_code = main(
+        [
+            "dry-run-case-result-selection-plan",
+            str(
+                ROOT
+                / "scenarios"
+                / "esg_energy"
+                / "supplier_evidence_review"
+                / "authoring.yaml"
+            ),
+            str(selection_plan_path),
+            "--out",
+            str(case_results_path),
+            "--summary-out",
+            str(summary_path),
+            "--run-id",
+            "2026-05-28-dry-run",
+            "--domain",
+            "esg_energy",
+            "--scenario",
+            "supplier_evidence_review",
+        ]
+    )
+
+    output = capsys.readouterr().out
+    payload = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert "case-result-selection-dry-run: wrote summary" in output
+    assert payload["schema_version"] == "case_result_summary.v1"
+    assert payload["total_cases"] == 1
+    assert payload["generator_quality"]["valid_syndrome_cases"] == 1
+    assert payload["by_syndrome"][0]["syndrome"] == "supplier_binding_resolved=F"
+
+
 def test_adapt_yaml_public_projection_cli_writes_replayable_bundle(tmp_path, capsys):
     bundle_dir = tmp_path / "yaml-public-projection"
 
