@@ -61,6 +61,7 @@ comp authority layer
         |
         v
 reporter layer
+  case_result.jsonl
   contract intent versus actual result
   diagnostics coverage
   shrink and freeze candidates
@@ -364,6 +365,44 @@ The evaluator returns statuses shaped for later `case_result.jsonl` records:
 }
 ```
 
+## Case Result Writer
+
+Use `comp_scenario_packs.generation.build_case_result` to convert a semantic
+case plus syndrome evaluation into a `case_result.v1` event. Use
+`write_case_result_jsonl` to write those events under `reports/runs/`.
+
+The first writer is generation-only: it records the mutation provenance,
+target syndrome, computed syndrome, generation status, contract intent, stable
+authoring/base-case hashes, and `not_evaluated` placeholders for comp gate,
+diagnostic, and replay fields. Later comp execution can fill `actual_gate` and
+`actual_diagnostics`.
+
+The event shape is intentionally append-friendly:
+
+```json
+{
+  "schema_version": "case_result.v1",
+  "run_id": "2026-05-28-main-abc123",
+  "case_id": "supplier_evidence_review.accepted.v1__invoice_amount_conflict",
+  "authoring_hash": "sha256:...",
+  "base_case_hash": "sha256:...",
+  "target_syndrome": {
+    "invoice_amount_matches_claim": "F"
+  },
+  "computed_syndrome": {
+    "invoice_amount_matches_claim": "F"
+  },
+  "statuses": {
+    "generation": "valid",
+    "syndrome": "match",
+    "gate": "not_evaluated",
+    "diagnostic": "not_evaluated",
+    "replay": "not_checked",
+    "overall": "valid_generation"
+  }
+}
+```
+
 ## Generated Output Policy
 
 `prepared/` contains generated candidate bundles and should stay mostly
@@ -378,6 +417,7 @@ authoring.yaml
   -> validate cards
   -> apply selected cards to base-case data
   -> compute invariant syndrome
+  -> write case_result.v1 events
   -> exclude invalid generation from comp-quality stats
   -> lower mutated cases into prepared bundles
   -> run comp
