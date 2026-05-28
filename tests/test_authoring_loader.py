@@ -24,6 +24,24 @@ def test_loads_supplier_evidence_authoring_seed_as_typed_spec():
     assert spec.base_case.case["claim"]["activity"]["amount"] == 8400
     assert spec.rendering["generated_text_is_authoritative"] is False
     assert "evidence.invoice.amount" in spec.grammar.allowed_paths
+    assert [invariant.code for invariant in spec.invariants] == [
+        "invoice_exists",
+        "meter_log_exists",
+        "invoice_amount_matches_claim",
+        "invoice_period_matches_claim",
+        "meter_log_period_matches_claim",
+        "supplier_binding_resolved",
+    ]
+    assert spec.invariant_codes == frozenset(
+        {
+            "invoice_exists",
+            "meter_log_exists",
+            "invoice_amount_matches_claim",
+            "invoice_period_matches_claim",
+            "meter_log_period_matches_claim",
+            "supplier_binding_resolved",
+        }
+    )
     assert set(spec.grammar.relations) == {
         "supplier_binding",
         "invoice_supports_claim",
@@ -34,17 +52,30 @@ def test_loads_supplier_evidence_authoring_seed_as_typed_spec():
         "invoice_amount_conflict",
         "stale_meter_log",
         "supplier_alias_unresolved",
+        "missing_invoice",
     ]
     assert spec.mutation_cards[0].op == "replace"
     assert spec.mutation_cards[0].path == "evidence.invoice.amount"
     assert spec.mutation_cards[0].from_value == 8400
     assert spec.mutation_cards[0].to_value == 8900
+    assert spec.mutation_cards[0].target_syndrome == {
+        "invoice_exists": "P",
+        "invoice_amount_matches_claim": "F",
+        "invoice_period_matches_claim": "P",
+    }
     assert spec.mutation_cards[0].semantic_delta == {
         "invoice.amount_relation": "conflicts_with_claim"
+    }
+    assert spec.mutation_cards[-1].target_syndrome == {
+        "invoice_exists": "F",
+        "invoice_amount_matches_claim": "X",
+        "invoice_period_matches_claim": "X",
     }
     assert spec.pressure_targets == (
         "canonical_binding",
         "evidence_matching",
+        "evidence_presence",
+        "period_matching",
         "public_projection_gate",
         "rfi_gate",
         "stale_evidence",
@@ -72,12 +103,21 @@ def test_authoring_cards_must_change_exactly_one_semantic_delta(tmp_path):
           relations:
             invoice_supports_claim:
               mutations: [amount_conflict]
+        invariants:
+          - code: invoice_amount_matches_claim
+            check:
+              kind: equals
+              left: evidence.invoice.amount
+              right: claim.activity.amount
+            pressure_targets: [evidence_matching]
         mutation_cards:
           - id: too_many_changes
             op: replace
             path: evidence.invoice.amount
             from: 1200
             to: 1350
+            target_syndrome:
+              invoice_amount_matches_claim: F
             semantic_delta:
               invoice.amount_relation: conflicts_with_claim
               meter_log.period_relation: previous_period
@@ -115,12 +155,21 @@ def test_authoring_cards_cannot_embed_comp_bundle_outputs(tmp_path):
           relations:
             invoice_supports_claim:
               mutations: [amount_conflict]
+        invariants:
+          - code: invoice_amount_matches_claim
+            check:
+              kind: equals
+              left: evidence.invoice.amount
+              right: claim.activity.amount
+            pressure_targets: [evidence_matching]
         mutation_cards:
           - id: embeds_runtime_case
             op: replace
             path: evidence.invoice.amount
             from: 1200
             to: 1350
+            target_syndrome:
+              invoice_amount_matches_claim: F
             semantic_delta:
               invoice.amount_relation: conflicts_with_claim
             pressure_targets: [evidence_matching]
@@ -137,7 +186,7 @@ def test_authoring_cards_cannot_embed_comp_bundle_outputs(tmp_path):
         load_authoring_spec(authoring)
 
 
-def test_authoring_card_target_must_reference_declared_slot_or_relation(tmp_path):
+def test_authoring_card_path_must_reference_declared_allowed_path(tmp_path):
     authoring = tmp_path / "authoring.yaml"
     authoring.write_text(
         """
@@ -156,12 +205,21 @@ def test_authoring_card_target_must_reference_declared_slot_or_relation(tmp_path
         grammar:
           allowed_paths: [claim.supplier]
           relations: {}
+        invariants:
+          - code: invoice_amount_matches_claim
+            check:
+              kind: equals
+              left: evidence.invoice.amount
+              right: claim.activity.amount
+            pressure_targets: [evidence_matching]
         mutation_cards:
           - id: unknown_target
             op: replace
             path: evidence.invoice.amount
             from: 1200
             to: 1350
+            target_syndrome:
+              invoice_amount_matches_claim: F
             semantic_delta:
               invoice.amount_relation: conflicts_with_claim
             pressure_targets: [evidence_matching]
@@ -196,12 +254,20 @@ def test_authoring_public_surfaces_stay_on_declared_comp_surfaces(tmp_path):
         grammar:
           allowed_paths: [claim.supplier]
           relations: {}
+        invariants:
+          - code: supplier_binding_resolved
+            check:
+              kind: resolves
+              path: claim.supplier
+            pressure_targets: [canonical_binding]
         mutation_cards:
           - id: supplier_alias
             op: replace
             path: claim.supplier
             from: alpha_metal
             to: alpha_metal_alias
+            target_syndrome:
+              supplier_binding_resolved: F
             semantic_delta:
               supplier.binding_relation: unresolved_alias
             pressure_targets: [canonical_binding]
@@ -236,12 +302,20 @@ def test_authoring_rendered_text_must_not_be_authoritative(tmp_path):
         grammar:
           allowed_paths: [claim.supplier]
           relations: {}
+        invariants:
+          - code: supplier_binding_resolved
+            check:
+              kind: resolves
+              path: claim.supplier
+            pressure_targets: [canonical_binding]
         mutation_cards:
           - id: supplier_alias
             op: replace
             path: claim.supplier
             from: alpha_metal
             to: alpha_metal_alias
+            target_syndrome:
+              supplier_binding_resolved: F
             semantic_delta:
               supplier.binding_relation: unresolved_alias
             pressure_targets: [canonical_binding]
@@ -254,4 +328,153 @@ def test_authoring_rendered_text_must_not_be_authoritative(tmp_path):
     )
 
     with pytest.raises(AuthoringSpecError, match="generated_text_is_authoritative"):
+        load_authoring_spec(authoring)
+
+
+def test_authoring_invariant_codes_must_be_unique(tmp_path):
+    authoring = tmp_path / "authoring.yaml"
+    authoring.write_text(
+        """
+        schema_version: 1
+        authoring_id: bad.v1
+        status: authoring-seed
+        authority_policy: compatibility_signal_not_authority_source
+        public_surfaces: [comp.scenario_contracts]
+        base_case:
+          id: bad.accepted.v1
+          intent:
+            path: accepted
+          claim: {}
+        rendering:
+          generated_text_is_authoritative: false
+        grammar:
+          allowed_paths: [claim.supplier]
+          relations: {}
+        invariants:
+          - code: supplier_binding_resolved
+            check:
+              kind: resolves
+              path: claim.supplier
+            pressure_targets: [canonical_binding]
+          - code: supplier_binding_resolved
+            check:
+              kind: resolves
+              path: claim.supplier
+            pressure_targets: [canonical_binding]
+        mutation_cards:
+          - id: supplier_alias
+            op: replace
+            path: claim.supplier
+            from: alpha_metal
+            to: alpha_metal_alias
+            target_syndrome:
+              supplier_binding_resolved: F
+            semantic_delta:
+              supplier.binding_relation: unresolved_alias
+            pressure_targets: [canonical_binding]
+            contract_intent:
+              public_projection: absent
+        generated_output_policy:
+          authority_note: comp_owns_receipt_replay_and_projection_authority
+        """,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AuthoringSpecError, match="invariant codes must be unique"):
+        load_authoring_spec(authoring)
+
+
+def test_authoring_target_syndrome_must_reference_declared_invariants(tmp_path):
+    authoring = tmp_path / "authoring.yaml"
+    authoring.write_text(
+        """
+        schema_version: 1
+        authoring_id: bad.v1
+        status: authoring-seed
+        authority_policy: compatibility_signal_not_authority_source
+        public_surfaces: [comp.scenario_contracts]
+        base_case:
+          id: bad.accepted.v1
+          intent:
+            path: accepted
+          claim: {}
+        rendering:
+          generated_text_is_authoritative: false
+        grammar:
+          allowed_paths: [claim.supplier]
+          relations: {}
+        invariants:
+          - code: supplier_binding_resolved
+            check:
+              kind: resolves
+              path: claim.supplier
+            pressure_targets: [canonical_binding]
+        mutation_cards:
+          - id: supplier_alias
+            op: replace
+            path: claim.supplier
+            from: alpha_metal
+            to: alpha_metal_alias
+            target_syndrome:
+              missing_invariant: F
+            semantic_delta:
+              supplier.binding_relation: unresolved_alias
+            pressure_targets: [canonical_binding]
+            contract_intent:
+              public_projection: absent
+        generated_output_policy:
+          authority_note: comp_owns_receipt_replay_and_projection_authority
+        """,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AuthoringSpecError, match="target_syndrome"):
+        load_authoring_spec(authoring)
+
+
+def test_authoring_target_syndrome_states_are_tristate(tmp_path):
+    authoring = tmp_path / "authoring.yaml"
+    authoring.write_text(
+        """
+        schema_version: 1
+        authoring_id: bad.v1
+        status: authoring-seed
+        authority_policy: compatibility_signal_not_authority_source
+        public_surfaces: [comp.scenario_contracts]
+        base_case:
+          id: bad.accepted.v1
+          intent:
+            path: accepted
+          claim: {}
+        rendering:
+          generated_text_is_authoritative: false
+        grammar:
+          allowed_paths: [claim.supplier]
+          relations: {}
+        invariants:
+          - code: supplier_binding_resolved
+            check:
+              kind: resolves
+              path: claim.supplier
+            pressure_targets: [canonical_binding]
+        mutation_cards:
+          - id: supplier_alias
+            op: replace
+            path: claim.supplier
+            from: alpha_metal
+            to: alpha_metal_alias
+            target_syndrome:
+              supplier_binding_resolved: maybe
+            semantic_delta:
+              supplier.binding_relation: unresolved_alias
+            pressure_targets: [canonical_binding]
+            contract_intent:
+              public_projection: absent
+        generated_output_policy:
+          authority_note: comp_owns_receipt_replay_and_projection_authority
+        """,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AuthoringSpecError, match="P, F, or X"):
         load_authoring_spec(authoring)

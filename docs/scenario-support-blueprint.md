@@ -204,10 +204,11 @@ scenarios/
 ```
 
 `authoring.yaml` may contain a structured base case, optional rendering
-metadata, allowed paths, relation grammar, mutation cards, and contract intent.
-It is not a runnable `comp` scenario manifest. Do not add `scenario.json` until
-selected mutation cards can be lowered into deterministic candidate bundles
-that run through public `comp.scenario_contracts`.
+metadata, allowed paths, relation grammar, invariant definitions, mutation
+cards, target syndromes, and contract intent. It is not a runnable `comp`
+scenario manifest. Do not add `scenario.json` until selected mutation cards can
+be lowered into deterministic candidate bundles that run through public
+`comp.scenario_contracts`.
 
 LLMs may propose mutation cards over declared base-case paths, but they must
 not generate `runtime_case.json`, artifact envelopes, body digests, receipt
