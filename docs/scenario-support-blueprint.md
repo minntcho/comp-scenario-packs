@@ -187,9 +187,9 @@ scenarios can coexist.
 Prefer moving scenarios gradually. Do not relocate all existing scenarios in the
 same PR as a new helper unless the migration itself is the point of the PR.
 
-## Adding A Domain Sentence Authoring Spec
+## Adding A Domain Case Authoring Spec
 
-Use `docs/domain-sentence-mutation.md` before introducing an LLM-assisted or
+Use `docs/domain-case-mutation.md` before introducing an LLM-assisted or
 generator-assisted scenario family. The first authoring slice should usually be
 one file:
 
@@ -203,16 +203,16 @@ scenarios/
       reports/
 ```
 
-`authoring.yaml` may contain a canonical sentence, semantic frame, slot and
-relation grammar, mutation cards, and contract intent. It is not a runnable
-`comp` scenario manifest. Do not add `scenario.json` until selected mutation
-cards can be lowered into deterministic candidate bundles that run through
-public `comp.scenario_contracts`.
+`authoring.yaml` may contain a structured base case, optional rendering
+metadata, allowed paths, relation grammar, mutation cards, and contract intent.
+It is not a runnable `comp` scenario manifest. Do not add `scenario.json` until
+selected mutation cards can be lowered into deterministic candidate bundles
+that run through public `comp.scenario_contracts`.
 
-LLMs may propose canonical sentences and mutation cards, but they must not
-generate `runtime_case.json`, artifact envelopes, body digests, receipt ids, or
-projection value commitments. Generated bundles are candidate inputs only;
-`comp` remains the receipt, replay, and public projection authority.
+LLMs may propose mutation cards over declared base-case paths, but they must
+not generate `runtime_case.json`, artifact envelopes, body digests, receipt
+ids, or projection value commitments. Generated bundles are candidate inputs
+only; `comp` remains the receipt, replay, and public projection authority.
 
 ## Adding An Adapter Smoke
 

@@ -19,8 +19,11 @@ def test_loads_supplier_evidence_authoring_seed_as_typed_spec():
 
     assert spec.authoring_id == "supplier_evidence_review.v1"
     assert spec.status == "authoring-seed"
-    assert spec.canonical_sentence.id == "supplier_evidence_review.accepted.v1"
-    assert spec.canonical_sentence.intent["path"] == "accepted"
+    assert spec.base_case.id == "supplier_evidence_review.accepted.v1"
+    assert spec.base_case.intent["path"] == "accepted"
+    assert spec.base_case.case["claim"]["activity"]["amount"] == 8400
+    assert spec.rendering["generated_text_is_authoritative"] is False
+    assert "evidence.invoice.amount" in spec.grammar.allowed_paths
     assert set(spec.grammar.relations) == {
         "supplier_binding",
         "invoice_supports_claim",
@@ -32,6 +35,10 @@ def test_loads_supplier_evidence_authoring_seed_as_typed_spec():
         "stale_meter_log",
         "supplier_alias_unresolved",
     ]
+    assert spec.mutation_cards[0].op == "replace"
+    assert spec.mutation_cards[0].path == "evidence.invoice.amount"
+    assert spec.mutation_cards[0].from_value == 8400
+    assert spec.mutation_cards[0].to_value == 8900
     assert spec.mutation_cards[0].semantic_delta == {
         "invoice.amount_relation": "conflicts_with_claim"
     }
@@ -53,22 +60,24 @@ def test_authoring_cards_must_change_exactly_one_semantic_delta(tmp_path):
         status: authoring-seed
         authority_policy: compatibility_signal_not_authority_source
         public_surfaces: [comp.scenario_contracts]
-        canonical_sentence:
+        base_case:
           id: bad.accepted.v1
-          text: A valid sentence.
           intent:
             path: accepted
-        semantic_frame:
           claim: {}
+        rendering:
+          generated_text_is_authoritative: false
         grammar:
-          slots: {}
+          allowed_paths: [evidence.invoice.amount]
           relations:
             invoice_supports_claim:
               mutations: [amount_conflict]
         mutation_cards:
           - id: too_many_changes
-            operator: conflict
-            target: invoice_supports_claim.amount
+            op: replace
+            path: evidence.invoice.amount
+            from: 1200
+            to: 1350
             semantic_delta:
               invoice.amount_relation: conflicts_with_claim
               meter_log.period_relation: previous_period
@@ -94,22 +103,24 @@ def test_authoring_cards_cannot_embed_comp_bundle_outputs(tmp_path):
         status: authoring-seed
         authority_policy: compatibility_signal_not_authority_source
         public_surfaces: [comp.scenario_contracts]
-        canonical_sentence:
+        base_case:
           id: bad.accepted.v1
-          text: A valid sentence.
           intent:
             path: accepted
-        semantic_frame:
           claim: {}
+        rendering:
+          generated_text_is_authoritative: false
         grammar:
-          slots: {}
+          allowed_paths: [evidence.invoice.amount]
           relations:
             invoice_supports_claim:
               mutations: [amount_conflict]
         mutation_cards:
           - id: embeds_runtime_case
-            operator: conflict
-            target: invoice_supports_claim.amount
+            op: replace
+            path: evidence.invoice.amount
+            from: 1200
+            to: 1350
             semantic_delta:
               invoice.amount_relation: conflicts_with_claim
             pressure_targets: [evidence_matching]
@@ -135,22 +146,22 @@ def test_authoring_card_target_must_reference_declared_slot_or_relation(tmp_path
         status: authoring-seed
         authority_policy: compatibility_signal_not_authority_source
         public_surfaces: [comp.scenario_contracts]
-        canonical_sentence:
+        base_case:
           id: bad.accepted.v1
-          text: A valid sentence.
           intent:
             path: accepted
-        semantic_frame:
           claim: {}
+        rendering:
+          generated_text_is_authoritative: false
         grammar:
-          slots:
-            supplier:
-              mutations: [unresolved_alias]
+          allowed_paths: [claim.supplier]
           relations: {}
         mutation_cards:
           - id: unknown_target
-            operator: alias
-            target: invoice_supports_claim.amount
+            op: replace
+            path: evidence.invoice.amount
+            from: 1200
+            to: 1350
             semantic_delta:
               invoice.amount_relation: conflicts_with_claim
             pressure_targets: [evidence_matching]
@@ -162,7 +173,7 @@ def test_authoring_card_target_must_reference_declared_slot_or_relation(tmp_path
         encoding="utf-8",
     )
 
-    with pytest.raises(AuthoringSpecError, match="target must reference"):
+    with pytest.raises(AuthoringSpecError, match="path must reference"):
         load_authoring_spec(authoring)
 
 
@@ -175,22 +186,22 @@ def test_authoring_public_surfaces_stay_on_declared_comp_surfaces(tmp_path):
         status: authoring-seed
         authority_policy: compatibility_signal_not_authority_source
         public_surfaces: [comp.persistence.envelope]
-        canonical_sentence:
+        base_case:
           id: bad.accepted.v1
-          text: A valid sentence.
           intent:
             path: accepted
-        semantic_frame:
           claim: {}
+        rendering:
+          generated_text_is_authoritative: false
         grammar:
-          slots:
-            supplier:
-              mutations: [unresolved_alias]
+          allowed_paths: [claim.supplier]
           relations: {}
         mutation_cards:
           - id: supplier_alias
-            operator: alias
-            target: supplier
+            op: replace
+            path: claim.supplier
+            from: alpha_metal
+            to: alpha_metal_alias
             semantic_delta:
               supplier.binding_relation: unresolved_alias
             pressure_targets: [canonical_binding]
@@ -203,4 +214,44 @@ def test_authoring_public_surfaces_stay_on_declared_comp_surfaces(tmp_path):
     )
 
     with pytest.raises(AuthoringSpecError, match="public_surfaces"):
+        load_authoring_spec(authoring)
+
+
+def test_authoring_rendered_text_must_not_be_authoritative(tmp_path):
+    authoring = tmp_path / "authoring.yaml"
+    authoring.write_text(
+        """
+        schema_version: 1
+        authoring_id: bad.v1
+        status: authoring-seed
+        authority_policy: compatibility_signal_not_authority_source
+        public_surfaces: [comp.scenario_contracts]
+        base_case:
+          id: bad.accepted.v1
+          intent:
+            path: accepted
+          claim: {}
+        rendering:
+          generated_text_is_authoritative: true
+        grammar:
+          allowed_paths: [claim.supplier]
+          relations: {}
+        mutation_cards:
+          - id: supplier_alias
+            op: replace
+            path: claim.supplier
+            from: alpha_metal
+            to: alpha_metal_alias
+            semantic_delta:
+              supplier.binding_relation: unresolved_alias
+            pressure_targets: [canonical_binding]
+            contract_intent:
+              public_projection: absent
+        generated_output_policy:
+          authority_note: comp_owns_receipt_replay_and_projection_authority
+        """,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AuthoringSpecError, match="generated_text_is_authoritative"):
         load_authoring_spec(authoring)

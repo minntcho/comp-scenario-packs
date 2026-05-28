@@ -4,22 +4,24 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DOC = ROOT / "docs" / "domain-sentence-mutation.md"
+DOC = ROOT / "docs" / "domain-case-mutation.md"
 AUTHORING = (
     ROOT / "scenarios" / "esg_energy" / "supplier_evidence_review" / "authoring.yaml"
 )
 
 
-def test_domain_sentence_mutation_doc_keeps_authority_boundary():
+def test_domain_case_mutation_doc_keeps_authority_boundary():
     doc = DOC.read_text(encoding="utf-8")
 
     assert "LLM-assisted" in doc
-    assert "controlled mutations" in doc
+    assert "source of truth" in doc
+    assert "base case" in doc
     assert "Generated mutations are scenario intents, not authority decisions" in doc
+    assert "Rendered sentences are views, not parse targets" in doc
     assert "receipt, replay, and public projection" in doc
     assert "authority remain owned by `comp`" in doc
     assert "must not generate `runtime_case.json`" in doc
-    assert "Each mutation card changes exactly one slot or one relation" in doc
+    assert "Each mutation card changes exactly one path or one relation" in doc
 
 
 def test_supplier_evidence_authoring_seed_uses_expected_sections():
@@ -28,12 +30,15 @@ def test_supplier_evidence_authoring_seed_uses_expected_sections():
     assert payload["status"] == "authoring-seed"
     assert payload["authority_policy"] == "compatibility_signal_not_authority_source"
     assert set(payload) >= {
-        "canonical_sentence",
-        "semantic_frame",
+        "base_case",
+        "rendering",
         "grammar",
         "mutation_cards",
         "generated_output_policy",
     }
+    assert "canonical_sentence" not in payload
+    assert "semantic_frame" not in payload
+    assert payload["rendering"]["generated_text_is_authoritative"] is False
     assert payload["generated_output_policy"]["authority_note"] == (
         "comp_owns_receipt_replay_and_projection_authority"
     )

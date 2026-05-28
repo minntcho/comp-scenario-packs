@@ -1,9 +1,14 @@
-# Domain Sentence Mutation
+# Domain Case Mutation
 
-Scenario generation starts from a canonical happy-path domain sentence. The
-sentence is decomposed into semantic slots and relations. LLM-assisted
-generation may only propose controlled mutations over those slots and
-relations. Generated mutations are scenario intents, not authority decisions.
+Scenario generation starts from a structured base case. The base case is the
+source of truth for the domain claim, evidence, bindings, and normal accepted
+intent. LLM-assisted generation may only propose controlled mutations over
+declared base-case paths or relations.
+Generated mutations are scenario intents, not authority decisions.
+
+Rendered sentences are views, not parse targets. They may appear in reports or
+LLM context, but generator code must not parse those sentences back into domain
+state.
 
 The comp bundle layer remains deterministic and is responsible only for
 producing candidate inputs to `comp`; receipt, replay, and public projection
@@ -13,9 +18,9 @@ authority remain owned by `comp`.
 
 ```text
 authoring layer
-  canonical sentence
-  semantic frame
-  slot and relation grammar
+  base case
+  optional rendered sentence view
+  allowed paths and relation grammar
   mutation cards
   contract intent
         |
@@ -23,7 +28,7 @@ authoring layer
 generation layer
   validate authoring spec
   enforce one-card-one-mutation
-  apply mutation cards
+  apply mutation cards to base-case data
   record provenance
   report pressure coverage
         |
@@ -55,8 +60,8 @@ reporter layer
 ## Authoring Boundary
 
 The authoring layer is the only layer that a human or LLM should edit directly
-while exploring new scenario ideas. It is allowed to describe a domain story,
-the semantic slots in that story, relation grammar, mutation cards, pressure
+while exploring new scenario ideas. It is allowed to describe a domain base
+case, the paths that may be mutated, relation grammar, mutation cards, pressure
 targets, and contract intent.
 
 The authoring layer must not generate `runtime_case.json`, receipt ids,
@@ -70,8 +75,8 @@ into replayable bundles.
 
 ## Single Authoring File First
 
-The first slice should keep the sentence, semantic frame, grammar, and mutation
-cards in one `authoring.yaml` file:
+The first slice should keep the base case, rendering metadata, grammar, and
+mutation cards in one `authoring.yaml` file:
 
 ```text
 scenarios/esg_energy/supplier_evidence_review/
@@ -81,27 +86,21 @@ scenarios/esg_energy/supplier_evidence_review/
   reports/
 ```
 
-Splitting the authoring file into `canonical_sentence.yaml`,
-`semantic_frame.yaml`, `grammar.yaml`, and `mutation_cards.yaml` can wait until
-the file grows large enough to justify physical separation.
+Splitting the authoring file into `base_case.yaml`, `grammar.yaml`, and
+`mutation_cards.yaml` can wait until the file grows large enough to justify
+physical separation.
 
 ## Authoring Spec Shape
 
 ```yaml
-canonical_sentence:
+base_case:
   id: supplier_evidence_review.accepted.v1
-  text: >
-    Alpha Metal submitted electricity usage of 8,400 kWh for Plant A,
-    Battery Housing Plate, period 2026-01, supported by invoice INV-001
-    and meter log MTR-001 covering the same period.
   intent:
     path: accepted
     pressure_targets:
       - canonical_binding
       - evidence_matching
       - public_projection_gate
-
-semantic_frame:
   claim:
     supplier: alpha_metal
     site: plant_alpha_a
@@ -114,21 +113,29 @@ semantic_frame:
   evidence:
     invoice:
       id: INV-001
+      amount: 8400
+      unit: kWh
+      period: 2026-01
       relation_to_claim: supports
     meter_log:
       id: MTR-001
+      amount: 8400
+      unit: kWh
+      period: 2026-01
       relation_to_claim: supports
 
+rendering:
+  sentence_template: supplier_evidence_review.default
+  generated_text_is_authoritative: false
+
 grammar:
-  slots:
-    supplier:
-      mutations:
-        - unresolved_alias
-        - ambiguous_alias
-    period:
-      mutations:
-        - previous_period
-        - omitted
+  allowed_paths:
+    - claim.supplier
+    - claim.period
+    - claim.activity.amount
+    - evidence.invoice.amount
+    - evidence.invoice.period
+    - evidence.meter_log.period
   relations:
     invoice_supports_claim:
       mutations:
@@ -143,8 +150,10 @@ grammar:
 
 mutation_cards:
   - id: invoice_amount_conflict
-    operator: conflict
-    target: invoice_supports_claim.amount
+    op: replace
+    path: evidence.invoice.amount
+    from: 8400
+    to: 8900
     semantic_delta:
       invoice.amount_relation: conflicts_with_claim
     pressure_targets:
@@ -160,15 +169,16 @@ mutation_cards:
 
 ## Mutation Card Rules
 
-1. Each mutation card changes exactly one slot or one relation.
-2. A mutation card may carry a mutated sentence, but the semantic delta is the
-   contract that deterministic code should validate.
+1. Each mutation card changes exactly one path or one relation.
+2. A mutation card may carry optional rendered text for reports, but its path
+   operation and semantic delta are the contracts deterministic code should
+   validate.
 3. Contract intent is pressure, not authority. It records what the case is
    meant to stress; `comp` still decides the actual receipt, replay, and
    projection result.
 4. Do not combine independent failures in the first card for a mutation family.
    Add compound mutations only after single mutations have stable diagnostics.
-5. Mutation ids and diagnostic labels should be derived from slot or relation
+5. Mutation ids and diagnostic labels should be derived from path or relation
    grammar, not improvised as free-form LLM tags.
 
 Good first relation targets for supplier evidence review are:
@@ -191,21 +201,23 @@ supplier_alias_unresolved
 
 ## LLM Use
 
-LLMs may propose canonical story sentences and mutation cards. They must not
-produce prepared comp bundles or decide authority outcomes.
+LLMs may propose mutation cards over declared base-case paths and relation
+operators. They must not produce prepared comp bundles or decide authority
+outcomes.
 
 A safe LLM task is:
 
 ```text
-Given a canonical domain sentence, semantic frame, and allowed mutation
-operators, propose mutation cards. Modify exactly one slot or one relation per
-card. Do not generate runtime_case.json. Do not invent comp internals. Return
-id, operator, target, mutated_sentence, semantic_delta, pressure_targets, and
+Given a structured base case, declared allowed paths, relation grammar, and
+allowed mutation operators, propose mutation cards. Modify exactly one path or
+one relation per card. Do not generate runtime_case.json. Do not invent comp
+internals. Return id, op, path, from, to, semantic_delta, pressure_targets, and
 contract_intent.
 ```
 
 The generated cards should then pass deterministic validation before any bundle
-lowering runs.
+lowering runs. If a rendered sentence is needed for review, generate it from the
+base case after mutation rather than parsing it back into state.
 
 ## Authoring Validation
 
@@ -217,9 +229,10 @@ The loader validates the current boundary rules:
 schema_version is supported
 public_surfaces stay on declared public comp surfaces
 required authoring sections are present
+rendered text is explicitly non-authoritative
 mutation card ids are unique
 each mutation card changes exactly one semantic_delta
-each mutation card target references a declared slot or relation
+each mutation card path references a declared allowed path
 mutation cards do not embed comp bundle outputs
 ```
 
@@ -238,7 +251,8 @@ The preferred progression is:
 ```text
 authoring.yaml
   -> validate cards
-  -> lower selected cards into prepared bundles
+  -> apply selected cards to base-case data
+  -> lower mutated cases into prepared bundles
   -> run comp
   -> compare contract intent with actual result
   -> promote important minimized cases into golden/

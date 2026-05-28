@@ -109,8 +109,9 @@ Domain-specific reuse belongs in scenario support modules, not authority
 modules. See `docs/domain-scenario-support.md` for the `common/` and `domains/`
 layout and non-authority rules. See `docs/scenario-support-blueprint.md` for
 the operational map, scenario nesting guidance, and helper placement rules.
-See `docs/domain-sentence-mutation.md` for the authoring boundary that keeps
-LLM-assisted scenario mutations above the deterministic comp bundle layer.
+See `docs/domain-case-mutation.md` for the authoring boundary that keeps
+LLM-assisted path-based scenario mutations above the deterministic comp bundle
+layer.
 
 ## Local Development
 

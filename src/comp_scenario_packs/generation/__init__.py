@@ -3,7 +3,7 @@
 from comp_scenario_packs.generation.authoring import (
     AuthoringSpec,
     AuthoringSpecError,
-    CanonicalSentence,
+    BaseCase,
     Grammar,
     MutationCard,
     load_authoring_spec,
@@ -12,7 +12,7 @@ from comp_scenario_packs.generation.authoring import (
 __all__ = [
     "AuthoringSpec",
     "AuthoringSpecError",
-    "CanonicalSentence",
+    "BaseCase",
     "Grammar",
     "MutationCard",
     "load_authoring_spec",
