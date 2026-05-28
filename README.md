@@ -248,6 +248,17 @@ The selection plan maps target syndrome buckets to reviewed authoring mutation
 cards. It is still a read model and does not apply mutations, generate runtime
 bundles, or run `comp`.
 
+Lower a selection plan into runnable canonical scenario bundles:
+
+```bash
+python -m comp_scenario_packs.cli lower-case-result-selection-plan scenarios/esg_energy/supplier_evidence_review/authoring.yaml reports/runs/pr.selection-plan.json --out-dir reports/runs/lowered/
+```
+
+This lowering step writes canonical scenario bundles for selected blocked
+mutation cards after checking the selected syndrome still matches the generated
+target/computed syndrome. The bundles can be run by `comp.scenario_contracts`,
+but they remain compatibility candidates rather than authority decisions.
+
 Dry-run a selection plan into generation-only case-result events:
 
 ```bash

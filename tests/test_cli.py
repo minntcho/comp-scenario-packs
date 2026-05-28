@@ -762,6 +762,67 @@ def test_dry_run_case_result_sampling_plan_cli_can_fail_on_invalid_generation(
     assert summary["generator_quality"]["invalid_generation"] == 1
 
 
+def test_lower_case_result_selection_plan_cli_writes_replayable_bundle(
+    tmp_path,
+    capsys,
+):
+    selection_plan_path = tmp_path / "selection-plan.json"
+    out_dir = tmp_path / "generated"
+    _write_json(
+        selection_plan_path,
+        {
+            "schema_version": "case_result_selection_plan.v1",
+            "authoring_id": "supplier_evidence_review.v1",
+            "selected_cards": [
+                {
+                    "syndrome": "supplier_binding_resolved=F",
+                    "mutation_card": "supplier_alias_unresolved",
+                    "mutation_op": "replace",
+                    "path": "claim.supplier",
+                    "min_cases": 10,
+                    "priority": "medium",
+                    "source": "coverage_gap",
+                    "reason": "current run has 0 cases.",
+                }
+            ],
+            "unmatched_targets": [],
+            "freeze_candidates": [],
+        },
+    )
+
+    exit_code = main(
+        [
+            "lower-case-result-selection-plan",
+            str(
+                ROOT
+                / "scenarios"
+                / "esg_energy"
+                / "supplier_evidence_review"
+                / "authoring.yaml"
+            ),
+            str(selection_plan_path),
+            "--out-dir",
+            str(out_dir),
+        ]
+    )
+
+    output = capsys.readouterr().out
+    manifest_path = (
+        out_dir
+        / "supplier_evidence_review.accepted.v1__supplier_alias_unresolved"
+        / "scenario.json"
+    )
+    result = run_scenario(
+        load_manifest(manifest_path),
+        report_path=tmp_path / "report.json",
+    )
+    assert exit_code == 0
+    assert "case-result-selection-lower: wrote 1 canonical bundles" in output
+    assert result.status == "passed"
+    assert result.receipt_count == 0
+    assert result.public_row_count == 0
+
+
 def test_adapt_yaml_public_projection_cli_writes_replayable_bundle(tmp_path, capsys):
     bundle_dir = tmp_path / "yaml-public-projection"
 

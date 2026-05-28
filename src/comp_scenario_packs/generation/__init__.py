@@ -19,6 +19,12 @@ from comp_scenario_packs.generation.evaluate import (
     SyndromeEvaluation,
     evaluate_semantic_case,
 )
+from comp_scenario_packs.generation.lowering import (
+    BLOCKED_BUNDLE_INVARIANTS,
+    LoweredScenarioBundle,
+    ScenarioLoweringError,
+    write_case_result_selection_plan_bundles,
+)
 from comp_scenario_packs.generation.results import (
     CASE_RESULT_SAMPLING_PLAN_SCHEMA_VERSION,
     CASE_RESULT_SCHEMA_VERSION,
@@ -49,6 +55,7 @@ from comp_scenario_packs.generation.results import (
 __all__ = [
     "AuthoringSpec",
     "AuthoringSpecError",
+    "BLOCKED_BUNDLE_INVARIANTS",
     "BaseCase",
     "CASE_RESULT_SAMPLING_PLAN_SCHEMA_VERSION",
     "CASE_RESULT_SCHEMA_VERSION",
@@ -59,7 +66,9 @@ __all__ = [
     "Grammar",
     "Invariant",
     "InvariantEvaluationError",
+    "LoweredScenarioBundle",
     "MutationCard",
+    "ScenarioLoweringError",
     "SemanticCase",
     "SemanticCaseApplyError",
     "SyndromeEvaluation",
@@ -80,6 +89,7 @@ __all__ = [
     "summarize_case_results",
     "syndrome_bucket_key",
     "write_case_result_sampling_plan_json",
+    "write_case_result_selection_plan_bundles",
     "write_case_result_selection_plan_json",
     "write_case_result_summary_comparison_json",
     "write_case_result_summary_json",
