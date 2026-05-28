@@ -25,6 +25,7 @@ def test_domain_case_mutation_doc_keeps_authority_boundary():
     assert "write_case_result_jsonl" in doc
     assert "summarize_case_result_jsonl" in doc
     assert "write_case_result_summary_json" in doc
+    assert "summarize-case-results" in doc
     assert "generator_quality" in doc
     assert "comp_quality" in doc
     assert "Generated mutations are scenario intents, not authority decisions" in doc

@@ -413,6 +413,15 @@ Use `comp_scenario_packs.generation.summarize_case_results` or
 from `case_result.v1` events. Use `write_case_result_summary_json` to write the
 read model as `summary.json`.
 
+The same read model is available from the CLI:
+
+```bash
+python -m comp_scenario_packs.cli summarize-case-results reports/runs/latest.case_results.jsonl --out reports/runs/latest.summary.json
+```
+
+The command returns a non-zero exit code only when the summary status is `red`,
+such as public projection leaks, receipt leaks, or replay nondeterminism.
+
 The summary keeps generation quality separate from comp quality. Cases whose
 target syndrome does not match the computed syndrome are counted as
 `invalid_generation` in `generator_quality`. They are excluded from

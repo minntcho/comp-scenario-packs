@@ -207,6 +207,16 @@ The top-level `SCENARIO_PACKS` export is derived from checked-in `pack.json`
 metadata in this checkout. Treat it as an import convenience for coarse pack
 lists, not as a separate coverage source to edit by hand.
 
+Summarize generated case-result events:
+
+```bash
+python -m comp_scenario_packs.cli summarize-case-results reports/runs/latest.case_results.jsonl --out reports/runs/latest.summary.json
+```
+
+The summary groups valid generated cases by invariant syndrome bucket while
+keeping invalid generation in a separate generator-quality section. A red
+summary, such as a public-projection leak, returns a non-zero exit code.
+
 Run the lightweight benchmark smoke:
 
 ```bash
