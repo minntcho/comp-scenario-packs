@@ -17,6 +17,10 @@ from comp_scenario_packs.domains.presets import (
     get_projection_filter_preset,
     get_projection_row_preset,
 )
+from comp_scenario_packs.generation import (
+    summarize_case_result_jsonl,
+    write_case_result_summary_json,
+)
 from comp_scenario_packs.lat_apply import LatApplyError, apply_lat_draft
 from comp_scenario_packs.lat_check import validate_lat_document
 from comp_scenario_packs.lat_reactor import suggest_lat_updates
@@ -57,6 +61,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         for scenario_result in result.results:
             print(f"{scenario_result.scenario_id}: {scenario_result.status}")
         return 0 if result.status == "passed" else 1
+    if args.command == "summarize-case-results":
+        summary = summarize_case_result_jsonl(args.case_results)
+        write_case_result_summary_json(args.out, summary)
+        print(
+            f"case-result-summary: {summary['status']} "
+            f"({summary['total_cases']} cases)"
+        )
+        print(f"case-result-summary: wrote {args.out}")
+        return 1 if summary["status"] == "red" else 0
     if args.command == "bench-smoke":
         result = run_benchmark_smoke(args.scenarios_dir, report_path=args.report)
         print(
@@ -197,6 +210,12 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     run_all.add_argument("--scenarios-dir", default="scenarios")
     run_all.add_argument("--reports-dir", default="reports")
+    summarize_case_results = subparsers.add_parser(
+        "summarize-case-results",
+        help="Build a case_result_summary.v1 file from case_result.v1 JSONL.",
+    )
+    summarize_case_results.add_argument("case_results")
+    summarize_case_results.add_argument("--out", required=True)
     bench_smoke = subparsers.add_parser(
         "bench-smoke",
         help="Run a lightweight runtime benchmark over checked-in scenarios.",

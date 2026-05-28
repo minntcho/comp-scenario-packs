@@ -214,6 +214,92 @@ def test_lat_status_cli_prints_summary(tmp_path, capsys):
     assert "diagnostic_gap: 1" in output
 
 
+def test_summarize_case_results_cli_writes_summary(tmp_path, capsys):
+    case_results_path = tmp_path / "case_results.jsonl"
+    summary_path = tmp_path / "summary.json"
+    _write_jsonl(
+        case_results_path,
+        [
+            _case_result_event(
+                target_syndrome={"invoice_amount_matches_claim": "F"}
+            ),
+            _case_result_event(
+                target_syndrome={"supplier_binding_resolved": "F"}
+            ),
+        ],
+    )
+
+    exit_code = main(
+        [
+            "summarize-case-results",
+            str(case_results_path),
+            "--out",
+            str(summary_path),
+        ]
+    )
+
+    output = capsys.readouterr().out
+    payload = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert "case-result-summary: not_evaluated (2 cases)" in output
+    assert f"case-result-summary: wrote {summary_path}" in output
+    assert payload["schema_version"] == "case_result_summary.v1"
+    assert payload["generator_quality"]["valid_syndrome_cases"] == 2
+    assert [bucket["syndrome"] for bucket in payload["by_syndrome"]] == [
+        "invoice_amount_matches_claim=F",
+        "supplier_binding_resolved=F",
+    ]
+
+
+def test_summarize_case_results_cli_returns_failure_for_red_summary(
+    tmp_path,
+    capsys,
+):
+    case_results_path = tmp_path / "case_results.jsonl"
+    summary_path = tmp_path / "summary.json"
+    _write_jsonl(
+        case_results_path,
+        [
+            _case_result_event(
+                target_syndrome={"supplier_binding_resolved": "F"},
+                statuses={
+                    "generation": "valid",
+                    "syndrome": "match",
+                    "gate": "fail",
+                    "diagnostic": "not_evaluated",
+                    "replay": "not_checked",
+                    "overall": "gate_failure",
+                },
+                expected_gate={
+                    "receipt": "absent",
+                    "rfi": "present",
+                    "public_projection": "absent",
+                },
+                actual_gate={
+                    "receipt": "absent",
+                    "rfi": "present",
+                    "public_projection": "present",
+                },
+            )
+        ],
+    )
+
+    exit_code = main(
+        [
+            "summarize-case-results",
+            str(case_results_path),
+            "--out",
+            str(summary_path),
+        ]
+    )
+
+    output = capsys.readouterr().out
+    payload = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert exit_code == 1
+    assert "case-result-summary: red (1 cases)" in output
+    assert payload["comp_quality"]["public_projection_leaks"] == 1
+
+
 def test_adapt_yaml_public_projection_cli_writes_replayable_bundle(tmp_path, capsys):
     bundle_dir = tmp_path / "yaml-public-projection"
 
@@ -510,3 +596,46 @@ def test_bench_projection_query_cli_returns_failure_when_selectivity_budget_is_e
             "actual": 0.25,
         }
     ]
+
+
+def _write_jsonl(path: Path, events: list[dict[str, object]]) -> None:
+    path.write_text(
+        "".join(json.dumps(event, sort_keys=True) + "\n" for event in events),
+        encoding="utf-8",
+    )
+
+
+def _case_result_event(
+    *,
+    target_syndrome: dict[str, str],
+    statuses: dict[str, str] | None = None,
+    expected_gate: dict[str, str] | None = None,
+    actual_gate: dict[str, str] | None = None,
+) -> dict[str, object]:
+    return {
+        "schema_version": "case_result.v1",
+        "case_id": "case-001",
+        "target_syndrome": target_syndrome,
+        "computed_syndrome": target_syndrome,
+        "expected_gate": expected_gate
+        or {
+            "receipt": "not_evaluated",
+            "rfi": "not_evaluated",
+            "public_projection": "not_evaluated",
+        },
+        "actual_gate": actual_gate
+        or {
+            "receipt": "not_evaluated",
+            "rfi": "not_evaluated",
+            "public_projection": "not_evaluated",
+        },
+        "statuses": statuses
+        or {
+            "generation": "valid",
+            "syndrome": "match",
+            "gate": "not_evaluated",
+            "diagnostic": "not_evaluated",
+            "replay": "not_checked",
+            "overall": "valid_generation",
+        },
+    }
