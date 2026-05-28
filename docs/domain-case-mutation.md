@@ -498,6 +498,17 @@ should also write the matching `case_result_summary.v1`. This summary is built
 from the generated events and remains a generation-quality/reporting read
 model; it does not introduce new authority.
 
+Use `dry-run-case-result-sampling-plan` when a CI or local rehearsal should run
+the sampling-to-summary read-model chain in one pass:
+
+```bash
+python -m comp_scenario_packs.cli dry-run-case-result-sampling-plan scenarios/esg_energy/supplier_evidence_review/authoring.yaml reports/runs/pr.sampling-plan.json --selection-out reports/runs/pr.selection-plan.json --case-results-out reports/runs/pr.case_results.jsonl --summary-out reports/runs/pr.summary.json --run-id 2026-05-28-dry-run --domain esg_energy --scenario supplier_evidence_review
+```
+
+The command still writes `case_result_selection_plan.v1` as an intermediate
+artifact so selected cards, unmatched targets, and freeze candidates remain
+reviewable before any future runtime bundle lowering is introduced.
+
 The summary keeps generation quality separate from comp quality. Cases whose
 target syndrome does not match the computed syndrome are counted as
 `invalid_generation` in `generator_quality`. They are excluded from

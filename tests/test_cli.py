@@ -557,6 +557,76 @@ def test_dry_run_case_result_selection_plan_cli_writes_summary(tmp_path, capsys)
     assert payload["by_syndrome"][0]["syndrome"] == "supplier_binding_resolved=F"
 
 
+def test_dry_run_case_result_sampling_plan_cli_writes_pipeline_outputs(
+    tmp_path,
+    capsys,
+):
+    sampling_plan_path = tmp_path / "sampling-plan.json"
+    selection_plan_path = tmp_path / "selection-plan.json"
+    case_results_path = tmp_path / "case-results.jsonl"
+    summary_path = tmp_path / "summary.json"
+    _write_json(
+        sampling_plan_path,
+        {
+            "schema_version": "case_result_sampling_plan.v1",
+            "source_status": "yellow",
+            "sampling_targets": [
+                {
+                    "syndrome": "supplier_binding_resolved=F",
+                    "min_cases": 10,
+                    "priority": "medium",
+                    "source": "coverage_gap",
+                    "reason": "current run has 0 cases; baseline had 10.",
+                }
+            ],
+            "freeze_candidates": [],
+        },
+    )
+
+    exit_code = main(
+        [
+            "dry-run-case-result-sampling-plan",
+            str(
+                ROOT
+                / "scenarios"
+                / "esg_energy"
+                / "supplier_evidence_review"
+                / "authoring.yaml"
+            ),
+            str(sampling_plan_path),
+            "--selection-out",
+            str(selection_plan_path),
+            "--case-results-out",
+            str(case_results_path),
+            "--summary-out",
+            str(summary_path),
+            "--run-id",
+            "2026-05-28-dry-run",
+            "--domain",
+            "esg_energy",
+            "--scenario",
+            "supplier_evidence_review",
+        ]
+    )
+
+    output = capsys.readouterr().out
+    selection = json.loads(selection_plan_path.read_text(encoding="utf-8"))
+    event = json.loads(case_results_path.read_text(encoding="utf-8").splitlines()[0])
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert "case-result-sampling-dry-run: wrote selection" in output
+    assert "case-result-sampling-dry-run: wrote case results" in output
+    assert "case-result-sampling-dry-run: wrote summary" in output
+    assert selection["schema_version"] == "case_result_selection_plan.v1"
+    assert selection["selected_cards"][0]["mutation_card"] == (
+        "supplier_alias_unresolved"
+    )
+    assert event["schema_version"] == "case_result.v1"
+    assert event["selection"]["syndrome"] == "supplier_binding_resolved=F"
+    assert summary["schema_version"] == "case_result_summary.v1"
+    assert summary["total_cases"] == 1
+
+
 def test_adapt_yaml_public_projection_cli_writes_replayable_bundle(tmp_path, capsys):
     bundle_dir = tmp_path / "yaml-public-projection"
 
