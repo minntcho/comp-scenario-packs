@@ -268,6 +268,10 @@ python -m comp_scenario_packs.cli dry-run-case-result-sampling-plan scenarios/es
 
 This convenience command still writes the intermediate selection plan so the
 chosen mutation cards and unmatched targets stay reviewable.
+Add `--fail-on-unmatched-targets` when CI should fail after writing artifacts if
+any sampling target has no matching mutation card. Add
+`--fail-on-invalid-generation` when CI should fail after writing artifacts if
+any generated case has a target/computed syndrome mismatch.
 
 Run the lightweight benchmark smoke:
 

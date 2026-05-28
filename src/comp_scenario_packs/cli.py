@@ -159,7 +159,25 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"wrote case results {args.case_results_out}"
         )
         print(f"case-result-sampling-dry-run: wrote summary {args.summary_out}")
-        return 0
+        exit_code = 0
+        if args.fail_on_unmatched_targets and selection_plan["unmatched_targets"]:
+            print(
+                "case-result-sampling-dry-run: "
+                "gate failed unmatched targets "
+                f"{len(selection_plan['unmatched_targets'])}"
+            )
+            exit_code = 1
+        if (
+            args.fail_on_invalid_generation
+            and summary["generator_quality"]["invalid_generation"]
+        ):
+            print(
+                "case-result-sampling-dry-run: "
+                "gate failed invalid generation "
+                f"{summary['generator_quality']['invalid_generation']}"
+            )
+            exit_code = 1
+        return exit_code
     if args.command == "dry-run-case-result-selection-plan":
         events = build_case_results_from_selection_plan(
             load_authoring_spec(args.authoring),
@@ -377,6 +395,16 @@ def _build_parser() -> argparse.ArgumentParser:
     dry_run_sampling_plan.add_argument("--seed", type=int, default=None)
     dry_run_sampling_plan.add_argument("--generator-version", default=None)
     dry_run_sampling_plan.add_argument("--comp-version", default="unknown")
+    dry_run_sampling_plan.add_argument(
+        "--fail-on-unmatched-targets",
+        action="store_true",
+        help="Return a non-zero exit code when sampling targets match no card.",
+    )
+    dry_run_sampling_plan.add_argument(
+        "--fail-on-invalid-generation",
+        action="store_true",
+        help="Return a non-zero exit code when target and computed syndromes differ.",
+    )
     dry_run_selection_plan = subparsers.add_parser(
         "dry-run-case-result-selection-plan",
         help="Apply selected mutation cards and write generation-only case results.",
