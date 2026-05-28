@@ -9,6 +9,9 @@ from typing import Any
 from comp.scenario_contracts import (
     RuntimeCase,
     ScenarioBundleExistsError,
+    ScenarioResult,
+    load_manifest,
+    run_scenario,
     write_artifact_envelopes,
     write_runtime_case,
 )
@@ -19,6 +22,7 @@ from comp_scenario_packs.generation.evaluate import (
     SyndromeEvaluation,
     evaluate_semantic_case,
 )
+from comp_scenario_packs.generation.results import CaseResultContext, build_case_result
 
 
 BLOCKED_BUNDLE_INVARIANTS = ("replay_succeeds", "blocking_hazards_absent")
@@ -62,6 +66,47 @@ def write_case_result_selection_plan_bundles(
             )
         )
     return tuple(bundles)
+
+
+def run_case_result_selection_plan_bundles(
+    spec: AuthoringSpec,
+    selection_plan: Mapping[str, Any],
+    out_dir: str | Path,
+    *,
+    reports_dir: str | Path,
+    context: CaseResultContext,
+    force: bool = False,
+) -> tuple[dict[str, Any], ...]:
+    """Lower selected cards, run comp scenarios, and return evaluated events."""
+
+    target = Path(out_dir)
+    report_root = Path(reports_dir)
+    events = []
+    for selection in _selection_plan_cards(selection_plan):
+        semantic_case = apply_mutation_card(spec, str(selection["mutation_card"]))
+        evaluation = evaluate_semantic_case(spec, semantic_case)
+        _require_selection_matches_target(selection, semantic_case, evaluation)
+        _require_valid_generation(semantic_case, evaluation)
+        bundle = _write_blocked_bundle(
+            semantic_case,
+            evaluation,
+            target / _path_segment(semantic_case.id),
+            force=force,
+        )
+        report_path = report_root / f"{_path_segment(semantic_case.id)}.json"
+        result = run_scenario(load_manifest(bundle.manifest_path), report_path=report_path)
+        event = build_case_result(
+            spec=spec,
+            semantic_case=semantic_case,
+            evaluation=evaluation,
+            context=context,
+            actual_gate=_actual_gate_from_result(result),
+        )
+        event["selection"] = _selection_metadata(selection)
+        event["actual_comp_result"] = _comp_result_payload(result)
+        event["statuses"] = _evaluated_statuses(event, result)
+        events.append(event)
+    return tuple(events)
 
 
 def _write_blocked_bundle(
@@ -114,6 +159,62 @@ def _write_blocked_bundle(
         artifact_envelopes_path=artifact_envelopes_path,
         mutation_card_id=semantic_case.mutation_card_id,
     )
+
+
+def _actual_gate_from_result(result: ScenarioResult) -> dict[str, str]:
+    return {
+        "receipt": "present" if result.receipt_count else "absent",
+        "rfi": "not_evaluated",
+        "public_projection": "present" if result.public_row_count else "absent",
+    }
+
+
+def _comp_result_payload(result: ScenarioResult) -> dict[str, Any]:
+    return {
+        "status": result.status,
+        "artifact_count": result.artifact_count,
+        "receipt_count": result.receipt_count,
+        "public_row_count": result.public_row_count,
+        "replay_checked_count": result.replay_checked_count,
+        "replay_failed_count": result.replay_failed_count,
+        "report_path": result.report_path,
+    }
+
+
+def _evaluated_statuses(
+    event: Mapping[str, Any],
+    result: ScenarioResult,
+) -> dict[str, str]:
+    generation = str(event["statuses"]["generation"])
+    syndrome = str(event["statuses"]["syndrome"])
+    gate = _gate_status(event)
+    replay = "pass" if result.replay_failed_count == 0 else "fail"
+    overall = "pass" if gate == "pass" and replay == "pass" else "fail"
+    return {
+        "generation": generation,
+        "syndrome": syndrome,
+        "gate": gate,
+        "diagnostic": "not_evaluated",
+        "replay": replay,
+        "overall": overall,
+    }
+
+
+def _gate_status(event: Mapping[str, Any]) -> str:
+    expected = event.get("expected_gate", {})
+    actual = event.get("actual_gate", {})
+    if not isinstance(expected, Mapping) or not isinstance(actual, Mapping):
+        return "not_evaluated"
+    checked = []
+    for key in ("receipt", "public_projection"):
+        expected_value = str(expected.get(key, "not_evaluated"))
+        actual_value = str(actual.get(key, "not_evaluated"))
+        if expected_value == "not_evaluated" or actual_value == "not_evaluated":
+            continue
+        checked.append(expected_value == actual_value)
+    if not checked:
+        return "not_evaluated"
+    return "pass" if all(checked) else "fail"
 
 
 def _require_valid_generation(
@@ -174,6 +275,16 @@ def _selection_plan_cards(selection_plan: Mapping[str, Any]) -> list[Mapping[str
     ]
 
 
+def _selection_metadata(selection: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "syndrome": str(selection.get("syndrome", "")),
+        "min_cases": int(selection.get("min_cases", 0)),
+        "priority": str(selection.get("priority", "unknown")),
+        "source": str(selection.get("source", "unknown")),
+        "reason": str(selection.get("reason", "")),
+    }
+
+
 def _parse_syndrome_bucket_key(syndrome: str) -> dict[str, str]:
     if not syndrome or syndrome == "empty_syndrome":
         return {}
@@ -195,5 +306,6 @@ __all__ = [
     "BLOCKED_BUNDLE_INVARIANTS",
     "LoweredScenarioBundle",
     "ScenarioLoweringError",
+    "run_case_result_selection_plan_bundles",
     "write_case_result_selection_plan_bundles",
 ]

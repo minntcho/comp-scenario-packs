@@ -23,6 +23,7 @@ from comp_scenario_packs.generation.lowering import (
     BLOCKED_BUNDLE_INVARIANTS,
     LoweredScenarioBundle,
     ScenarioLoweringError,
+    run_case_result_selection_plan_bundles,
     write_case_result_selection_plan_bundles,
 )
 from comp_scenario_packs.generation.results import (
@@ -84,6 +85,7 @@ __all__ = [
     "load_case_result_summary_comparison_json",
     "load_case_result_summary_json",
     "load_authoring_spec",
+    "run_case_result_selection_plan_bundles",
     "stable_hash",
     "summarize_case_result_jsonl",
     "summarize_case_results",

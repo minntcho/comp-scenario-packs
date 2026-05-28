@@ -495,6 +495,19 @@ matches the generated target/computed syndrome. The bundles are runnable
 compatibility candidates, not authority decisions; receipt, replay, and public
 projection authority remain owned by `comp`.
 
+Use `run-lowered-case-result-selection-plan` when the lowered bundles should be
+executed immediately and converted back into evaluated `case_result.v1` events:
+
+```bash
+python -m comp_scenario_packs.cli run-lowered-case-result-selection-plan scenarios/esg_energy/supplier_evidence_review/authoring.yaml reports/runs/pr.selection-plan.json --out-dir reports/runs/lowered/ --reports-dir reports/runs/lowered-reports/ --case-results-out reports/runs/pr.evaluated.case_results.jsonl --summary-out reports/runs/pr.evaluated.summary.json --run-id 2026-05-28-lowered-run --domain esg_energy --scenario supplier_evidence_review
+```
+
+This run records `actual_gate` from observed `comp.scenario_contracts` counts:
+receipts become `receipt`, public rows become `public_projection`, and replay
+failures become replay status. RFI and diagnostic fields remain
+`not_evaluated` until a comp surface exposes them. The resulting case results
+are observations of comp output, not a replacement for comp authority.
+
 Use `build_case_results_from_selection_plan` or the CLI to dry-run selected
 cards into generation-only `case_result.v1` events:
 

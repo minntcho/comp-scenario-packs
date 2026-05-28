@@ -34,6 +34,8 @@ def test_domain_case_mutation_doc_keeps_authority_boundary():
     assert "case_result_selection_plan.v1" in doc
     assert "build-case-result-selection-plan" in doc
     assert "lower-case-result-selection-plan" in doc
+    assert "run-lowered-case-result-selection-plan" in doc
+    assert "actual_gate" in doc
     assert "dry-run-case-result-selection-plan" in doc
     assert "dry-run-case-result-sampling-plan" in doc
     assert "canonical scenario bundles" in doc
