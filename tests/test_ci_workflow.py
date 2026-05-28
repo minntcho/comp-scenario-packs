@@ -25,6 +25,16 @@ def test_ci_runs_sampling_dry_run_with_generation_gates():
     assert "supplier_binding_resolved=F" not in workflow
 
 
+def test_ci_runs_evaluated_lowered_selection_plan_gate():
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+
+    assert "Run evaluated lowered gate" in workflow
+    assert "run-lowered-case-result-selection-plan" in workflow
+    assert "reports/runs/ci.selection-plan.json" in workflow
+    assert "reports/runs/ci.evaluated.case_results.jsonl" in workflow
+    assert "reports/runs/ci.evaluated.summary.json" in workflow
+
+
 def test_ci_sampling_plan_fixture_targets_reviewed_syndrome():
     payload = json.loads(CI_SAMPLING_PLAN.read_text(encoding="utf-8"))
 
