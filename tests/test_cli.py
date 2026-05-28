@@ -392,6 +392,53 @@ def test_build_case_result_sampling_plan_cli_writes_plan(tmp_path, capsys):
     ]
 
 
+def test_build_case_result_selection_plan_cli_writes_plan(tmp_path, capsys):
+    sampling_plan_path = tmp_path / "sampling-plan.json"
+    selection_plan_path = tmp_path / "selection-plan.json"
+    _write_json(
+        sampling_plan_path,
+        {
+            "schema_version": "case_result_sampling_plan.v1",
+            "source_status": "yellow",
+            "sampling_targets": [
+                {
+                    "syndrome": "supplier_binding_resolved=F",
+                    "min_cases": 10,
+                    "priority": "medium",
+                    "source": "coverage_gap",
+                    "reason": "current run has 0 cases; baseline had 10.",
+                }
+            ],
+            "freeze_candidates": [],
+        },
+    )
+
+    exit_code = main(
+        [
+            "build-case-result-selection-plan",
+            str(
+                ROOT
+                / "scenarios"
+                / "esg_energy"
+                / "supplier_evidence_review"
+                / "authoring.yaml"
+            ),
+            str(sampling_plan_path),
+            "--out",
+            str(selection_plan_path),
+        ]
+    )
+
+    output = capsys.readouterr().out
+    payload = json.loads(selection_plan_path.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert "case-result-selection-plan: wrote" in output
+    assert payload["schema_version"] == "case_result_selection_plan.v1"
+    assert payload["selected_cards"][0]["mutation_card"] == (
+        "supplier_alias_unresolved"
+    )
+
+
 def test_adapt_yaml_public_projection_cli_writes_replayable_bundle(tmp_path, capsys):
     bundle_dir = tmp_path / "yaml-public-projection"
 

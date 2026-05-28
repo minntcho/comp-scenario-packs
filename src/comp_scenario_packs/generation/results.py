@@ -16,6 +16,7 @@ CASE_RESULT_SCHEMA_VERSION = "case_result.v1"
 CASE_RESULT_SUMMARY_SCHEMA_VERSION = "case_result_summary.v1"
 CASE_RESULT_SUMMARY_COMPARISON_SCHEMA_VERSION = "case_result_summary_comparison.v1"
 CASE_RESULT_SAMPLING_PLAN_SCHEMA_VERSION = "case_result_sampling_plan.v1"
+CASE_RESULT_SELECTION_PLAN_SCHEMA_VERSION = "case_result_selection_plan.v1"
 NOT_EVALUATED = "not_evaluated"
 CRITICAL_COMP_COUNTERS = (
     "public_projection_leaks",
@@ -234,6 +235,71 @@ def write_case_result_sampling_plan_json(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
         json.dumps(_jsonable(sampling_plan), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def load_case_result_sampling_plan_json(path: str | Path) -> dict[str, Any]:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def build_case_result_selection_plan(
+    spec: AuthoringSpec,
+    sampling_plan: Mapping[str, Any],
+) -> dict[str, Any]:
+    selected_cards: list[dict[str, Any]] = []
+    unmatched_targets: list[dict[str, Any]] = []
+    for target in _sampling_plan_targets(sampling_plan):
+        syndrome = str(target.get("syndrome", ""))
+        syndrome_states = _parse_syndrome_bucket_key(syndrome)
+        matching_cards = [
+            card
+            for card in spec.mutation_cards
+            if _card_matches_syndrome(card.target_syndrome, syndrome_states)
+        ]
+        if not matching_cards:
+            unmatched_targets.append(
+                {
+                    "syndrome": syndrome,
+                    "min_cases": int(target.get("min_cases", 0)),
+                    "priority": str(target.get("priority", "unknown")),
+                    "source": str(target.get("source", "unknown")),
+                    "reason": "no_mutation_card_matches_syndrome",
+                }
+            )
+            continue
+
+        for card in sorted(matching_cards, key=lambda item: item.id):
+            selected_cards.append(
+                {
+                    "syndrome": syndrome,
+                    "mutation_card": card.id,
+                    "mutation_op": card.op,
+                    "path": card.path,
+                    "min_cases": int(target.get("min_cases", 0)),
+                    "priority": str(target.get("priority", "unknown")),
+                    "source": str(target.get("source", "unknown")),
+                    "reason": str(target.get("reason", "")),
+                }
+            )
+
+    return {
+        "schema_version": CASE_RESULT_SELECTION_PLAN_SCHEMA_VERSION,
+        "authoring_id": spec.authoring_id,
+        "selected_cards": selected_cards,
+        "unmatched_targets": unmatched_targets,
+        "freeze_candidates": _sampling_plan_freeze_candidates(sampling_plan),
+    }
+
+
+def write_case_result_selection_plan_json(
+    path: str | Path,
+    selection_plan: Mapping[str, Any],
+) -> None:
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        json.dumps(_jsonable(selection_plan), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
 
@@ -537,6 +603,49 @@ def _freeze_candidates_from_actions(
     return candidates
 
 
+def _sampling_plan_targets(sampling_plan: Mapping[str, Any]) -> list[Mapping[str, Any]]:
+    targets = sampling_plan.get("sampling_targets", [])
+    if not isinstance(targets, Sequence):
+        return []
+    return [target for target in targets if isinstance(target, Mapping)]
+
+
+def _sampling_plan_freeze_candidates(
+    sampling_plan: Mapping[str, Any],
+) -> list[dict[str, Any]]:
+    candidates = sampling_plan.get("freeze_candidates", [])
+    if not isinstance(candidates, Sequence):
+        return []
+    return [
+        dict(candidate) for candidate in candidates if isinstance(candidate, Mapping)
+    ]
+
+
+def _parse_syndrome_bucket_key(syndrome: str) -> dict[str, str]:
+    if not syndrome or syndrome == "empty_syndrome":
+        return {}
+    states: dict[str, str] = {}
+    for part in syndrome.split("|"):
+        if "=" not in part:
+            continue
+        code, state = part.split("=", 1)
+        if code and state:
+            states[code] = state
+    return states
+
+
+def _card_matches_syndrome(
+    card_syndrome: Mapping[str, str],
+    target_syndrome: Mapping[str, str],
+) -> bool:
+    if not target_syndrome:
+        return False
+    return all(
+        card_syndrome.get(code) == state
+        for code, state in target_syndrome.items()
+    )
+
+
 def _comparison_actions(comparison: Mapping[str, Any]) -> list[Mapping[str, Any]]:
     actions = comparison.get("recommended_actions", [])
     if not isinstance(actions, Sequence):
@@ -736,12 +845,15 @@ def _jsonable(value: Any) -> Any:
 __all__ = [
     "CASE_RESULT_SAMPLING_PLAN_SCHEMA_VERSION",
     "CASE_RESULT_SCHEMA_VERSION",
+    "CASE_RESULT_SELECTION_PLAN_SCHEMA_VERSION",
     "CASE_RESULT_SUMMARY_COMPARISON_SCHEMA_VERSION",
     "CASE_RESULT_SUMMARY_SCHEMA_VERSION",
     "CaseResultContext",
     "build_case_result",
     "build_case_result_sampling_plan",
+    "build_case_result_selection_plan",
     "compare_case_result_summaries",
+    "load_case_result_sampling_plan_json",
     "load_case_result_summary_comparison_json",
     "load_case_result_summary_json",
     "stable_hash",
@@ -749,6 +861,7 @@ __all__ = [
     "summarize_case_results",
     "syndrome_bucket_key",
     "write_case_result_sampling_plan_json",
+    "write_case_result_selection_plan_json",
     "write_case_result_summary_comparison_json",
     "write_case_result_summary_json",
     "write_case_result_jsonl",
