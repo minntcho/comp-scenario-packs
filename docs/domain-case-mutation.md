@@ -36,6 +36,8 @@ generation layer
   validate authoring spec
   enforce one-card-one-mutation
   apply mutation cards to base-case data
+  compute invariant syndrome
+  reject target/computed syndrome mismatches before comp runs
   record provenance
   report pressure coverage
         |
@@ -329,6 +331,39 @@ The semantic apply layer is still not the comp bundle layer. It does not create
 `runtime_case.json`, artifact envelopes, receipts, diagnostics, or public
 projection decisions.
 
+## Invariant Evaluation Layer
+
+Use `comp_scenario_packs.generation.evaluate_semantic_case` after semantic
+apply. The evaluator computes a `computed_syndrome` for every declared
+invariant and compares the mutation card's `target_syndrome` against the
+computed states.
+
+Supported MVP checks are intentionally small:
+
+```text
+exists(path)
+equals(left, right)
+resolves(path, resolved_values)
+```
+
+If `target_syndrome` and `computed_syndrome` disagree, the case is invalid
+generation. It must not be lowered to a comp bundle or counted as a comp gate,
+diagnostic, replay, or regression failure. Those cases belong to generator
+quality metrics.
+
+The evaluator returns statuses shaped for later `case_result.jsonl` records:
+
+```json
+{
+  "generation": "invalid",
+  "syndrome": "target_computed_mismatch",
+  "gate": "not_evaluated",
+  "diagnostic": "not_evaluated",
+  "replay": "not_checked",
+  "overall": "invalid_generation"
+}
+```
+
 ## Generated Output Policy
 
 `prepared/` contains generated candidate bundles and should stay mostly
@@ -342,6 +377,8 @@ The preferred progression is:
 authoring.yaml
   -> validate cards
   -> apply selected cards to base-case data
+  -> compute invariant syndrome
+  -> exclude invalid generation from comp-quality stats
   -> lower mutated cases into prepared bundles
   -> run comp
   -> compare contract intent with actual result

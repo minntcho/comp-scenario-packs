@@ -14,6 +14,11 @@ from comp_scenario_packs.generation.authoring import (
     MutationCard,
     load_authoring_spec,
 )
+from comp_scenario_packs.generation.evaluate import (
+    InvariantEvaluationError,
+    SyndromeEvaluation,
+    evaluate_semantic_case,
+)
 
 __all__ = [
     "AuthoringSpec",
@@ -21,9 +26,12 @@ __all__ = [
     "BaseCase",
     "Grammar",
     "Invariant",
+    "InvariantEvaluationError",
     "MutationCard",
     "SemanticCase",
     "SemanticCaseApplyError",
+    "SyndromeEvaluation",
     "apply_mutation_card",
+    "evaluate_semantic_case",
     "load_authoring_spec",
 ]
