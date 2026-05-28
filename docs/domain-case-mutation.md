@@ -555,6 +555,11 @@ events contain target/computed syndrome mismatches. Both gates run only after
 the selection plan, `case_result.v1` JSONL, and summary have been written, so
 the artifacts remain available for review.
 
+The checked-in supplier evidence CI plan is a multi-syndrome coverage rehearsal.
+It exercises several reviewed blocked-path syndrome buckets through the same
+dry-run, lowering, evaluated run, and summary gate loop. This widens coverage
+pressure without adding a new authority source.
+
 The summary keeps generation quality separate from comp quality. Cases whose
 target syndrome does not match the computed syndrome are counted as
 `invalid_generation` in `generator_quality`. They are excluded from

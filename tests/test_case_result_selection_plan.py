@@ -17,6 +17,13 @@ ROOT = Path(__file__).resolve().parents[1]
 AUTHORING = (
     ROOT / "scenarios" / "esg_energy" / "supplier_evidence_review" / "authoring.yaml"
 )
+CI_SAMPLING_PLAN = (
+    ROOT
+    / "scenarios"
+    / "esg_energy"
+    / "supplier_evidence_review"
+    / "ci_sampling_plan.json"
+)
 
 
 def test_builds_selection_plan_from_sampling_targets():
@@ -137,6 +144,31 @@ def test_loads_sampling_plan_and_writes_selection_plan_json(tmp_path):
     payload = json.loads(selection_plan_path.read_text(encoding="utf-8"))
     assert payload["schema_version"] == "case_result_selection_plan.v1"
     assert payload["selected_cards"][0]["mutation_card"] == "invoice_amount_conflict"
+
+
+def test_ci_sampling_plan_selects_multiple_reviewed_cards():
+    spec = load_authoring_spec(AUTHORING)
+    sampling_plan = load_case_result_sampling_plan_json(CI_SAMPLING_PLAN)
+
+    plan = build_case_result_selection_plan(spec, sampling_plan)
+
+    assert plan["unmatched_targets"] == []
+    assert [card["mutation_card"] for card in plan["selected_cards"]] == [
+        "invoice_amount_conflict",
+        "stale_meter_log",
+        "supplier_alias_unresolved",
+        "missing_invoice",
+    ]
+    assert [card["syndrome"] for card in plan["selected_cards"]] == [
+        "invoice_amount_matches_claim=F",
+        "meter_log_period_matches_claim=F",
+        "supplier_binding_resolved=F",
+        (
+            "invoice_amount_matches_claim=X|"
+            "invoice_exists=F|"
+            "invoice_period_matches_claim=X"
+        ),
+    ]
 
 
 def test_loads_sampling_plan_json_with_utf8_bom(tmp_path):

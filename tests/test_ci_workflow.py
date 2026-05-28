@@ -37,7 +37,7 @@ def test_ci_runs_evaluated_lowered_selection_plan_gate():
     assert "reports/runs/ci.evaluated.summary.json" in workflow
 
 
-def test_ci_sampling_plan_fixture_targets_reviewed_syndrome():
+def test_ci_sampling_plan_fixture_targets_reviewed_syndromes():
     payload = json.loads(CI_SAMPLING_PLAN.read_text(encoding="utf-8"))
 
     assert payload["schema_version"] == "case_result_sampling_plan.v1"
@@ -45,10 +45,35 @@ def test_ci_sampling_plan_fixture_targets_reviewed_syndrome():
     assert payload["freeze_candidates"] == []
     assert payload["sampling_targets"] == [
         {
+            "syndrome": "invoice_amount_matches_claim=F",
+            "min_cases": 10,
+            "priority": "medium",
+            "source": "ci_rehearsal",
+            "reason": "exercise invoice amount mismatch coverage in CI.",
+        },
+        {
+            "syndrome": "meter_log_period_matches_claim=F",
+            "min_cases": 10,
+            "priority": "medium",
+            "source": "ci_rehearsal",
+            "reason": "exercise stale meter log coverage in CI.",
+        },
+        {
             "syndrome": "supplier_binding_resolved=F",
             "min_cases": 10,
             "priority": "medium",
             "source": "ci_rehearsal",
-            "reason": "exercise generation-only sampling gates in CI.",
-        }
+            "reason": "exercise supplier binding coverage in CI.",
+        },
+        {
+            "syndrome": (
+                "invoice_amount_matches_claim=X|"
+                "invoice_exists=F|"
+                "invoice_period_matches_claim=X"
+            ),
+            "min_cases": 10,
+            "priority": "medium",
+            "source": "ci_rehearsal",
+            "reason": "exercise missing invoice coverage in CI.",
+        },
     ]
