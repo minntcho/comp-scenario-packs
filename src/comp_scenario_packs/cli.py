@@ -18,7 +18,10 @@ from comp_scenario_packs.domains.presets import (
     get_projection_row_preset,
 )
 from comp_scenario_packs.generation import (
+    compare_case_result_summaries,
+    load_case_result_summary_json,
     summarize_case_result_jsonl,
+    write_case_result_summary_comparison_json,
     write_case_result_summary_json,
 )
 from comp_scenario_packs.lat_apply import LatApplyError, apply_lat_draft
@@ -70,6 +73,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         print(f"case-result-summary: wrote {args.out}")
         return 1 if summary["status"] == "red" else 0
+    if args.command == "compare-case-result-summaries":
+        comparison = compare_case_result_summaries(
+            load_case_result_summary_json(args.baseline),
+            load_case_result_summary_json(args.current),
+            max_pass_rate_drop=args.max_pass_rate_drop,
+        )
+        write_case_result_summary_comparison_json(args.out, comparison)
+        print(
+            f"case-result-summary-compare: {comparison['status']} "
+            f"({len(comparison['regressions'])} regressions, "
+            f"{len(comparison['coverage_gaps'])} coverage gaps)"
+        )
+        print(f"case-result-summary-compare: wrote {args.out}")
+        return 1 if comparison["status"] == "red" else 0
     if args.command == "bench-smoke":
         result = run_benchmark_smoke(args.scenarios_dir, report_path=args.report)
         print(
@@ -216,6 +233,19 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     summarize_case_results.add_argument("case_results")
     summarize_case_results.add_argument("--out", required=True)
+    compare_case_results = subparsers.add_parser(
+        "compare-case-result-summaries",
+        help="Compare baseline and current case_result_summary.v1 files.",
+    )
+    compare_case_results.add_argument("baseline")
+    compare_case_results.add_argument("current")
+    compare_case_results.add_argument("--out", required=True)
+    compare_case_results.add_argument(
+        "--max-pass-rate-drop",
+        type=float,
+        default=0.05,
+        help="Fail when a syndrome pass rate drops by at least this fraction.",
+    )
     bench_smoke = subparsers.add_parser(
         "bench-smoke",
         help="Run a lightweight runtime benchmark over checked-in scenarios.",

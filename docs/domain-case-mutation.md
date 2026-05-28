@@ -422,6 +422,19 @@ python -m comp_scenario_packs.cli summarize-case-results reports/runs/latest.cas
 The command returns a non-zero exit code only when the summary status is `red`,
 such as public projection leaks, receipt leaks, or replay nondeterminism.
 
+Use `compare_case_result_summaries` or the CLI to compare a baseline
+`summary.json` against a current one:
+
+```bash
+python -m comp_scenario_packs.cli compare-case-result-summaries reports/baselines/main.summary.json reports/runs/pr.summary.json --out reports/runs/pr.comparison.json
+```
+
+The comparison read model is `case_result_summary_comparison.v1`. It reports
+critical counter deltas, syndrome pass-rate regressions, and coverage gaps. Red
+comparison status is a comp-quality regression signal; yellow coverage gaps
+mean the current run stopped testing a syndrome bucket and should feed the next
+sampling plan rather than be counted as a comp failure.
+
 The summary keeps generation quality separate from comp quality. Cases whose
 target syndrome does not match the computed syndrome are counted as
 `invalid_generation` in `generator_quality`. They are excluded from
