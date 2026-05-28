@@ -435,6 +435,20 @@ comparison status is a comp-quality regression signal; yellow coverage gaps
 mean the current run stopped testing a syndrome bucket and should feed the next
 sampling plan rather than be counted as a comp failure.
 
+The comparison also emits `recommended_actions`. These are routing hints, not
+authority decisions:
+
+```text
+freeze_failure
+  critical gate/replay counters increased; preserve a minimized reproducer
+
+investigate_regression
+  a syndrome bucket pass rate dropped beyond the configured threshold
+
+increase_sampling
+  the current run stopped covering a syndrome bucket from the baseline
+```
+
 The summary keeps generation quality separate from comp quality. Cases whose
 target syndrome does not match the computed syndrome are counted as
 `invalid_generation` in `generator_quality`. They are excluded from

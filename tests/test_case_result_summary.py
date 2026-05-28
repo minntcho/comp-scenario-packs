@@ -180,6 +180,15 @@ def test_compares_summary_critical_counter_regressions():
             "delta": 1,
         }
     ]
+    assert comparison["recommended_actions"] == [
+        {
+            "action": "freeze_failure",
+            "priority": "critical",
+            "source": "critical_counter_increase",
+            "metric": "public_projection_leaks",
+            "reason": "public_projection_leaks increased by 1.",
+        }
+    ]
 
 
 def test_compares_summary_pass_rate_regressions_by_syndrome():
@@ -218,6 +227,15 @@ def test_compares_summary_pass_rate_regressions_by_syndrome():
             "threshold": -0.05,
         }
     ]
+    assert comparison["recommended_actions"] == [
+        {
+            "action": "investigate_regression",
+            "priority": "high",
+            "source": "syndrome_pass_rate_drop",
+            "syndrome": "meter_log_period_matches_claim=F",
+            "reason": "pass rate dropped by 0.15.",
+        }
+    ]
 
 
 def test_compares_summary_coverage_gaps_without_calling_comp_failure():
@@ -241,6 +259,15 @@ def test_compares_summary_coverage_gaps_without_calling_comp_failure():
             "baseline_cases": 10,
             "current_cases": 0,
             "reason": "missing_current_bucket",
+        }
+    ]
+    assert comparison["recommended_actions"] == [
+        {
+            "action": "increase_sampling",
+            "priority": "medium",
+            "source": "coverage_gap",
+            "syndrome": "supplier_binding_resolved=F",
+            "reason": "current run has 0 cases; baseline had 10.",
         }
     ]
 

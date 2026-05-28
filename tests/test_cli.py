@@ -336,6 +336,15 @@ def test_compare_case_result_summaries_cli_writes_comparison(tmp_path, capsys):
     assert f"case-result-summary-compare: wrote {comparison_path}" in output
     assert payload["schema_version"] == "case_result_summary_comparison.v1"
     assert payload["regressions"][0]["kind"] == "syndrome_pass_rate_drop"
+    assert payload["recommended_actions"] == [
+        {
+            "action": "investigate_regression",
+            "priority": "high",
+            "source": "syndrome_pass_rate_drop",
+            "syndrome": "invoice_amount_matches_claim=F",
+            "reason": "pass rate dropped by 0.15.",
+        }
+    ]
 
 
 def test_adapt_yaml_public_projection_cli_writes_replayable_bundle(tmp_path, capsys):

@@ -225,6 +225,9 @@ python -m comp_scenario_packs.cli compare-case-result-summaries reports/baseline
 
 The comparison reports critical counter deltas, syndrome pass-rate regressions,
 and coverage gaps. A red comparison returns a non-zero exit code.
+Its `recommended_actions` section suggests next routing steps such as
+`freeze_failure`, `investigate_regression`, or `increase_sampling`; those are
+review hints, not `comp` authority.
 
 Run the lightweight benchmark smoke:
 
