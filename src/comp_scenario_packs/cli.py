@@ -87,6 +87,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         print(f"case-result-summary: wrote {args.out}")
         return 1 if summary["status"] == "red" else 0
+    if args.command == "assert-case-result-summary":
+        summary = load_case_result_summary_json(args.summary)
+        status = str(summary.get("status", "unknown"))
+        if args.require_green:
+            if status == "green":
+                print("case-result-summary-gate: green")
+                return 0
+            print(f"case-result-summary-gate: failed status {status}")
+            return 1
+        if status == "red":
+            print("case-result-summary-gate: failed status red")
+            return 1
+        print(f"case-result-summary-gate: {status}")
+        return 0
     if args.command == "compare-case-result-summaries":
         comparison = compare_case_result_summaries(
             load_case_result_summary_json(args.baseline),
@@ -396,6 +410,16 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     summarize_case_results.add_argument("case_results")
     summarize_case_results.add_argument("--out", required=True)
+    assert_case_result_summary = subparsers.add_parser(
+        "assert-case-result-summary",
+        help="Gate on a case_result_summary.v1 status.",
+    )
+    assert_case_result_summary.add_argument("summary")
+    assert_case_result_summary.add_argument(
+        "--require-green",
+        action="store_true",
+        help="Return a non-zero exit code unless the summary status is green.",
+    )
     compare_case_results = subparsers.add_parser(
         "compare-case-result-summaries",
         help="Compare baseline and current case_result_summary.v1 files.",

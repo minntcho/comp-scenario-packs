@@ -422,6 +422,17 @@ python -m comp_scenario_packs.cli summarize-case-results reports/runs/latest.cas
 The command returns a non-zero exit code only when the summary status is `red`,
 such as public projection leaks, receipt leaks, or replay nondeterminism.
 
+Use `assert-case-result-summary` when a CI step needs to gate on an already
+written summary instead of rebuilding it:
+
+```bash
+python -m comp_scenario_packs.cli assert-case-result-summary reports/runs/pr.evaluated.summary.json --require-green
+```
+
+With `--require-green`, any non-green status fails the command. This keeps the
+summary as an observability read model while making CI policy explicit at the
+call site.
+
 Use `compare_case_result_summaries` or the CLI to compare a baseline
 `summary.json` against a current one:
 

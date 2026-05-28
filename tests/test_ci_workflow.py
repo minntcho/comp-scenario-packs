@@ -30,6 +30,8 @@ def test_ci_runs_evaluated_lowered_selection_plan_gate():
 
     assert "Run evaluated lowered gate" in workflow
     assert "run-lowered-case-result-selection-plan" in workflow
+    assert "assert-case-result-summary reports/runs/ci.evaluated.summary.json" in workflow
+    assert "--require-green" in workflow
     assert "reports/runs/ci.selection-plan.json" in workflow
     assert "reports/runs/ci.evaluated.case_results.jsonl" in workflow
     assert "reports/runs/ci.evaluated.summary.json" in workflow
