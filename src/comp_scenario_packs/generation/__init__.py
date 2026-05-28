@@ -19,11 +19,20 @@ from comp_scenario_packs.generation.evaluate import (
     SyndromeEvaluation,
     evaluate_semantic_case,
 )
+from comp_scenario_packs.generation.results import (
+    CASE_RESULT_SCHEMA_VERSION,
+    CaseResultContext,
+    build_case_result,
+    stable_hash,
+    write_case_result_jsonl,
+)
 
 __all__ = [
     "AuthoringSpec",
     "AuthoringSpecError",
     "BaseCase",
+    "CASE_RESULT_SCHEMA_VERSION",
+    "CaseResultContext",
     "Grammar",
     "Invariant",
     "InvariantEvaluationError",
@@ -32,6 +41,9 @@ __all__ = [
     "SemanticCaseApplyError",
     "SyndromeEvaluation",
     "apply_mutation_card",
+    "build_case_result",
     "evaluate_semantic_case",
     "load_authoring_spec",
+    "stable_hash",
+    "write_case_result_jsonl",
 ]
