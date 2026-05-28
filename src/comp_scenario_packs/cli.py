@@ -18,14 +18,18 @@ from comp_scenario_packs.domains.presets import (
     get_projection_row_preset,
 )
 from comp_scenario_packs.generation import (
+    CaseResultContext,
     build_case_result_sampling_plan,
     build_case_result_selection_plan,
+    build_case_results_from_selection_plan,
     compare_case_result_summaries,
     load_authoring_spec,
     load_case_result_sampling_plan_json,
+    load_case_result_selection_plan_json,
     load_case_result_summary_comparison_json,
     load_case_result_summary_json,
     summarize_case_result_jsonl,
+    write_case_result_jsonl,
     write_case_result_sampling_plan_json,
     write_case_result_selection_plan_json,
     write_case_result_summary_comparison_json,
@@ -120,6 +124,26 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"{len(plan['unmatched_targets'])} unmatched targets"
         )
         print(f"case-result-selection-plan: wrote {args.out}")
+        return 0
+    if args.command == "dry-run-case-result-selection-plan":
+        events = build_case_results_from_selection_plan(
+            load_authoring_spec(args.authoring),
+            load_case_result_selection_plan_json(args.selection_plan),
+            context=CaseResultContext(
+                run_id=args.run_id,
+                domain=args.domain,
+                scenario=args.scenario,
+                seed=args.seed,
+                generator_version=args.generator_version,
+                comp_version=args.comp_version,
+            ),
+        )
+        write_case_result_jsonl(args.out, events)
+        print(
+            f"case-result-selection-dry-run: "
+            f"{len(events)} case_result.v1 events"
+        )
+        print(f"case-result-selection-dry-run: wrote {args.out}")
         return 0
     if args.command == "bench-smoke":
         result = run_benchmark_smoke(args.scenarios_dir, report_path=args.report)
@@ -295,6 +319,19 @@ def _build_parser() -> argparse.ArgumentParser:
     selection_plan.add_argument("authoring")
     selection_plan.add_argument("sampling_plan")
     selection_plan.add_argument("--out", required=True)
+    dry_run_selection_plan = subparsers.add_parser(
+        "dry-run-case-result-selection-plan",
+        help="Apply selected mutation cards and write generation-only case results.",
+    )
+    dry_run_selection_plan.add_argument("authoring")
+    dry_run_selection_plan.add_argument("selection_plan")
+    dry_run_selection_plan.add_argument("--out", required=True)
+    dry_run_selection_plan.add_argument("--run-id", required=True)
+    dry_run_selection_plan.add_argument("--domain", required=True)
+    dry_run_selection_plan.add_argument("--scenario", required=True)
+    dry_run_selection_plan.add_argument("--seed", type=int, default=None)
+    dry_run_selection_plan.add_argument("--generator-version", default=None)
+    dry_run_selection_plan.add_argument("--comp-version", default="unknown")
     bench_smoke = subparsers.add_parser(
         "bench-smoke",
         help="Run a lightweight runtime benchmark over checked-in scenarios.",

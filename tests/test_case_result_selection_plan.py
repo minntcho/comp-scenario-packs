@@ -2,9 +2,13 @@ import json
 from pathlib import Path
 
 from comp_scenario_packs.generation import (
+    CaseResultContext,
     build_case_result_selection_plan,
+    build_case_results_from_selection_plan,
     load_authoring_spec,
     load_case_result_sampling_plan_json,
+    load_case_result_selection_plan_json,
+    write_case_result_jsonl,
     write_case_result_selection_plan_json,
 )
 
@@ -133,6 +137,106 @@ def test_loads_sampling_plan_and_writes_selection_plan_json(tmp_path):
     payload = json.loads(selection_plan_path.read_text(encoding="utf-8"))
     assert payload["schema_version"] == "case_result_selection_plan.v1"
     assert payload["selected_cards"][0]["mutation_card"] == "invoice_amount_conflict"
+
+
+def test_builds_generation_only_case_results_from_selection_plan():
+    spec = load_authoring_spec(AUTHORING)
+    selection_plan = {
+        "schema_version": "case_result_selection_plan.v1",
+        "authoring_id": "supplier_evidence_review.v1",
+        "selected_cards": [
+            {
+                "syndrome": "supplier_binding_resolved=F",
+                "mutation_card": "supplier_alias_unresolved",
+                "mutation_op": "replace",
+                "path": "claim.supplier",
+                "min_cases": 10,
+                "priority": "medium",
+                "source": "coverage_gap",
+                "reason": "current run has 0 cases; baseline had 10.",
+            }
+        ],
+        "unmatched_targets": [],
+        "freeze_candidates": [],
+    }
+
+    events = build_case_results_from_selection_plan(
+        spec,
+        selection_plan,
+        context=CaseResultContext(
+            run_id="2026-05-28-dry-run",
+            domain="esg_energy",
+            scenario="supplier_evidence_review",
+            seed=42,
+        ),
+    )
+
+    assert len(events) == 1
+    event = events[0]
+    assert event["schema_version"] == "case_result.v1"
+    assert event["case_id"] == (
+        "supplier_evidence_review.accepted.v1__supplier_alias_unresolved"
+    )
+    assert event["generator"]["mutation_card"] == "supplier_alias_unresolved"
+    assert event["target_syndrome"]["supplier_binding_resolved"] == "F"
+    assert event["computed_syndrome"]["supplier_binding_resolved"] == "F"
+    assert event["statuses"]["overall"] == "valid_generation"
+    assert event["selection"] == {
+        "syndrome": "supplier_binding_resolved=F",
+        "min_cases": 10,
+        "priority": "medium",
+        "source": "coverage_gap",
+        "reason": "current run has 0 cases; baseline had 10.",
+    }
+    assert event["actual_gate"]["public_projection"] == "not_evaluated"
+
+
+def test_loads_selection_plan_and_writes_dry_run_case_results_jsonl(tmp_path):
+    spec = load_authoring_spec(AUTHORING)
+    selection_plan_path = tmp_path / "selection-plan.json"
+    case_results_path = tmp_path / "case-results.jsonl"
+    selection_plan_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "case_result_selection_plan.v1",
+                "authoring_id": "supplier_evidence_review.v1",
+                "selected_cards": [
+                    {
+                        "syndrome": "invoice_amount_matches_claim=F",
+                        "mutation_card": "invoice_amount_conflict",
+                        "mutation_op": "replace",
+                        "path": "evidence.invoice.amount",
+                        "min_cases": 30,
+                        "priority": "high",
+                        "source": "syndrome_pass_rate_drop",
+                        "reason": "pass rate dropped by 0.1.",
+                    }
+                ],
+                "unmatched_targets": [],
+                "freeze_candidates": [],
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+
+    selection_plan = load_case_result_selection_plan_json(selection_plan_path)
+    events = build_case_results_from_selection_plan(
+        spec,
+        selection_plan,
+        context=CaseResultContext(
+            run_id="2026-05-28-dry-run",
+            domain="esg_energy",
+            scenario="supplier_evidence_review",
+        ),
+    )
+    write_case_result_jsonl(case_results_path, events)
+
+    lines = case_results_path.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 1
+    assert json.loads(lines[0])["generator"]["mutation_card"] == (
+        "invoice_amount_conflict"
+    )
 
 
 def _sampling_plan(*targets: dict[str, object]) -> dict[str, object]:

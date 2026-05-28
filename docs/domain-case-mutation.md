@@ -480,6 +480,19 @@ selection plan does not apply mutations, lower semantic cases into
 `runtime_case.json`, run `comp`, or decide receipt, replay, diagnostic, or
 projection authority.
 
+Use `build_case_results_from_selection_plan` or the CLI to dry-run selected
+cards into generation-only `case_result.v1` events:
+
+```bash
+python -m comp_scenario_packs.cli dry-run-case-result-selection-plan scenarios/esg_energy/supplier_evidence_review/authoring.yaml reports/runs/pr.selection-plan.json --out reports/runs/pr.case_results.jsonl --run-id 2026-05-28-dry-run --domain esg_energy --scenario supplier_evidence_review
+```
+
+The dry run applies each selected mutation card to the structured base case,
+computes the invariant syndrome, and writes append-friendly JSONL. It preserves
+the selection metadata for traceability, but it still does not generate
+`runtime_case.json`, run `comp`, or fill actual gate, diagnostic, replay, or
+projection authority fields.
+
 The summary keeps generation quality separate from comp quality. Cases whose
 target syndrome does not match the computed syndrome are counted as
 `invalid_generation` in `generator_quality`. They are excluded from
