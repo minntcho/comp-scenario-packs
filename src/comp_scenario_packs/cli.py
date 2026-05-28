@@ -18,9 +18,12 @@ from comp_scenario_packs.domains.presets import (
     get_projection_row_preset,
 )
 from comp_scenario_packs.generation import (
+    build_case_result_sampling_plan,
     compare_case_result_summaries,
+    load_case_result_summary_comparison_json,
     load_case_result_summary_json,
     summarize_case_result_jsonl,
+    write_case_result_sampling_plan_json,
     write_case_result_summary_comparison_json,
     write_case_result_summary_json,
 )
@@ -87,6 +90,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         print(f"case-result-summary-compare: wrote {args.out}")
         return 1 if comparison["status"] == "red" else 0
+    if args.command == "build-case-result-sampling-plan":
+        plan = build_case_result_sampling_plan(
+            load_case_result_summary_comparison_json(args.comparison),
+            min_cases_for_signal=args.min_cases_for_signal,
+            min_cases_for_stable_signal=args.min_cases_for_stable_signal,
+        )
+        write_case_result_sampling_plan_json(args.out, plan)
+        print(
+            f"case-result-sampling-plan: "
+            f"{len(plan['sampling_targets'])} sampling targets, "
+            f"{len(plan['freeze_candidates'])} freeze candidates"
+        )
+        print(f"case-result-sampling-plan: wrote {args.out}")
+        return 0
     if args.command == "bench-smoke":
         result = run_benchmark_smoke(args.scenarios_dir, report_path=args.report)
         print(
@@ -246,6 +263,14 @@ def _build_parser() -> argparse.ArgumentParser:
         default=0.05,
         help="Fail when a syndrome pass rate drops by at least this fraction.",
     )
+    sampling_plan = subparsers.add_parser(
+        "build-case-result-sampling-plan",
+        help="Build a sampling-plan read model from a summary comparison.",
+    )
+    sampling_plan.add_argument("comparison")
+    sampling_plan.add_argument("--out", required=True)
+    sampling_plan.add_argument("--min-cases-for-signal", type=int, default=10)
+    sampling_plan.add_argument("--min-cases-for-stable-signal", type=int, default=30)
     bench_smoke = subparsers.add_parser(
         "bench-smoke",
         help="Run a lightweight runtime benchmark over checked-in scenarios.",

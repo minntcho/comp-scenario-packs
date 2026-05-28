@@ -449,6 +449,19 @@ increase_sampling
   the current run stopped covering a syndrome bucket from the baseline
 ```
 
+Use `build_case_result_sampling_plan` or the CLI to turn comparison hints into
+the next run's quota plan:
+
+```bash
+python -m comp_scenario_packs.cli build-case-result-sampling-plan reports/runs/pr.comparison.json --out reports/runs/pr.sampling-plan.json
+```
+
+The sampling plan read model is `case_result_sampling_plan.v1`. It converts
+`increase_sampling` and `investigate_regression` into `sampling_targets` with
+minimum case counts, while `freeze_failure` stays in `freeze_candidates`.
+The plan is still an input suggestion for a future selector/generator; it does
+not create runtime bundles or decide comp authority.
+
 The summary keeps generation quality separate from comp quality. Cases whose
 target syndrome does not match the computed syndrome are counted as
 `invalid_generation` in `generator_quality`. They are excluded from

@@ -15,6 +15,7 @@ from comp_scenario_packs.generation.evaluate import SyndromeEvaluation
 CASE_RESULT_SCHEMA_VERSION = "case_result.v1"
 CASE_RESULT_SUMMARY_SCHEMA_VERSION = "case_result_summary.v1"
 CASE_RESULT_SUMMARY_COMPARISON_SCHEMA_VERSION = "case_result_summary_comparison.v1"
+CASE_RESULT_SAMPLING_PLAN_SCHEMA_VERSION = "case_result_sampling_plan.v1"
 NOT_EVALUATED = "not_evaluated"
 CRITICAL_COMP_COUNTERS = (
     "public_projection_leaks",
@@ -197,6 +198,42 @@ def write_case_result_summary_comparison_json(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
         json.dumps(_jsonable(comparison), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def load_case_result_summary_comparison_json(path: str | Path) -> dict[str, Any]:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def build_case_result_sampling_plan(
+    comparison: Mapping[str, Any],
+    *,
+    min_cases_for_signal: int = 10,
+    min_cases_for_stable_signal: int = 30,
+) -> dict[str, Any]:
+    sampling_targets = _sampling_targets_from_actions(
+        comparison=comparison,
+        min_cases_for_signal=min_cases_for_signal,
+        min_cases_for_stable_signal=min_cases_for_stable_signal,
+    )
+    freeze_candidates = _freeze_candidates_from_actions(comparison)
+    return {
+        "schema_version": CASE_RESULT_SAMPLING_PLAN_SCHEMA_VERSION,
+        "source_status": str(comparison.get("status", "unknown")),
+        "sampling_targets": sampling_targets,
+        "freeze_candidates": freeze_candidates,
+    }
+
+
+def write_case_result_sampling_plan_json(
+    path: str | Path,
+    sampling_plan: Mapping[str, Any],
+) -> None:
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        json.dumps(_jsonable(sampling_plan), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
 
@@ -431,6 +468,108 @@ def _recommended_actions(
     return actions
 
 
+def _sampling_targets_from_actions(
+    *,
+    comparison: Mapping[str, Any],
+    min_cases_for_signal: int,
+    min_cases_for_stable_signal: int,
+) -> list[dict[str, Any]]:
+    targets = []
+    for action in _comparison_actions(comparison):
+        action_name = action.get("action")
+        if action_name not in {"increase_sampling", "investigate_regression"}:
+            continue
+        syndrome = str(action["syndrome"])
+        targets.append(
+            {
+                "syndrome": syndrome,
+                "min_cases": _sampling_min_cases(
+                    comparison=comparison,
+                    action=action,
+                    min_cases_for_signal=min_cases_for_signal,
+                    min_cases_for_stable_signal=min_cases_for_stable_signal,
+                ),
+                "priority": str(action["priority"]),
+                "source": str(action["source"]),
+                "reason": str(action["reason"]),
+            }
+        )
+    return sorted(targets, key=lambda item: (item["priority"], item["syndrome"]))
+
+
+def _sampling_min_cases(
+    *,
+    comparison: Mapping[str, Any],
+    action: Mapping[str, Any],
+    min_cases_for_signal: int,
+    min_cases_for_stable_signal: int,
+) -> int:
+    syndrome = str(action["syndrome"])
+    if action.get("action") == "investigate_regression":
+        bucket = _comparison_bucket(comparison, syndrome)
+        return max(
+            min_cases_for_stable_signal,
+            int(bucket.get("current_cases", 0)) if bucket else 0,
+        )
+
+    gap = _coverage_gap(comparison, syndrome)
+    return max(
+        min_cases_for_signal,
+        int(gap.get("baseline_cases", 0)) if gap else 0,
+    )
+
+
+def _freeze_candidates_from_actions(
+    comparison: Mapping[str, Any],
+) -> list[dict[str, Any]]:
+    candidates = []
+    for action in _comparison_actions(comparison):
+        if action.get("action") != "freeze_failure":
+            continue
+        candidates.append(
+            {
+                "metric": str(action["metric"]),
+                "priority": str(action["priority"]),
+                "source": str(action["source"]),
+                "reason": str(action["reason"]),
+            }
+        )
+    return candidates
+
+
+def _comparison_actions(comparison: Mapping[str, Any]) -> list[Mapping[str, Any]]:
+    actions = comparison.get("recommended_actions", [])
+    if not isinstance(actions, Sequence):
+        return []
+    return [action for action in actions if isinstance(action, Mapping)]
+
+
+def _comparison_bucket(
+    comparison: Mapping[str, Any],
+    syndrome: str,
+) -> Mapping[str, Any]:
+    buckets = comparison.get("by_syndrome", [])
+    if not isinstance(buckets, Sequence):
+        return {}
+    for bucket in buckets:
+        if isinstance(bucket, Mapping) and bucket.get("syndrome") == syndrome:
+            return bucket
+    return {}
+
+
+def _coverage_gap(
+    comparison: Mapping[str, Any],
+    syndrome: str,
+) -> Mapping[str, Any]:
+    gaps = comparison.get("coverage_gaps", [])
+    if not isinstance(gaps, Sequence):
+        return {}
+    for gap in gaps:
+        if isinstance(gap, Mapping) and gap.get("syndrome") == syndrome:
+            return gap
+    return {}
+
+
 def _format_rate_delta(value: float) -> str:
     return f"{value:.6f}".rstrip("0").rstrip(".")
 
@@ -595,17 +734,21 @@ def _jsonable(value: Any) -> Any:
 
 
 __all__ = [
+    "CASE_RESULT_SAMPLING_PLAN_SCHEMA_VERSION",
     "CASE_RESULT_SCHEMA_VERSION",
     "CASE_RESULT_SUMMARY_COMPARISON_SCHEMA_VERSION",
     "CASE_RESULT_SUMMARY_SCHEMA_VERSION",
     "CaseResultContext",
     "build_case_result",
+    "build_case_result_sampling_plan",
     "compare_case_result_summaries",
+    "load_case_result_summary_comparison_json",
     "load_case_result_summary_json",
     "stable_hash",
     "summarize_case_result_jsonl",
     "summarize_case_results",
     "syndrome_bucket_key",
+    "write_case_result_sampling_plan_json",
     "write_case_result_summary_comparison_json",
     "write_case_result_summary_json",
     "write_case_result_jsonl",

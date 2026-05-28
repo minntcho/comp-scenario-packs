@@ -229,6 +229,15 @@ Its `recommended_actions` section suggests next routing steps such as
 `freeze_failure`, `investigate_regression`, or `increase_sampling`; those are
 review hints, not `comp` authority.
 
+Build a sampling plan from a comparison:
+
+```bash
+python -m comp_scenario_packs.cli build-case-result-sampling-plan reports/runs/pr.comparison.json --out reports/runs/pr.sampling-plan.json
+```
+
+The sampling plan converts comparison hints into next-run syndrome quotas and
+freeze candidates. It does not generate runtime bundles.
+
 Run the lightweight benchmark smoke:
 
 ```bash
