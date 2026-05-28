@@ -462,6 +462,24 @@ minimum case counts, while `freeze_failure` stays in `freeze_candidates`.
 The plan is still an input suggestion for a future selector/generator; it does
 not create runtime bundles or decide comp authority.
 
+Use `build_case_result_selection_plan` or the CLI to match those sampling
+targets against reviewed authoring mutation cards:
+
+```bash
+python -m comp_scenario_packs.cli build-case-result-selection-plan scenarios/esg_energy/supplier_evidence_review/authoring.yaml reports/runs/pr.sampling-plan.json --out reports/runs/pr.selection-plan.json
+```
+
+The selection plan read model is `case_result_selection_plan.v1`. It parses
+target syndrome buckets such as `supplier_binding_resolved=F` and selects
+mutation cards whose `target_syndrome` includes every requested invariant
+state. Targets that do not match any card remain in `unmatched_targets`, and
+freeze candidates pass through unchanged.
+
+This is still an observability feedback layer, not a generator run. The
+selection plan does not apply mutations, lower semantic cases into
+`runtime_case.json`, run `comp`, or decide receipt, replay, diagnostic, or
+projection authority.
+
 The summary keeps generation quality separate from comp quality. Cases whose
 target syndrome does not match the computed syndrome are counted as
 `invalid_generation` in `generator_quality`. They are excluded from

@@ -19,11 +19,15 @@ from comp_scenario_packs.domains.presets import (
 )
 from comp_scenario_packs.generation import (
     build_case_result_sampling_plan,
+    build_case_result_selection_plan,
     compare_case_result_summaries,
+    load_authoring_spec,
+    load_case_result_sampling_plan_json,
     load_case_result_summary_comparison_json,
     load_case_result_summary_json,
     summarize_case_result_jsonl,
     write_case_result_sampling_plan_json,
+    write_case_result_selection_plan_json,
     write_case_result_summary_comparison_json,
     write_case_result_summary_json,
 )
@@ -103,6 +107,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"{len(plan['freeze_candidates'])} freeze candidates"
         )
         print(f"case-result-sampling-plan: wrote {args.out}")
+        return 0
+    if args.command == "build-case-result-selection-plan":
+        plan = build_case_result_selection_plan(
+            load_authoring_spec(args.authoring),
+            load_case_result_sampling_plan_json(args.sampling_plan),
+        )
+        write_case_result_selection_plan_json(args.out, plan)
+        print(
+            f"case-result-selection-plan: "
+            f"{len(plan['selected_cards'])} selected cards, "
+            f"{len(plan['unmatched_targets'])} unmatched targets"
+        )
+        print(f"case-result-selection-plan: wrote {args.out}")
         return 0
     if args.command == "bench-smoke":
         result = run_benchmark_smoke(args.scenarios_dir, report_path=args.report)
@@ -271,6 +288,13 @@ def _build_parser() -> argparse.ArgumentParser:
     sampling_plan.add_argument("--out", required=True)
     sampling_plan.add_argument("--min-cases-for-signal", type=int, default=10)
     sampling_plan.add_argument("--min-cases-for-stable-signal", type=int, default=30)
+    selection_plan = subparsers.add_parser(
+        "build-case-result-selection-plan",
+        help="Match a sampling-plan read model to authoring mutation cards.",
+    )
+    selection_plan.add_argument("authoring")
+    selection_plan.add_argument("sampling_plan")
+    selection_plan.add_argument("--out", required=True)
     bench_smoke = subparsers.add_parser(
         "bench-smoke",
         help="Run a lightweight runtime benchmark over checked-in scenarios.",

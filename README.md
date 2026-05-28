@@ -238,6 +238,16 @@ python -m comp_scenario_packs.cli build-case-result-sampling-plan reports/runs/p
 The sampling plan converts comparison hints into next-run syndrome quotas and
 freeze candidates. It does not generate runtime bundles.
 
+Match a sampling plan to authoring mutation cards:
+
+```bash
+python -m comp_scenario_packs.cli build-case-result-selection-plan scenarios/esg_energy/supplier_evidence_review/authoring.yaml reports/runs/pr.sampling-plan.json --out reports/runs/pr.selection-plan.json
+```
+
+The selection plan maps target syndrome buckets to reviewed authoring mutation
+cards. It is still a read model and does not apply mutations, generate runtime
+bundles, or run `comp`.
+
 Run the lightweight benchmark smoke:
 
 ```bash
