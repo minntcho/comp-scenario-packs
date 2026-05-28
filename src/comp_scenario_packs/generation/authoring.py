@@ -16,31 +16,29 @@ class AuthoringSpecError(ValueError):
 
 
 @dataclass(frozen=True)
-class CanonicalSentence:
+class BaseCase:
     id: str
-    text: str
     intent: Mapping[str, Any]
+    case: Mapping[str, Any]
 
 
 @dataclass(frozen=True)
 class Grammar:
-    slots: Mapping[str, Mapping[str, Any]]
+    allowed_paths: tuple[str, ...]
     relations: Mapping[str, Mapping[str, Any]]
-
-    @property
-    def target_roots(self) -> frozenset[str]:
-        return frozenset((*self.slots, *self.relations))
 
 
 @dataclass(frozen=True)
 class MutationCard:
     id: str
-    operator: str
-    target: str
+    op: str
+    path: str
     semantic_delta: Mapping[str, Any]
     pressure_targets: tuple[str, ...]
     contract_intent: Mapping[str, Any]
-    mutated_sentence: str | None = None
+    from_value: Any = None
+    to_value: Any = None
+    rendered_text: str | None = None
 
 
 @dataclass(frozen=True)
@@ -50,18 +48,18 @@ class AuthoringSpec:
     status: str
     authority_policy: str
     public_surfaces: tuple[str, ...]
-    canonical_sentence: CanonicalSentence
-    semantic_frame: Mapping[str, Any]
+    base_case: BaseCase
+    rendering: Mapping[str, Any]
     grammar: Grammar
     mutation_cards: tuple[MutationCard, ...]
     generated_output_policy: Mapping[str, Any]
 
     @property
     def pressure_targets(self) -> tuple[str, ...]:
-        targets = set(_string_sequence(self.canonical_sentence.intent.get(
+        targets = set(_string_sequence(self.base_case.intent.get(
             "pressure_targets",
             [],
-        ), "canonical_sentence.intent.pressure_targets"))
+        ), "base_case.intent.pressure_targets"))
         for card in self.mutation_cards:
             targets.update(card.pressure_targets)
         return tuple(sorted(targets))
@@ -119,8 +117,12 @@ def _authoring_spec_from_mapping(
             f"{', '.join(undeclared_surfaces)} in {path}."
         )
 
-    canonical_sentence = _canonical_sentence_from_mapping(
-        _required_mapping(payload, "canonical_sentence", path=path),
+    base_case = _base_case_from_mapping(
+        _required_mapping(payload, "base_case", path=path),
+        path=path,
+    )
+    rendering = _rendering_from_mapping(
+        payload.get("rendering"),
         path=path,
     )
     grammar = _grammar_from_mapping(
@@ -139,8 +141,8 @@ def _authoring_spec_from_mapping(
         status=_required_str(payload, "status", path=path),
         authority_policy=authority_policy,
         public_surfaces=tuple(public_surfaces),
-        canonical_sentence=canonical_sentence,
-        semantic_frame=_required_mapping(payload, "semantic_frame", path=path),
+        base_case=base_case,
+        rendering=rendering,
         grammar=grammar,
         mutation_cards=mutation_cards,
         generated_output_policy=_required_mapping(
@@ -151,32 +153,51 @@ def _authoring_spec_from_mapping(
     )
 
 
-def _canonical_sentence_from_mapping(
+def _base_case_from_mapping(
     payload: Mapping[str, Any],
     *,
     path: Path,
-) -> CanonicalSentence:
-    return CanonicalSentence(
+) -> BaseCase:
+    case = dict(payload)
+    case.pop("id", None)
+    case.pop("intent", None)
+    if not case:
+        raise AuthoringSpecError(
+            f"Authoring spec base_case must include domain elements: {path}."
+        )
+    return BaseCase(
         id=_required_str(payload, "id", path=path),
-        text=_required_str(payload, "text", path=path),
         intent=_required_mapping(payload, "intent", path=path),
+        case=case,
     )
 
 
+def _rendering_from_mapping(value: Any, *, path: Path) -> Mapping[str, Any]:
+    if value is None:
+        return {"generated_text_is_authoritative": False}
+    if not isinstance(value, Mapping):
+        raise AuthoringSpecError(f"Authoring spec rendering must be a mapping: {path}.")
+    if value.get("generated_text_is_authoritative") is not False:
+        raise AuthoringSpecError(
+            "Authoring spec rendering.generated_text_is_authoritative must be false: "
+            f"{path}."
+        )
+    return value
+
+
 def _grammar_from_mapping(payload: Mapping[str, Any], *, path: Path) -> Grammar:
-    slots = _required_mapping(payload, "slots", path=path)
+    allowed_paths = _string_sequence(payload.get("allowed_paths"), "allowed_paths")
     relations = _required_mapping(payload, "relations", path=path)
-    for label, grammar_section in (("slots", slots), ("relations", relations)):
-        for name, value in grammar_section.items():
-            if not isinstance(name, str) or not name:
-                raise AuthoringSpecError(
-                    f"Authoring grammar {label} names must be non-empty strings: {path}."
-                )
-            if not isinstance(value, Mapping):
-                raise AuthoringSpecError(
-                    f"Authoring grammar {label}.{name} must be a mapping: {path}."
-                )
-    return Grammar(slots=slots, relations=relations)
+    for name, value in relations.items():
+        if not isinstance(name, str) or not name:
+            raise AuthoringSpecError(
+                f"Authoring grammar relation names must be non-empty strings: {path}."
+            )
+        if not isinstance(value, Mapping):
+            raise AuthoringSpecError(
+                f"Authoring grammar relations.{name} must be a mapping: {path}."
+            )
+    return Grammar(allowed_paths=allowed_paths, relations=relations)
 
 
 def _mutation_cards_from_sequence(
@@ -220,8 +241,8 @@ def _mutation_card_from_mapping(
             f"{', '.join(sorted(forbidden_keys))} in {path}."
         )
 
-    target = _required_str(payload, "target", path=path)
-    _validate_target(target, grammar=grammar, path=path)
+    card_path = _required_str(payload, "path", path=path)
+    _validate_card_path(card_path, grammar=grammar, path=path)
     semantic_delta = _required_mapping(payload, "semantic_delta", path=path)
     if len(semantic_delta) != 1:
         raise AuthoringSpecError(
@@ -230,23 +251,24 @@ def _mutation_card_from_mapping(
 
     return MutationCard(
         id=_required_str(payload, "id", path=path),
-        operator=_required_str(payload, "operator", path=path),
-        target=target,
+        op=_required_str(payload, "op", path=path),
+        path=card_path,
         semantic_delta=semantic_delta,
         pressure_targets=tuple(
             _string_sequence(payload.get("pressure_targets"), "pressure_targets")
         ),
         contract_intent=_required_mapping(payload, "contract_intent", path=path),
-        mutated_sentence=_optional_str(payload.get("mutated_sentence")),
+        from_value=payload.get("from"),
+        to_value=payload.get("to"),
+        rendered_text=_optional_str(payload.get("rendered_text")),
     )
 
 
-def _validate_target(target: str, *, grammar: Grammar, path: Path) -> None:
-    target_root = target.split(".", 1)[0]
-    if target_root not in grammar.target_roots:
+def _validate_card_path(card_path: str, *, grammar: Grammar, path: Path) -> None:
+    if card_path not in grammar.allowed_paths:
         raise AuthoringSpecError(
-            "Authoring mutation card target must reference a declared slot or "
-            f"relation: {target} in {path}."
+            "Authoring mutation card path must reference a declared allowed path: "
+            f"{card_path} in {path}."
         )
 
 
@@ -295,7 +317,7 @@ def _string_sequence(value: Any, label: str) -> tuple[str, ...]:
 __all__ = [
     "AuthoringSpec",
     "AuthoringSpecError",
-    "CanonicalSentence",
+    "BaseCase",
     "Grammar",
     "MutationCard",
     "load_authoring_spec",

@@ -6,20 +6,14 @@ public_surfaces:
   - comp.scenario_contracts
   - comp.persistence
 
-canonical_sentence:
+base_case:
   id: supplier_evidence_review.accepted.v1
-  text: >
-    Alpha Metal submitted electricity usage of 8,400 kWh for Plant Alpha A,
-    Battery Housing Plate, period 2026-01, supported by invoice INV-001 and
-    meter log MTR-001 covering the same period.
   intent:
     path: accepted
     pressure_targets:
       - canonical_binding
       - evidence_matching
       - public_projection_gate
-
-semantic_frame:
   claim:
     supplier: alpha_metal
     site: plant_alpha_a
@@ -43,27 +37,21 @@ semantic_frame:
       period: 2026-01
       relation_to_claim: supports
 
+rendering:
+  sentence_template: supplier_evidence_review.default
+  generated_text_is_authoritative: false
+
 grammar:
-  slots:
-    supplier:
-      role: canonical_entity_ref
-      mutations:
-        - unresolved_alias
-        - ambiguous_alias
-        - old_name
-    period:
-      role: reporting_scope
-      mutations:
-        - previous_period
-        - next_period
-        - omitted
-    amount:
-      role: measured_quantity
-      mutations:
-        - plus_delta
-        - minus_delta
-        - rounded
-        - omitted
+  allowed_paths:
+    - claim.supplier
+    - claim.site
+    - claim.component
+    - claim.period
+    - claim.activity.amount
+    - evidence.invoice.amount
+    - evidence.invoice.period
+    - evidence.meter_log.amount
+    - evidence.meter_log.period
   relations:
     supplier_binding:
       normal: resolved
@@ -92,12 +80,10 @@ grammar:
 
 mutation_cards:
   - id: invoice_amount_conflict
-    operator: conflict
-    target: invoice_supports_claim.amount
-    mutated_sentence: >
-      Alpha Metal submitted electricity usage of 8,400 kWh for Plant Alpha A,
-      Battery Housing Plate, period 2026-01, supported by invoice INV-001
-      showing 8,900 kWh and meter log MTR-001 covering the same period.
+    op: replace
+    path: evidence.invoice.amount
+    from: 8400
+    to: 8900
     semantic_delta:
       invoice.amount_relation: conflicts_with_claim
     pressure_targets:
@@ -111,12 +97,10 @@ mutation_cards:
         - amount_mismatch
 
   - id: stale_meter_log
-    operator: substitute
-    target: meter_log_supports_claim.period
-    mutated_sentence: >
-      Alpha Metal submitted electricity usage of 8,400 kWh for Plant Alpha A,
-      Battery Housing Plate, period 2026-01, supported by invoice INV-001 and
-      meter log MTR-001 covering 2025-12.
+    op: replace
+    path: evidence.meter_log.period
+    from: 2026-01
+    to: 2025-12
     semantic_delta:
       meter_log.period_relation: previous_period
     pressure_targets:
@@ -130,12 +114,10 @@ mutation_cards:
         - stale_meter_log
 
   - id: supplier_alias_unresolved
-    operator: alias
-    target: supplier_binding
-    mutated_sentence: >
-      Alpha Metal Co. submitted electricity usage of 8,400 kWh for Plant Alpha A,
-      Battery Housing Plate, period 2026-01, supported by invoice INV-001 and
-      meter log MTR-001 covering the same period.
+    op: replace
+    path: claim.supplier
+    from: alpha_metal
+    to: alpha_metal_co_unresolved_alias
     semantic_delta:
       supplier.binding_relation: unresolved_alias
     pressure_targets:
