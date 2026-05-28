@@ -14,7 +14,13 @@ from comp_scenario_packs.generation.evaluate import SyndromeEvaluation
 
 CASE_RESULT_SCHEMA_VERSION = "case_result.v1"
 CASE_RESULT_SUMMARY_SCHEMA_VERSION = "case_result_summary.v1"
+CASE_RESULT_SUMMARY_COMPARISON_SCHEMA_VERSION = "case_result_summary_comparison.v1"
 NOT_EVALUATED = "not_evaluated"
+CRITICAL_COMP_COUNTERS = (
+    "public_projection_leaks",
+    "receipt_leaks",
+    "replay_flakes",
+)
 
 
 @dataclass(frozen=True)
@@ -137,6 +143,59 @@ def write_case_result_summary_json(
     )
 
 
+def load_case_result_summary_json(path: str | Path) -> dict[str, Any]:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def compare_case_result_summaries(
+    baseline: Mapping[str, Any],
+    current: Mapping[str, Any],
+    *,
+    max_pass_rate_drop: float = 0.05,
+) -> dict[str, Any]:
+    critical_delta = {
+        metric: _summary_counter(current, metric) - _summary_counter(baseline, metric)
+        for metric in CRITICAL_COMP_COUNTERS
+    }
+    regressions = _critical_counter_regressions(
+        baseline=baseline,
+        current=current,
+        critical_delta=critical_delta,
+    )
+    by_syndrome, syndrome_regressions, coverage_gaps = _compare_syndrome_buckets(
+        baseline=baseline,
+        current=current,
+        max_pass_rate_drop=max_pass_rate_drop,
+    )
+    regressions.extend(syndrome_regressions)
+    return {
+        "schema_version": CASE_RESULT_SUMMARY_COMPARISON_SCHEMA_VERSION,
+        "status": _comparison_status(
+            current=current,
+            regressions=regressions,
+            coverage_gaps=coverage_gaps,
+        ),
+        "baseline_status": str(baseline.get("status", "unknown")),
+        "current_status": str(current.get("status", "unknown")),
+        "critical_delta": critical_delta,
+        "regressions": regressions,
+        "coverage_gaps": coverage_gaps,
+        "by_syndrome": by_syndrome,
+    }
+
+
+def write_case_result_summary_comparison_json(
+    path: str | Path,
+    comparison: Mapping[str, Any],
+) -> None:
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        json.dumps(_jsonable(comparison), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
 def stable_hash(value: Any) -> str:
     payload = json.dumps(
         _jsonable(value),
@@ -219,6 +278,138 @@ def syndrome_bucket_key(syndrome: Mapping[str, Any]) -> str:
     if not meaningful:
         return "empty_syndrome"
     return "|".join(f"{code}={meaningful[code]}" for code in sorted(meaningful))
+
+
+def _critical_counter_regressions(
+    *,
+    baseline: Mapping[str, Any],
+    current: Mapping[str, Any],
+    critical_delta: Mapping[str, int],
+) -> list[dict[str, Any]]:
+    regressions = []
+    for metric in CRITICAL_COMP_COUNTERS:
+        delta = critical_delta[metric]
+        if delta <= 0:
+            continue
+        regressions.append(
+            {
+                "kind": "critical_counter_increase",
+                "metric": metric,
+                "baseline": _summary_counter(baseline, metric),
+                "current": _summary_counter(current, metric),
+                "delta": delta,
+            }
+        )
+    return regressions
+
+
+def _compare_syndrome_buckets(
+    *,
+    baseline: Mapping[str, Any],
+    current: Mapping[str, Any],
+    max_pass_rate_drop: float,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    baseline_buckets = _buckets_by_syndrome(baseline)
+    current_buckets = _buckets_by_syndrome(current)
+    bucket_summaries: list[dict[str, Any]] = []
+    regressions: list[dict[str, Any]] = []
+    coverage_gaps: list[dict[str, Any]] = []
+    for syndrome in sorted(set(baseline_buckets) | set(current_buckets)):
+        baseline_bucket = baseline_buckets.get(syndrome)
+        current_bucket = current_buckets.get(syndrome)
+        baseline_rate = _bucket_pass_rate(baseline_bucket)
+        current_rate = _bucket_pass_rate(current_bucket)
+        rate_delta = (
+            _rounded_rate(current_rate - baseline_rate)
+            if baseline_rate is not None and current_rate is not None
+            else None
+        )
+        status = "green"
+        if rate_delta is not None and rate_delta <= -max_pass_rate_drop:
+            status = "red"
+            regressions.append(
+                {
+                    "kind": "syndrome_pass_rate_drop",
+                    "syndrome": syndrome,
+                    "baseline_pass_rate": baseline_rate,
+                    "current_pass_rate": current_rate,
+                    "delta": rate_delta,
+                    "threshold": -max_pass_rate_drop,
+                }
+            )
+        elif _bucket_cases(baseline_bucket) and not _bucket_cases(current_bucket):
+            status = "yellow"
+            coverage_gaps.append(
+                {
+                    "syndrome": syndrome,
+                    "baseline_cases": _bucket_cases(baseline_bucket),
+                    "current_cases": _bucket_cases(current_bucket),
+                    "reason": "missing_current_bucket",
+                }
+            )
+
+        bucket_summaries.append(
+            {
+                "syndrome": syndrome,
+                "baseline_cases": _bucket_cases(baseline_bucket),
+                "current_cases": _bucket_cases(current_bucket),
+                "baseline_pass_rate": baseline_rate,
+                "current_pass_rate": current_rate,
+                "pass_rate_delta": rate_delta,
+                "status": status,
+            }
+        )
+    return bucket_summaries, regressions, coverage_gaps
+
+
+def _comparison_status(
+    *,
+    current: Mapping[str, Any],
+    regressions: Sequence[Mapping[str, Any]],
+    coverage_gaps: Sequence[Mapping[str, Any]],
+) -> str:
+    if str(current.get("status", "unknown")) == "red" or regressions:
+        return "red"
+    if coverage_gaps:
+        return "yellow"
+    return "green"
+
+
+def _summary_counter(summary: Mapping[str, Any], metric: str) -> int:
+    comp_quality = summary.get("comp_quality", {})
+    if not isinstance(comp_quality, Mapping):
+        return 0
+    return int(comp_quality.get(metric, 0))
+
+
+def _buckets_by_syndrome(summary: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
+    buckets = summary.get("by_syndrome", [])
+    if not isinstance(buckets, Sequence):
+        return {}
+    return {
+        str(bucket["syndrome"]): bucket
+        for bucket in buckets
+        if isinstance(bucket, Mapping) and "syndrome" in bucket
+    }
+
+
+def _bucket_cases(bucket: Mapping[str, Any] | None) -> int:
+    return int(bucket.get("cases", 0)) if bucket else 0
+
+
+def _bucket_pass_rate(bucket: Mapping[str, Any] | None) -> float | None:
+    if not bucket:
+        return None
+    passed = int(bucket.get("pass", 0))
+    failed = int(bucket.get("fail", 0))
+    denominator = passed + failed
+    if denominator == 0:
+        return None
+    return _rounded_rate(passed / denominator)
+
+
+def _rounded_rate(value: float) -> float:
+    return round(value, 6)
 
 
 def _is_valid_generation(event: Mapping[str, Any]) -> bool:
@@ -345,13 +536,17 @@ def _jsonable(value: Any) -> Any:
 
 __all__ = [
     "CASE_RESULT_SCHEMA_VERSION",
+    "CASE_RESULT_SUMMARY_COMPARISON_SCHEMA_VERSION",
     "CASE_RESULT_SUMMARY_SCHEMA_VERSION",
     "CaseResultContext",
     "build_case_result",
+    "compare_case_result_summaries",
+    "load_case_result_summary_json",
     "stable_hash",
     "summarize_case_result_jsonl",
     "summarize_case_results",
     "syndrome_bucket_key",
+    "write_case_result_summary_comparison_json",
     "write_case_result_summary_json",
     "write_case_result_jsonl",
 ]

@@ -7,8 +7,11 @@ from comp_scenario_packs.generation.evaluate import evaluate_semantic_case
 from comp_scenario_packs.generation.results import (
     CaseResultContext,
     build_case_result,
+    compare_case_result_summaries,
+    load_case_result_summary_json,
     summarize_case_result_jsonl,
     summarize_case_results,
+    write_case_result_summary_comparison_json,
     write_case_result_summary_json,
     write_case_result_jsonl,
 )
@@ -142,3 +145,182 @@ def test_writes_summary_json(tmp_path):
     assert json.loads(path.read_text(encoding="utf-8"))["schema_version"] == (
         "case_result_summary.v1"
     )
+
+
+def test_compares_summary_critical_counter_regressions():
+    baseline = _summary(
+        comp_quality={"public_projection_leaks": 0},
+        buckets=[_bucket("supplier_binding_resolved=F", passed=10, failed=0)],
+    )
+    current = _summary(
+        status="red",
+        comp_quality={"public_projection_leaks": 1},
+        buckets=[
+            _bucket(
+                "supplier_binding_resolved=F",
+                passed=10,
+                failed=0,
+                public_projection_leaks=1,
+                status="red",
+            )
+        ],
+    )
+
+    comparison = compare_case_result_summaries(baseline, current)
+
+    assert comparison["schema_version"] == "case_result_summary_comparison.v1"
+    assert comparison["status"] == "red"
+    assert comparison["critical_delta"]["public_projection_leaks"] == 1
+    assert comparison["regressions"] == [
+        {
+            "kind": "critical_counter_increase",
+            "metric": "public_projection_leaks",
+            "baseline": 0,
+            "current": 1,
+            "delta": 1,
+        }
+    ]
+
+
+def test_compares_summary_pass_rate_regressions_by_syndrome():
+    baseline = _summary(
+        buckets=[_bucket("meter_log_period_matches_claim=F", passed=20, failed=0)]
+    )
+    current = _summary(
+        buckets=[_bucket("meter_log_period_matches_claim=F", passed=17, failed=3)]
+    )
+
+    comparison = compare_case_result_summaries(
+        baseline,
+        current,
+        max_pass_rate_drop=0.05,
+    )
+
+    assert comparison["status"] == "red"
+    assert comparison["by_syndrome"] == [
+        {
+            "syndrome": "meter_log_period_matches_claim=F",
+            "baseline_cases": 20,
+            "current_cases": 20,
+            "baseline_pass_rate": 1.0,
+            "current_pass_rate": 0.85,
+            "pass_rate_delta": -0.15,
+            "status": "red",
+        }
+    ]
+    assert comparison["regressions"] == [
+        {
+            "kind": "syndrome_pass_rate_drop",
+            "syndrome": "meter_log_period_matches_claim=F",
+            "baseline_pass_rate": 1.0,
+            "current_pass_rate": 0.85,
+            "delta": -0.15,
+            "threshold": -0.05,
+        }
+    ]
+
+
+def test_compares_summary_coverage_gaps_without_calling_comp_failure():
+    baseline = _summary(
+        buckets=[
+            _bucket("invoice_amount_matches_claim=F", passed=10, failed=0),
+            _bucket("supplier_binding_resolved=F", passed=10, failed=0),
+        ]
+    )
+    current = _summary(
+        buckets=[_bucket("invoice_amount_matches_claim=F", passed=10, failed=0)]
+    )
+
+    comparison = compare_case_result_summaries(baseline, current)
+
+    assert comparison["status"] == "yellow"
+    assert comparison["regressions"] == []
+    assert comparison["coverage_gaps"] == [
+        {
+            "syndrome": "supplier_binding_resolved=F",
+            "baseline_cases": 10,
+            "current_cases": 0,
+            "reason": "missing_current_bucket",
+        }
+    ]
+
+
+def test_loads_and_writes_summary_comparison_json(tmp_path):
+    baseline_path = tmp_path / "baseline.summary.json"
+    current_path = tmp_path / "current.summary.json"
+    comparison_path = tmp_path / "comparison.json"
+    baseline = _summary(
+        buckets=[_bucket("invoice_amount_matches_claim=F", passed=10, failed=0)]
+    )
+    current = _summary(
+        buckets=[_bucket("invoice_amount_matches_claim=F", passed=10, failed=0)]
+    )
+    write_case_result_summary_json(baseline_path, baseline)
+    write_case_result_summary_json(current_path, current)
+
+    comparison = compare_case_result_summaries(
+        load_case_result_summary_json(baseline_path),
+        load_case_result_summary_json(current_path),
+    )
+    write_case_result_summary_comparison_json(comparison_path, comparison)
+
+    assert json.loads(comparison_path.read_text(encoding="utf-8"))[
+        "schema_version"
+    ] == "case_result_summary_comparison.v1"
+
+
+def _summary(
+    *,
+    status: str = "green",
+    comp_quality: dict[str, int] | None = None,
+    buckets: list[dict] | None = None,
+) -> dict:
+    comp_quality = comp_quality or {}
+    return {
+        "schema_version": "case_result_summary.v1",
+        "total_cases": sum(bucket["cases"] for bucket in buckets or []),
+        "status": status,
+        "generator_quality": {
+            "cases": sum(bucket["cases"] for bucket in buckets or []),
+            "valid_syndrome_cases": sum(bucket["cases"] for bucket in buckets or []),
+            "invalid_generation": 0,
+            "target_computed_mismatch_rate": 0,
+        },
+        "comp_quality": {
+            "eligible_cases": sum(bucket["cases"] for bucket in buckets or []),
+            "evaluated_cases": sum(
+                bucket["evaluated_cases"] for bucket in buckets or []
+            ),
+            "public_projection_leaks": comp_quality.get("public_projection_leaks", 0),
+            "receipt_leaks": comp_quality.get("receipt_leaks", 0),
+            "diagnostic_mismatches": comp_quality.get("diagnostic_mismatches", 0),
+            "replay_flakes": comp_quality.get("replay_flakes", 0),
+        },
+        "by_syndrome": buckets or [],
+    }
+
+
+def _bucket(
+    syndrome: str,
+    *,
+    passed: int,
+    failed: int,
+    public_projection_leaks: int = 0,
+    receipt_leaks: int = 0,
+    diagnostic_mismatches: int = 0,
+    replay_flakes: int = 0,
+    status: str = "green",
+) -> dict:
+    return {
+        "syndrome": syndrome,
+        "cases": passed + failed,
+        "evaluated_cases": passed + failed,
+        "pass": passed,
+        "fail": failed,
+        "not_evaluated": 0,
+        "public_projection_leaks": public_projection_leaks,
+        "receipt_leaks": receipt_leaks,
+        "diagnostic_mismatches": diagnostic_mismatches,
+        "replay_flakes": replay_flakes,
+        "status": status,
+    }

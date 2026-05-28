@@ -217,6 +217,15 @@ The summary groups valid generated cases by invariant syndrome bucket while
 keeping invalid generation in a separate generator-quality section. A red
 summary, such as a public-projection leak, returns a non-zero exit code.
 
+Compare a baseline summary against a current summary:
+
+```bash
+python -m comp_scenario_packs.cli compare-case-result-summaries reports/baselines/main.summary.json reports/runs/pr.summary.json --out reports/runs/pr.comparison.json
+```
+
+The comparison reports critical counter deltas, syndrome pass-rate regressions,
+and coverage gaps. A red comparison returns a non-zero exit code.
+
 Run the lightweight benchmark smoke:
 
 ```bash

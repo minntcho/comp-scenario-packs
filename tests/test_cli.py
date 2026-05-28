@@ -300,6 +300,44 @@ def test_summarize_case_results_cli_returns_failure_for_red_summary(
     assert payload["comp_quality"]["public_projection_leaks"] == 1
 
 
+def test_compare_case_result_summaries_cli_writes_comparison(tmp_path, capsys):
+    baseline_path = tmp_path / "baseline.summary.json"
+    current_path = tmp_path / "current.summary.json"
+    comparison_path = tmp_path / "comparison.json"
+    _write_json(
+        baseline_path,
+        _summary_result(
+            buckets=[_summary_bucket("invoice_amount_matches_claim=F", 20, 0)]
+        ),
+    )
+    _write_json(
+        current_path,
+        _summary_result(
+            buckets=[_summary_bucket("invoice_amount_matches_claim=F", 17, 3)]
+        ),
+    )
+
+    exit_code = main(
+        [
+            "compare-case-result-summaries",
+            str(baseline_path),
+            str(current_path),
+            "--out",
+            str(comparison_path),
+            "--max-pass-rate-drop",
+            "0.05",
+        ]
+    )
+
+    output = capsys.readouterr().out
+    payload = json.loads(comparison_path.read_text(encoding="utf-8"))
+    assert exit_code == 1
+    assert "case-result-summary-compare: red" in output
+    assert f"case-result-summary-compare: wrote {comparison_path}" in output
+    assert payload["schema_version"] == "case_result_summary_comparison.v1"
+    assert payload["regressions"][0]["kind"] == "syndrome_pass_rate_drop"
+
+
 def test_adapt_yaml_public_projection_cli_writes_replayable_bundle(tmp_path, capsys):
     bundle_dir = tmp_path / "yaml-public-projection"
 
@@ -605,6 +643,10 @@ def _write_jsonl(path: Path, events: list[dict[str, object]]) -> None:
     )
 
 
+def _write_json(path: Path, payload: dict[str, object]) -> None:
+    path.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+
+
 def _case_result_event(
     *,
     target_syndrome: dict[str, str],
@@ -638,4 +680,44 @@ def _case_result_event(
             "replay": "not_checked",
             "overall": "valid_generation",
         },
+    }
+
+
+def _summary_result(*, buckets: list[dict[str, object]]) -> dict[str, object]:
+    total_cases = sum(int(bucket["cases"]) for bucket in buckets)
+    return {
+        "schema_version": "case_result_summary.v1",
+        "total_cases": total_cases,
+        "status": "green",
+        "generator_quality": {
+            "cases": total_cases,
+            "valid_syndrome_cases": total_cases,
+            "invalid_generation": 0,
+            "target_computed_mismatch_rate": 0,
+        },
+        "comp_quality": {
+            "eligible_cases": total_cases,
+            "evaluated_cases": total_cases,
+            "public_projection_leaks": 0,
+            "receipt_leaks": 0,
+            "diagnostic_mismatches": 0,
+            "replay_flakes": 0,
+        },
+        "by_syndrome": buckets,
+    }
+
+
+def _summary_bucket(syndrome: str, passed: int, failed: int) -> dict[str, object]:
+    return {
+        "syndrome": syndrome,
+        "cases": passed + failed,
+        "evaluated_cases": passed + failed,
+        "pass": passed,
+        "fail": failed,
+        "not_evaluated": 0,
+        "public_projection_leaks": 0,
+        "receipt_leaks": 0,
+        "diagnostic_mismatches": 0,
+        "replay_flakes": 0,
+        "status": "green",
     }
