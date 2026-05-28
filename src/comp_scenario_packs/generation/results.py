@@ -168,6 +168,10 @@ def compare_case_result_summaries(
         max_pass_rate_drop=max_pass_rate_drop,
     )
     regressions.extend(syndrome_regressions)
+    recommended_actions = _recommended_actions(
+        regressions=regressions,
+        coverage_gaps=coverage_gaps,
+    )
     return {
         "schema_version": CASE_RESULT_SUMMARY_COMPARISON_SCHEMA_VERSION,
         "status": _comparison_status(
@@ -180,6 +184,7 @@ def compare_case_result_summaries(
         "critical_delta": critical_delta,
         "regressions": regressions,
         "coverage_gaps": coverage_gaps,
+        "recommended_actions": recommended_actions,
         "by_syndrome": by_syndrome,
     }
 
@@ -373,6 +378,61 @@ def _comparison_status(
     if coverage_gaps:
         return "yellow"
     return "green"
+
+
+def _recommended_actions(
+    *,
+    regressions: Sequence[Mapping[str, Any]],
+    coverage_gaps: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    actions: list[dict[str, Any]] = []
+    for regression in regressions:
+        kind = regression.get("kind")
+        if kind == "critical_counter_increase":
+            metric = str(regression["metric"])
+            delta = int(regression["delta"])
+            actions.append(
+                {
+                    "action": "freeze_failure",
+                    "priority": "critical",
+                    "source": "critical_counter_increase",
+                    "metric": metric,
+                    "reason": f"{metric} increased by {delta}.",
+                }
+            )
+        elif kind == "syndrome_pass_rate_drop":
+            syndrome = str(regression["syndrome"])
+            delta = abs(float(regression["delta"]))
+            actions.append(
+                {
+                    "action": "investigate_regression",
+                    "priority": "high",
+                    "source": "syndrome_pass_rate_drop",
+                    "syndrome": syndrome,
+                    "reason": f"pass rate dropped by {_format_rate_delta(delta)}.",
+                }
+            )
+    for gap in coverage_gaps:
+        syndrome = str(gap["syndrome"])
+        baseline_cases = int(gap["baseline_cases"])
+        current_cases = int(gap["current_cases"])
+        actions.append(
+            {
+                "action": "increase_sampling",
+                "priority": "medium",
+                "source": "coverage_gap",
+                "syndrome": syndrome,
+                "reason": (
+                    f"current run has {current_cases} cases; "
+                    f"baseline had {baseline_cases}."
+                ),
+            }
+        )
+    return actions
+
+
+def _format_rate_delta(value: float) -> str:
+    return f"{value:.6f}".rstrip("0").rstrip(".")
 
 
 def _summary_counter(summary: Mapping[str, Any], metric: str) -> int:
